@@ -46,12 +46,12 @@ Suppose you have the following Go file `config.go`:
 ```go
 package foo
 
-//go:generate envdoc --output env-docs.md --type Config
+//go:generate envdoc --output env-doc.md --type Config
 type Config struct {
   // Port to listen for incoming connections
-  Port int `env:"PORT"`
+  Port int `env:"PORT,required"`
   // Address to serve
-  Address string `env:"ADDRESS"`
+  Address string `env:"ADDRESS" envDefault:"localhost"`
 }
 ```
 
@@ -60,9 +60,11 @@ And the `go:generate` line above creates documentation in `env-doc.md` file:
 ```md
 # Environment variables
 
-- `PORT` - Port to listen for incoming connections
-- `ADDRESS` - Address to serve
+- `PORT` (**required**) - Port to listen for incoming connections
+- `ADDRESS` (default: `localhost`) - Address to serve
 ```
+
+See [_examples](/_examples/) fir for more details.
 
 ## Contributing
 
