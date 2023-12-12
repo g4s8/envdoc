@@ -64,7 +64,7 @@ And the `go:generate` line above creates documentation in `env-doc.md` file:
 - `ADDRESS` (default: `localhost`) - Address to serve
 ```
 
-See [_examples](/_examples/) fir for more details.
+See [_examples](/_examples/) dir for more details.
 
 ## Contributing
 
