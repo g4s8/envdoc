@@ -24,7 +24,7 @@ go install github.com/g4s8/envdoc@latest
 And use it in code:
 
 ```go
-//go:generate envdoc -output environments.md -type Config
+//go:generate envdoc -output environments.md
 type Config struct {
     // ...
 }
@@ -36,8 +36,9 @@ type Config struct {
 //go:generate envdoc -output <output_file_name> -type <target_type_name> 
 ```
 
- * `-output`: Specify the output file name for the generated documentation.
- * `-type`: Specify the target struct type name to generate documentation for.
+ * `-output` (**required**): Specify the output file name for the generated documentation.
+ * `-type` (optional): Specify the target struct type name to generate documentation for.
+ If ommited, the next type after `go:generate` comment will be used.
 
 ## Example
 
@@ -46,7 +47,7 @@ Suppose you have the following Go file `config.go`:
 ```go
 package foo
 
-//go:generate envdoc --output env-doc.md --type Config
+//go:generate envdoc --output env-doc.md
 type Config struct {
   // Port to listen for incoming connections
   Port int `env:"PORT,required"`
@@ -72,4 +73,4 @@ If you find any issues or have suggestions for improvement, feel free to open an
 
 ## License
 
-This project is licensed under the MIT License - see the LICENSE.md file for details.
+This project is licensed under the MIT License - see the [LICENSE.md](/LICENSE.md) file for details.
