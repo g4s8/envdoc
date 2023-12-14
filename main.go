@@ -4,6 +4,7 @@ import (
 	"flag"
 	"fmt"
 	"os"
+	"strconv"
 )
 
 func main() {
@@ -17,14 +18,21 @@ func main() {
 		flag.Usage()
 		os.Exit(1)
 	}
-	if typeName == "" {
-		flag.Usage()
-		os.Exit(1)
-	}
 
 	inputFileName := os.Getenv("GOFILE")
 	if inputFileName == "" {
-		fatal("No input file specified")
+		fatal("No input file specified, this tool should be called by go generate")
+	}
+
+	var execLine int
+	if e := os.Getenv("GOLINE"); e != "" {
+		i, err := strconv.Atoi(e)
+		if err != nil {
+			fatal("Invalid line number specified, this tool should be called by go generate")
+		}
+		execLine = i
+	} else {
+		fatal("No line number specified, this tool should be called by go generate")
 	}
 
 	outputFile, err := os.Create(outputFileName)
@@ -46,7 +54,7 @@ func main() {
 		}
 	}()
 
-	insp := newInspector(typeName, output)
+	insp := newInspector(typeName, output, execLine)
 	if err := insp.inspectFile(inputFileName); err != nil {
 		fatalf("inspect file: %v", err)
 	}

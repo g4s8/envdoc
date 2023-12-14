@@ -1,6 +1,6 @@
 package main
 
-//go:generate go run ../ -output config.md -type Config
+//go:generate go run ../ -output config.md
 type Config struct {
 	// Host name to listen on.
 	Host string `env:"HOST,required"`

@@ -15,10 +15,14 @@ type inspectorOutput interface {
 type inspector struct {
 	typeName string
 	out      inspectorOutput
+	execLine int
+
+	lines       []int
+	pendingType bool
 }
 
-func newInspector(typeName string, out inspectorOutput) *inspector {
-	return &inspector{typeName: typeName, out: out}
+func newInspector(typeName string, out inspectorOutput, execLine int) *inspector {
+	return &inspector{typeName: typeName, out: out, execLine: execLine}
 }
 
 func (i *inspector) inspectFile(fileName string) error {
@@ -27,6 +31,9 @@ func (i *inspector) inspectFile(fileName string) error {
 	if err != nil {
 		return fmt.Errorf("parse file: %w", err)
 	}
+	// get a lines to position map for the file.
+	f := fset.File(file.Pos())
+	i.lines = f.Lines()
 	i.inspect(file)
 	return nil
 }
@@ -37,10 +44,45 @@ func (i *inspector) inspect(node ast.Node) {
 
 func (i *inspector) Visit(n ast.Node) ast.Visitor {
 	switch t := n.(type) {
+	case *ast.Comment:
+		// if type name is not specified we should process the next type
+		// declaration after the comment with go:generate
+		// which causes this command to be executed.
+		if i.typeName != "" {
+			return nil
+		}
+		if !t.Pos().IsValid() {
+			return nil
+		}
+		var line int
+		for l, pos := range i.lines {
+			if token.Pos(pos) > t.Pos() {
+				break
+			}
+			// $GOLINE env var is 1-based.
+			line = l + 1
+		}
+		if line != i.execLine {
+			return nil
+		}
+		if !strings.HasPrefix(t.Text, "//go:generate") {
+			return nil
+		}
+
+		i.pendingType = true
+		return nil
 	case *ast.TypeSpec:
-		if t.Name == nil && t.Name.Name != i.typeName {
+		var generate bool
+		if i.typeName != "" && t.Name != nil && t.Name.Name == i.typeName {
+			generate = true
+		}
+		if i.typeName == "" && i.pendingType {
+			generate = true
+		}
+		if !generate {
 			return i
 		}
+
 		if st, ok := t.Type.(*ast.StructType); ok {
 			for _, field := range st.Fields.List {
 				if field.Tag != nil {
@@ -53,6 +95,9 @@ func (i *inspector) Visit(n ast.Node) ast.Visitor {
 				}
 			}
 		}
+		// reset pending type flag event if this type
+		// is not processable (e.g. interface type).
+		i.pendingType = false
 	}
 	return i
 }
