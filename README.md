@@ -6,6 +6,8 @@ It takes comments associated with `env` tags in Go structs and creates a Markdow
 This tool is compatible with the
 - [caarlos0/env](https://github.com/caarlos0/env) library for parsing environment variables.
 
+[![Go Reference](https://pkg.go.dev/badge/github.com/g4s8/envdoc.svg)](https://pkg.go.dev/github.com/g4s8/envdoc)
+
 ## Installation
 
 Run it with `go run` in source file:
