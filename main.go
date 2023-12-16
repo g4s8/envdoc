@@ -49,8 +49,8 @@ func main() {
 	output := newMarkdownOutput(outputFile)
 	output.writeHeader()
 	defer func() {
-		if err := output.Close(); err != nil {
-			fatalf("close output: %v", err)
+		if err := output.dump(); err != nil {
+			fatalf("dump output: %v", err)
 		}
 	}()
 

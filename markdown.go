@@ -9,8 +9,7 @@ import (
 type markdownOutput struct {
 	out io.Writer
 
-	sb     strings.Builder
-	closed bool
+	sb strings.Builder
 }
 
 func newMarkdownOutput(out io.Writer) *markdownOutput {
@@ -45,11 +44,7 @@ func (m *markdownOutput) writeItem(item docItem) {
 	m.sb.WriteString(fmt.Sprintf("- %s\n", item.doc))
 }
 
-func (m *markdownOutput) Close() error {
-	if m.closed {
-		return nil
-	}
-	m.closed = true
+func (m *markdownOutput) dump() error {
 	if _, err := m.out.Write([]byte(m.sb.String())); err != nil {
 		return fmt.Errorf("write: %w", err)
 	}
