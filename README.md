@@ -4,8 +4,6 @@ envdoc is a tool for generating documentation for environment variables in Go st
 It takes comments associated with `env` tags in Go structs and creates a Markdown, plaintext or HTML
 file with detailed documentation.
 
-This tool is compatible with the
-- [caarlos0/env](https://github.com/caarlos0/env) library for parsing environment variables.
 
 <br/>
 
@@ -76,6 +74,16 @@ And the `go:generate` line above creates documentation in `env-doc.md` file:
 ```
 
 See [_examples](/_examples/) dir for more details.
+
+## Compatibility
+
+This tool is compatible with
+- full compatibility: [caarlos0/env](https://github.com/caarlos0/env)
+- partial compatibility: [sethvargo/go-envconfig](https://github.com/sethvargo/go-envconfig)
+- partial compatibility: [joeshaw/envdecode](https://github.com/joeshaw/envdecode)
+
+*Let me know about any new lib to check compatibility.*
+
 
 ## Contributing
 
