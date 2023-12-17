@@ -19,7 +19,9 @@ func (cfg *appConfig) parseFlags(f *flag.FlagSet) error {
 	f.StringVar(&cfg.outputFileName, "output", "", "Output file name")
 	f.StringVar(&cfg.typeName, "type", "", "Type name")
 	f.StringVar(&cfg.formatName, "format", "", "Output format, default `markdown`")
-	f.Parse(os.Args[1:])
+	if err := f.Parse(os.Args[1:]); err != nil {
+		return fmt.Errorf("parsing CLI args: %w", err)
+	}
 
 	if cfg.outputFileName == "" {
 		return fmt.Errorf("output file name is required")
@@ -68,8 +70,8 @@ func run(cfg *appConfig) (err error) {
 	if err != nil {
 		return fmt.Errorf("creating output file: %w", err)
 	}
-	defer closeWith(outputFile, func(err error) {
-		if err != nil {
+	defer closeWith(outputFile, func(closeErr error) {
+		if closeErr != nil {
 			err = fmt.Errorf("closing output file: %w", err)
 		}
 	})
