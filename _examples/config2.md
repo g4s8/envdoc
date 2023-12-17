@@ -1,4 +1,4 @@
-# Environment variables
+# Environment Variables
 
 - `SECRET` (from file) - Secret is a secret value that is read from a file.
 - `PASSWORD` (from file, default: `/tmp/password`) - Password is a password that is read from a file.

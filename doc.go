@@ -25,9 +25,14 @@ Running go generate will generate the following Markdown file:
 	- `PORT` (**required**, not-empty) - Port to listen on.
 	- `DEBUG` (default: `false`) - Debug mode enabled.
 
+By default envdoc generates documentation in Markdown format, but it
+can also generate plaintext or HTML.
+
 Options:
   - `-output` - Output file name.
   - `-type` - Type name to generate documentation for. Defaults for
     the next type after `go:generate` directive.
+  - `-format` (optional, default: `markdown`): Set output format type, either `markdown`,
+    `plaintext` or `html`.
 */
 package main

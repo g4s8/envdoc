@@ -1,7 +1,8 @@
 # envdoc
 
 envdoc is a tool for generating documentation for environment variables in Go structs.
-It takes comments associated with `env` tags in Go structs and creates a Markdown file with detailed documentation.
+It takes comments associated with `env` tags in Go structs and creates a Markdown, plaintext or HTML
+file with detailed documentation.
 
 This tool is compatible with the
 - [caarlos0/env](https://github.com/caarlos0/env) library for parsing environment variables.
@@ -46,6 +47,8 @@ type Config struct {
  * `-output` (**required**): Specify the output file name for the generated documentation.
  * `-type` (optional): Specify the target struct type name to generate documentation for.
  If ommited, the next type after `go:generate` comment will be used.
+ * `-format` (optional, default: `markdown`): Set output format type, either `markdown`,
+ `plaintext` or `html`.
 
 ## Example
 
@@ -66,7 +69,7 @@ type Config struct {
 And the `go:generate` line above creates documentation in `env-doc.md` file:
 
 ```md
-# Environment variables
+# Environment Variables
 
 - `PORT` (**required**) - Port to listen for incoming connections
 - `ADDRESS` (default: `localhost`) - Address to serve

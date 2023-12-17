@@ -8,10 +8,14 @@ import (
 )
 
 func main() {
-	var outputFileName string
-	var typeName string
+	var (
+		outputFileName string
+		typeName       string
+		formatName     string
+	)
 	flag.StringVar(&outputFileName, "output", "", "Output file name")
 	flag.StringVar(&typeName, "type", "", "Type name")
+	flag.StringVar(&formatName, "format", "", "Output format, default `markdown`")
 	flag.Parse()
 
 	if outputFileName == "" {
@@ -40,34 +44,21 @@ func main() {
 		fmt.Println("Error creating output file:", err)
 		os.Exit(1)
 	}
-	defer func() {
-		if err := outputFile.Close(); err != nil {
-			fatalf("close output file: %v", err)
-		}
-	}()
+	defer closeWith(outputFile, func(err error) {
+		fatal("close output file", err)
+	})
 
-	output := newMarkdownOutput(outputFile)
-	output.writeHeader()
-	defer func() {
-		if err := output.dump(); err != nil {
-			fatalf("dump output: %v", err)
-		}
-	}()
-
-	insp := newInspector(typeName, output, execLine)
-	if err := insp.inspectFile(inputFileName); err != nil {
-		fatalf("inspect file: %v", err)
+	gen, err := newGenerator(inputFileName, execLine,
+		withType(typeName), withFormat(formatName))
+	if err != nil {
+		fatal("Error creating generator:", err)
 	}
-
-	fmt.Printf("Documentation generated and saved to %s\n", outputFileName)
+	if err := gen.generate(outputFile); err != nil {
+		fatal("Error generating documentation:", err)
+	}
 }
 
-func fatal(msg string) {
-	fmt.Fprintln(os.Stderr, msg)
-	os.Exit(1)
-}
-
-func fatalf(format string, args ...interface{}) {
-	fmt.Fprintf(os.Stderr, format, args...)
+func fatal(msg ...any) {
+	fmt.Fprintln(os.Stderr, msg...)
 	os.Exit(1)
 }
