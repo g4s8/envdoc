@@ -1,5 +1,11 @@
+codecov:
+  require_ci_to_pass: true
+
 coverage:
   status:
     project:
       default:
         target: 80%
+
+github_checks:
+  annotations: true
