@@ -97,5 +97,14 @@ func TestGeneratorOpts(t *testing.T) {
 				t.Fatalf("unexpected format: %v", format)
 			}
 		})
+		t.Run("default", func(t *testing.T) {
+			g, err := newGenerator("", 0, withFormat(""))
+			if err != nil {
+				t.Fatalf("new generator: %v", err)
+			}
+			if format := g.format; format != fmtMD {
+				t.Fatalf("unexpected format: %v", format)
+			}
+		})
 	})
 }

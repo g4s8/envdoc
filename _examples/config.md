@@ -3,4 +3,3 @@
 - `HOST` (**required**) - Host name to listen on.
 - `PORT` (**required**, not-empty) - Port to listen on.
 - `DEBUG` (default: `false`) - Debug mode enabled.
-
