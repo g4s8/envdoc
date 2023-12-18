@@ -11,6 +11,7 @@ file with detailed documentation.
 [![Go Reference](https://pkg.go.dev/badge/github.com/g4s8/envdoc.svg)](https://pkg.go.dev/github.com/g4s8/envdoc)
 [![codecov](https://codecov.io/gh/g4s8/envdoc/graph/badge.svg?token=sqXWNR755O)](https://codecov.io/gh/g4s8/envdoc)
 [![Go Report Card](https://goreportcard.com/badge/github.com/g4s8/envdoc)](https://goreportcard.com/report/github.com/g4s8/envdoc)
+[![Mentioned in Awesome Go](https://awesome.re/mentioned-badge.svg)](https://github.com/avelino/awesome-go)  
 
 ## Installation
 
