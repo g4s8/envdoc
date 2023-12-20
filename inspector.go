@@ -8,38 +8,36 @@ import (
 	"strings"
 )
 
-type inspectorOutput interface {
-	writeItem(docItem)
-}
-
 type inspector struct {
 	typeName string
-	out      inspectorOutput
 	execLine int
 
 	lines       []int
 	pendingType bool
+	items       []docItem
 }
 
-func newInspector(typeName string, out inspectorOutput, execLine int) *inspector {
-	return &inspector{typeName: typeName, out: out, execLine: execLine}
+func newInspector(typeName string, execLine int) *inspector {
+	return &inspector{typeName: typeName, execLine: execLine}
 }
 
-func (i *inspector) inspectFile(fileName string) error {
+func (i *inspector) inspectFile(fileName string) (error, []docItem) {
 	fset := token.NewFileSet()
 	file, err := parser.ParseFile(fset, fileName, nil, parser.ParseComments)
 	if err != nil {
-		return fmt.Errorf("parse file: %w", err)
+		return fmt.Errorf("parse file: %w", err), nil
 	}
 	// get a lines to position map for the file.
 	f := fset.File(file.Pos())
 	i.lines = f.Lines()
-	i.inspect(file)
-	return nil
+	items := i.inspect(file)
+	return nil, items
 }
 
-func (i *inspector) inspect(node ast.Node) {
+func (i *inspector) inspect(node ast.Node) []docItem {
+	i.items = make([]docItem, 0)
 	ast.Walk(i, node)
+	return i.items
 }
 
 func (i *inspector) Visit(n ast.Node) ast.Visitor {
@@ -97,7 +95,7 @@ func (i *inspector) Visit(n ast.Node) ast.Visitor {
 				if _, ok := field.Type.(*ast.ArrayType); ok && item.separator == "" {
 					item.separator = ","
 				}
-				i.out.writeItem(item)
+				i.items = append(i.items, item)
 			}
 		}
 		// reset pending type flag event if this type
@@ -151,7 +149,7 @@ func parseTag(tag string, out *docItem) bool {
 
 	envDefault := getTagValues(tag, "envDefault")
 	if len(envDefault) > 0 {
-		out.envDefault = envDefault[0]
+		out.envDefault = strings.Join(envDefault, ",")
 	}
 
 	envSeparator := getTagValues(tag, "envSeparator")

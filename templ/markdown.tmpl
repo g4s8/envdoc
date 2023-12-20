@@ -1,0 +1,38 @@
+# Environment Variables
+
+{{range .Items -}}
+  {{- $comma := false -}}
+- `{{.EnvName}}`
+  {{- if eq .EnvSeparator "," -}}
+    {{- $comma = true }} (comma-separated
+  {{- else if ne .EnvSeparator "" -}}
+    {{- $comma = true }} (separated by `{{.EnvSeparator}}`
+  {{- end -}}
+  {{- if .Required -}}
+    {{- if $comma }}, {{ else }} ({{ end -}}
+    {{- $comma = true -}}
+    **required**
+  {{- end -}}
+  {{- if .Expand -}} 
+    {{- if $comma }}, {{ else }} ({{ end -}}
+    {{- $comma = true -}}
+    expand
+  {{- end -}}
+  {{- if .NonEmpty -}}
+    {{- if $comma }}, {{ else }} ({{ end -}}
+    {{- $comma = true -}}
+    non-empty
+  {{- end -}}
+  {{if .FromFile -}}
+    {{- if $comma }}, {{ else }} ({{ end -}}
+    {{- $comma = true -}}
+    from-file
+  {{- end -}}
+  {{- if ne .EnvDefault "" -}}
+    {{- if $comma }}, {{ else }} ({{ end -}}
+    {{- $comma = true -}}
+    {{- .EnvDefault | printf "default: `%s`" -}}
+  {{- end -}}
+  {{- if $comma }}) {{ else }} {{ end -}}
+ - {{.Doc}}
+{{ end -}}

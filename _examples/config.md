@@ -1,5 +1,5 @@
 # Environment Variables
 
 - `HOST` (separated by `;`, **required**) - Hosts name of hosts to listen on.
-- `PORT` (**required**, not-empty) - Port to listen on.
+- `PORT` (**required**, non-empty) - Port to listen on.
 - `DEBUG` (default: `false`) - Debug mode enabled.

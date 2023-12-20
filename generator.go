@@ -9,7 +9,7 @@ type generator struct {
 	fileName   string
 	execLine   int
 	targetType string
-	format     itemFormat
+	tmpl       template
 }
 
 type generatorOption func(*generator) error
@@ -27,11 +27,11 @@ func withFormat(formatName string) generatorOption {
 		case "":
 			fallthrough
 		case "markdown":
-			g.format = fmtMD
+			g.tmpl = tmplMarkdown
 		case "plaintext":
-			g.format = fmtPlain
+			g.tmpl = tmplPlaintext
 		case "html":
-			g.format = fmtHTML
+			g.tmpl = tmplHTML
 		default:
 			return fmt.Errorf("unknown format: %s", formatName)
 		}
@@ -46,19 +46,22 @@ func newGenerator(fileName string, execLine int, opts ...generatorOption) (*gene
 			return nil, err
 		}
 	}
-	if g.format == nil {
+	if g.tmpl == nil {
 		return nil, fmt.Errorf("format is not specified")
 	}
 	return g, nil
 }
 
 func (g *generator) generate(out io.Writer) error {
-	output := newDocOutput(out, g.format)
-	output.begin()
-	insp := newInspector(g.targetType, output, g.execLine)
-	if err := insp.inspectFile(g.fileName); err != nil {
+	insp := newInspector(g.targetType, g.execLine)
+	err, data := insp.inspectFile(g.fileName)
+	if err != nil {
 		return fmt.Errorf("inspect file: %w", err)
 	}
-	output.end()
+	renderer := templateRenderer(g.tmpl)
+	rctx := newRenderContext(data)
+	if err := renderer(rctx, out); err != nil {
+		return err
+	}
 	return nil
 }

@@ -155,14 +155,6 @@ func TestInspector(t *testing.T) {
 	}
 }
 
-type testOutput struct {
-	items []docItem
-}
-
-func (o *testOutput) writeItem(i docItem) {
-	o.items = append(o.items, i)
-}
-
 func copyTestFile(name string, dest string) error {
 	srcf, err := testdata.Open(name)
 	if err != nil {
@@ -184,22 +176,22 @@ func copyTestFile(name string, dest string) error {
 
 func inspectorTester(name string, typeName string, lineN int, expect []docItem) func(*testing.T) {
 	return func(t *testing.T) {
-		var out testOutput
 		sourceFile := path.Join(t.TempDir(), "tmp.go")
 		if err := copyTestFile(path.Join("testdata", name), sourceFile); err != nil {
 			t.Fatal("Copy test file data", err)
 		}
-		insp := newInspector(typeName, &out, lineN)
-		if err := insp.inspectFile(sourceFile); err != nil {
+		insp := newInspector(typeName, lineN)
+		err, data := insp.inspectFile(sourceFile)
+		if err != nil {
 			t.Fatal("Inspector failed", err)
 		}
-		if len(out.items) != len(expect) {
-			t.Errorf("inspector found %d items; expected %d", len(out.items), len(expect))
+		if len(data) != len(expect) {
+			t.Errorf("inspector found %d items; expected %d", len(data), len(expect))
 		}
-		for i := range out.items {
-			if out.items[i] != expect[i] {
+		for i := range data {
+			if data[i] != expect[i] {
 				t.Errorf("inspector found item[%d] %+v; expected %+v", i,
-					out.items[i], expect[i])
+					data[i], expect[i])
 			}
 		}
 	}

@@ -1,7 +1,13 @@
 package main
 
-//go:generate go run ../ -output config2.md -type Config2
-type Config2 struct {
+// ComplexConfig is an example configuration structure.
+// It contains a few fields with different types of tags.
+// It is trying to cover all the possible cases.
+//
+//go:generate go run ../ -output complex.html -format html
+//go:generate go run ../ -output complex.md -type ComplexConfig
+//go:generate go run ../ -output complex.txt -format plaintext
+type ComplexConfig struct {
 	// Secret is a secret value that is read from a file.
 	Secret string `env:"SECRET,file"`
 	// Password is a password that is read from a file.
@@ -14,7 +20,7 @@ type Config2 struct {
 	SecretVal string `json:"secret_val" env:"SECRET_VAL,notEmpty"`
 
 	// Hosts is a list of hosts.
-	Hosts []string `env:"HOSTS" envSeparator:":"`
+	Hosts []string `env:"HOSTS,required" envSeparator:":"`
 	// Words is just a list of words.
-	Words []string `env:"WORDS"`
+	Words []string `env:"WORDS,file" envDefault:"one,two,three"`
 }

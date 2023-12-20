@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+    <meta charset="utf-8">
+    <title>Environment Variables</title>
+    <style>
+    body {
+      font-family: sans-serif;
+    }
+    </style>
+  </head>
+  <body>
+  <h1>Environment Variables</h1>
+  <ul>
+{{ range .Items }}    <li>
+    {{- $comma := false -}}
+    <code>{{ .EnvName }}</code>
+    {{- if eq .EnvSeparator "," -}}
+      {{- $comma = true }} (comma-separated
+    {{- else if ne .EnvSeparator "" -}}
+      {{- $comma = true }} (separated by "<code>{{.EnvSeparator}}</code>"
+    {{- end -}}
+    {{- if .Required -}}
+      {{- if $comma }}, {{ else }} ({{ end -}}
+      {{- $comma = true -}}
+      <strong>required</strong>
+    {{- end -}}
+    {{- if .Expand -}} 
+      {{- if $comma }}, {{ else }} ({{ end -}}
+      {{- $comma = true -}}
+      expand
+    {{- end -}}
+    {{- if .NonEmpty -}}
+      {{- if $comma }}, {{ else }} ({{ end -}}
+      {{- $comma = true -}}
+      non-empty
+    {{- end -}}
+    {{if .FromFile -}}
+      {{- if $comma }}, {{ else }} ({{ end -}}
+      {{- $comma = true -}}
+      from-file
+    {{- end -}}
+    {{- if ne .EnvDefault "" -}}
+      {{- if $comma }}, {{ else }} ({{ end -}}
+      {{- $comma = true -}}
+      default: <code>{{ .EnvDefault }}</code>
+    {{- end -}}
+    {{- if $comma }}) {{ else }} {{ end -}}
+ - {{ .Doc -}}
+    </li>
+{{ end }}  </ul>
+  </body>
+</html>
