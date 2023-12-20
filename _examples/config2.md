@@ -5,3 +5,5 @@
 - `CERTIFICATE` (expand, from file, default: `${CERTIFICATE_FILE}`) - Certificate is a certificate that is read from a file.
 - `SECRET_KEY` (**required**) - Key is a secret key.
 - `SECRET_VAL` (**required**, not-empty) - SecretVal is a secret value.
+- `HOSTS` (separated by `:`) - Hosts is a list of hosts.
+- `WORDS` (comma-separated) - Words is just a list of words.

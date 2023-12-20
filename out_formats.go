@@ -17,6 +17,13 @@ func (markdownFormat) formatItem(item docItem) string {
 	var sb strings.Builder
 	sb.WriteString(fmt.Sprintf("- `%s` ", item.envName))
 	var opts []string
+
+	if item.separator == "," {
+		opts = append(opts, "comma-separated")
+	} else if item.separator != "" {
+		opts = append(opts, fmt.Sprintf("separated by `%s`", item.separator))
+	}
+
 	if item.flags&docItemFlagRequired != 0 {
 		opts = append(opts, "**required**")
 	}
@@ -29,9 +36,11 @@ func (markdownFormat) formatItem(item docItem) string {
 	if item.flags&docItemFlagFromFile != 0 {
 		opts = append(opts, "from file")
 	}
+
 	if item.envDefault != "" {
 		opts = append(opts, fmt.Sprintf("default: `%s`", item.envDefault))
 	}
+
 	if len(opts) > 0 {
 		sb.WriteString(fmt.Sprintf("(%s) ", strings.Join(opts, ", ")))
 	}
@@ -53,6 +62,13 @@ func (plaintextFormat) formatItem(item docItem) string {
 	var sb strings.Builder
 	sb.WriteString(fmt.Sprintf(" * `%s` ", item.envName))
 	var opts []string
+
+	if item.separator == "," {
+		opts = append(opts, "comma-separated")
+	} else if item.separator != "" {
+		opts = append(opts, fmt.Sprintf("separated by `%s`", item.separator))
+	}
+
 	if item.flags&docItemFlagRequired != 0 {
 		opts = append(opts, "required")
 	}
@@ -65,9 +81,11 @@ func (plaintextFormat) formatItem(item docItem) string {
 	if item.flags&docItemFlagFromFile != 0 {
 		opts = append(opts, "from file")
 	}
+
 	if item.envDefault != "" {
 		opts = append(opts, fmt.Sprintf("default: `%s`", item.envDefault))
 	}
+
 	if len(opts) > 0 {
 		sb.WriteString(fmt.Sprintf("(%s) ", strings.Join(opts, ", ")))
 	}
@@ -89,6 +107,13 @@ func (htmlFormat) formatItem(item docItem) string {
 	var sb strings.Builder
 	sb.WriteString(fmt.Sprintf("<li><code>%s</code> ", item.envName))
 	var opts []string
+
+	if item.separator == "," {
+		opts = append(opts, "comma-separated")
+	} else if item.separator != "" {
+		opts = append(opts, fmt.Sprintf("separated by <code>%s</code>", item.separator))
+	}
+
 	if item.flags&docItemFlagRequired != 0 {
 		opts = append(opts, "<strong>required</strong>")
 	}
@@ -101,9 +126,11 @@ func (htmlFormat) formatItem(item docItem) string {
 	if item.flags&docItemFlagFromFile != 0 {
 		opts = append(opts, "from file")
 	}
+
 	if item.envDefault != "" {
 		opts = append(opts, fmt.Sprintf("default: <code>%s</code>", item.envDefault))
 	}
+
 	if len(opts) > 0 {
 		sb.WriteString(fmt.Sprintf("(%s) ", strings.Join(opts, ", ")))
 	}

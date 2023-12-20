@@ -8,8 +8,8 @@ package main
 //go:generate go run ../ -output config.md -format markdown
 //go:generate go run ../ -output config.html -format html
 type Config struct {
-	// Host name to listen on.
-	Host string `env:"HOST,required"`
+	// Hosts name of hosts to listen on.
+	Hosts []string `env:"HOST,required", envSeparator:";"`
 	// Port to listen on.
 	Port int `env:"PORT,notEmpty"`
 

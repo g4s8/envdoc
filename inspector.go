@@ -85,14 +85,19 @@ func (i *inspector) Visit(n ast.Node) ast.Visitor {
 
 		if st, ok := t.Type.(*ast.StructType); ok {
 			for _, field := range st.Fields.List {
-				if field.Tag != nil {
-					var item docItem
-					if !parseTag(field.Tag.Value, &item) {
-						continue
-					}
-					item.doc = strings.TrimSpace(field.Doc.Text())
-					i.out.writeItem(item)
+				if field.Tag == nil {
+					continue
 				}
+				var item docItem
+				if !parseTag(field.Tag.Value, &item) {
+					continue
+				}
+				item.doc = strings.TrimSpace(field.Doc.Text())
+				// Check if the field type is a slice or array
+				if _, ok := field.Type.(*ast.ArrayType); ok && item.separator == "" {
+					item.separator = ","
+				}
+				i.out.writeItem(item)
 			}
 		}
 		// reset pending type flag event if this type
@@ -147,6 +152,11 @@ func parseTag(tag string, out *docItem) bool {
 	envDefault := getTagValues(tag, "envDefault")
 	if len(envDefault) > 0 {
 		out.envDefault = envDefault[0]
+	}
+
+	envSeparator := getTagValues(tag, "envSeparator")
+	if len(envSeparator) > 0 {
+		out.separator = envSeparator[0]
 	}
 
 	return true

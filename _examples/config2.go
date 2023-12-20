@@ -12,4 +12,9 @@ type Config2 struct {
 	SecretKey string `env:"SECRET_KEY,required" json:"secret_key"`
 	// SecretVal is a secret value.
 	SecretVal string `json:"secret_val" env:"SECRET_VAL,notEmpty"`
+
+	// Hosts is a list of hosts.
+	Hosts []string `env:"HOSTS" envSeparator:":"`
+	// Words is just a list of words.
+	Words []string `env:"WORDS"`
 }

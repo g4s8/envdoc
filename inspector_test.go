@@ -46,6 +46,13 @@ func TestTagParsers(t *testing.T) {
 				envDefault: "${JUST_A_MESS_FILE}",
 			},
 		},
+		{
+			tag: `env:"WORDS" envSeparator:";"`,
+			expect: docItem{
+				envName:   "WORDS",
+				separator: ";",
+			},
+		},
 	} {
 		t.Run(fmt.Sprint(i), func(t *testing.T) {
 			var out docItem
@@ -124,6 +131,22 @@ func TestInspector(t *testing.T) {
 				{
 					envName: "FOO",
 					doc:     "Foo stub",
+				},
+			},
+		},
+		{
+			name:     "arrays.go",
+			typeName: "Arrays",
+			expect: []docItem{
+				{
+					envName:   "DOT_SEPARATED",
+					doc:       "DotSeparated stub",
+					separator: ".",
+				},
+				{
+					envName:   "COMMA_SEPARATED",
+					doc:       "CommaSeparated stub",
+					separator: ",",
 				},
 			},
 		},

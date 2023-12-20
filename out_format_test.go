@@ -18,14 +18,21 @@ func TestFormats(t *testing.T) {
 			envName:    "BAR",
 			doc:        "bar",
 			envDefault: "1",
+			separator:  ";",
 			flags:      docItemFlagRequired | docItemFlagExpand | docItemFlagNonEmpty | docItemFlagFromFile,
+		},
+		{
+			envName:   "BAZ",
+			doc:       "baz",
+			separator: ",",
 		},
 	}
 	t.Run("markdown", formatTester(fmtMD, items, formatExpectation{
 		before: "# Environment Variables\n\n",
 		items: []string{
 			"- `FOO` - foo\n",
-			"- `BAR` (**required**, expand, not-empty, from file, default: `1`) - bar\n",
+			"- `BAR` (separated by `;`, **required**, expand, not-empty, from file, default: `1`) - bar\n",
+			"- `BAZ` (comma-separated) - baz\n",
 		},
 		after: "",
 	}))
@@ -33,7 +40,8 @@ func TestFormats(t *testing.T) {
 		before: "ENVIRONMENT VARIABLES\n\n",
 		items: []string{
 			" * `FOO` - foo\n",
-			" * `BAR` (required, expand, not-empty, from file, default: `1`) - bar\n",
+			" * `BAR` (separated by `;`, required, expand, not-empty, from file, default: `1`) - bar\n",
+			" * `BAZ` (comma-separated) - baz\n",
 		},
 		after: "",
 	}))
@@ -55,7 +63,8 @@ func TestFormats(t *testing.T) {
 `,
 		items: []string{
 			"<li><code>FOO</code> - foo</li>\n",
-			"<li><code>BAR</code> (<strong>required</strong>, expand, not-empty, from file, default: <code>1</code>) - bar</li>\n",
+			"<li><code>BAR</code> (separated by <code>;</code>, <strong>required</strong>, expand, not-empty, from file, default: <code>1</code>) - bar</li>\n",
+			"<li><code>BAZ</code> (comma-separated) - baz</li>\n",
 		},
 		after: `</ul>
 	</body>
