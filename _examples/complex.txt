@@ -7,3 +7,4 @@ ENVIRONMENT VARIABLES
  * `SECRET_VAL` (required, non-empty) - SecretVal is a secret value.
  * `HOSTS` (separated by `:`, required) - Hosts is a list of hosts.
  * `WORDS` (comma-separated, from-file, default: `one,two,three`) - Words is just a list of words.
+ * `COMMENT` (required, default: `This is a comment.`) - Just a comment.

@@ -23,4 +23,6 @@ type ComplexConfig struct {
 	Hosts []string `env:"HOSTS,required" envSeparator:":"`
 	// Words is just a list of words.
 	Words []string `env:"WORDS,file" envDefault:"one,two,three"`
+
+	Comment string `env:"COMMENT,required" envDefault:"This is a comment."` // Just a comment.
 }

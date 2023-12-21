@@ -150,6 +150,20 @@ func TestInspector(t *testing.T) {
 				},
 			},
 		},
+		{
+			name:     "comments.go",
+			typeName: "Comments",
+			expect: []docItem{
+				{
+					envName: "FOO",
+					doc:     "Foo stub",
+				},
+				{
+					envName: "BAR",
+					doc:     "Bar stub",
+				},
+			},
+		},
 	} {
 		t.Run(c.name, inspectorTester(c.name, c.typeName, c.goLine, c.expect))
 	}

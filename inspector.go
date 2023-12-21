@@ -88,6 +88,9 @@ func (i *inspector) Visit(n ast.Node) ast.Visitor {
 					continue
 				}
 				item.doc = strings.TrimSpace(field.Doc.Text())
+				if item.doc == "" && field.Comment != nil {
+					item.doc = strings.TrimSpace(field.Comment.Text())
+				}
 				// Check if the field type is a slice or array
 				if _, ok := field.Type.(*ast.ArrayType); ok && item.separator == "" {
 					item.separator = ","
