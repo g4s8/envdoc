@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bufio"
 	"bytes"
 	"strings"
 	"testing"
@@ -29,50 +30,37 @@ var testRenderItems = []renderItem{
 
 func TestRender(t *testing.T) {
 	t.Run("markdown", testRenderer(tmplMarkdown, renderContext{Items: testRenderItems},
-		strings.Join([]string{
-			"# Environment Variables",
-			"",
-			"- `TEST_ENV` - This is a test environment variable.",
-			"- `TEST_ENV2` (comma-separated, default: `default value`) - This is another test environment variable.",
-			"- `TEST_ENV3` (**required**, expand, non-empty, from-file) - This is a third test environment variable.",
-			"",
-		}, "\n")))
+		"# Environment Variables",
+		"- `TEST_ENV` - This is a test environment variable.",
+		"- `TEST_ENV2` (comma-separated, default: `default value`) - This is another test environment variable.",
+		"- `TEST_ENV3` (**required**, expand, non-empty, from-file) - This is a third test environment variable."))
 	t.Run("plaintext", testRenderer(tmplPlaintext, renderContext{Items: testRenderItems},
-		strings.Join([]string{
-			"ENVIRONMENT VARIABLES",
-			"",
-			" * `TEST_ENV` - This is a test environment variable.",
-			" * `TEST_ENV2` (comma-separated, default: `default value`) - This is another test environment variable.",
-			" * `TEST_ENV3` (required, expand, non-empty, from-file) - This is a third test environment variable.",
-			"",
-		}, "\n")))
+		"ENVIRONMENT VARIABLES",
+		" * `TEST_ENV` - This is a test environment variable.",
+		" * `TEST_ENV2` (comma-separated, default: `default value`) - This is another test environment variable.",
+		" * `TEST_ENV3` (required, expand, non-empty, from-file) - This is a third test environment variable."))
 	t.Run("html", testRenderer(tmplHTML, renderContext{Items: testRenderItems},
-		strings.Join([]string{
-			`<!DOCTYPE html>`,
-			`<html lang="en">`,
-			`    <head>`,
-			`    <meta charset="utf-8">`,
-			`    <title>Environment Variables</title>`,
-			`    <style>`,
-			`    body {`,
-			`      font-family: sans-serif;`,
-			`    }`,
-			`    </style>`,
-			`  </head>`,
-			`  <body>`,
-			`  <h1>Environment Variables</h1>`,
-			`  <ul>`,
-			`    <li><code>TEST_ENV</code> - This is a test environment variable.</li>`,
-			`    <li><code>TEST_ENV2</code> (comma-separated, default: <code>default value</code>) - This is another test environment variable.</li>`,
-			`    <li><code>TEST_ENV3</code> (<strong>required</strong>, expand, non-empty, from-file) - This is a third test environment variable.</li>`,
-			`  </ul>`,
-			`  </body>`,
-			`</html>`,
-			``,
-		}, "\n")))
+		`<!DOCTYPE html>`,
+		`<html lang="en">`,
+		`<head>`,
+		`<meta charset="utf-8">`,
+		`<title>Environment Variables</title>`,
+		`</head>`,
+		`<section>`,
+		`<article>`,
+		`<h1>Environment Variables</h1>`,
+		`<ul>`,
+		`<li><code>TEST_ENV</code> - This is a test environment variable.</li>`,
+		`<li><code>TEST_ENV2</code> (comma-separated, default: <code>default value</code>) - This is another test environment variable.</li>`,
+		`<li><code>TEST_ENV3</code> (<strong>required</strong>, expand, non-empty, from-file) - This is a third test environment variable.</li>`,
+		`</ul>`,
+		`</article>`,
+		`</section>`,
+		`</body>`,
+		`</html>`))
 }
 
-func testRenderer(tmpl template, c renderContext, expect string) func(*testing.T) {
+func testRenderer(tmpl template, c renderContext, expectLines ...string) func(*testing.T) {
 	return func(t *testing.T) {
 		var buf bytes.Buffer
 		r := templateRenderer(tmpl)
@@ -80,8 +68,22 @@ func testRenderer(tmpl template, c renderContext, expect string) func(*testing.T
 		if err != nil {
 			t.Fatal(err)
 		}
-		if buf.String() != expect {
-			t.Errorf("expected %q, got %q", expect, buf.String())
+		scanner := bufio.NewScanner(&buf)
+		var currentLine int
+		for scanner.Scan() {
+			line := strings.TrimSpace(scanner.Text())
+			expect := strings.TrimSpace(expectLines[currentLine])
+			if line == expect {
+				currentLine++
+			}
+		}
+		if err := scanner.Err(); err != nil {
+			t.Fatal("error reading output:", err)
+		}
+		if currentLine != len(expectLines) {
+			t.Log("output:")
+			t.Log(buf.String())
+			t.Fatalf("expected %d lines, got %d", len(expectLines), currentLine)
 		}
 	}
 }

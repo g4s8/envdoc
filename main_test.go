@@ -81,19 +81,21 @@ func TestInvalidConfig(t *testing.T) {
 }
 
 func TestMainRun(t *testing.T) {
-	inputFile := path.Join(t.TempDir(), "example.go")
-	if err := copyTestFile(path.Join("testdata", "example_type.go"), inputFile); err != nil {
-		t.Fatal("copy test file", err)
-	}
-	outputFile := path.Join(t.TempDir(), "example.md")
-	config := appConfig{
-		typeName:       "Type1",
-		formatName:     "markdown",
-		outputFileName: outputFile,
-		inputFileName:  inputFile,
-		execLine:       0,
-	}
-	if err := run(&config); err != nil {
-		t.Fatal("run", err)
-	}
+	t.Run("ok", func(t *testing.T) {
+		inputFile := path.Join(t.TempDir(), "example.go")
+		if err := copyTestFile(path.Join("testdata", "example_type.go"), inputFile); err != nil {
+			t.Fatal("copy test file", err)
+		}
+		outputFile := path.Join(t.TempDir(), "example.md")
+		config := appConfig{
+			typeName:       "Type1",
+			formatName:     "markdown",
+			outputFileName: outputFile,
+			inputFileName:  inputFile,
+			execLine:       0,
+		}
+		if err := run(&config); err != nil {
+			t.Fatal("run", err)
+		}
+	})
 }

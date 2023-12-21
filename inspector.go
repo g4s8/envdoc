@@ -63,9 +63,6 @@ func (i *inspector) Visit(n ast.Node) ast.Visitor {
 		if line != i.execLine {
 			return nil
 		}
-		if !strings.HasPrefix(t.Text, "//go:generate") {
-			return nil
-		}
 
 		i.pendingType = true
 		return nil

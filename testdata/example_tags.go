@@ -11,4 +11,10 @@ type Type1 struct {
 	SecretKey string `env:"SECRET_KEY,required" json:"secret_key"`
 	// SecretVal is a secret value.
 	SecretVal string `json:"secret_val" env:"SECRET_VAL,notEmpty"`
+	// NotEnv is not an environment variable.
+	NotEnv string `json:"not_env"`
+	// NoTag is not tagged.
+	NoTag string
+	// BrokenTag is a tag that is broken.
+	BrokenTag string `env:"BROKEN_TAG,required`
 }
