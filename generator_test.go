@@ -43,6 +43,15 @@ func TestOptions(t *testing.T) {
 			t.Fatal("expected all to be true")
 		}
 	})
+	t.Run("WithPrefix", func(t *testing.T) {
+		g, err := newGenerator("stub", 1, withPrefix("prefix"))
+		if err != nil {
+			t.Fatal("new generator error", err)
+		}
+		if g.prefix != "prefix" {
+			t.Fatal("expected prefix to be 'prefix'")
+		}
+	})
 	t.Run("empty", func(t *testing.T) {
 		g, err := newGenerator("stub", 1)
 		if err != nil {

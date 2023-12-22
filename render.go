@@ -32,7 +32,7 @@ type renderContext struct {
 	Sections []renderSection
 }
 
-func newRenderContext(scopes []*EnvScope) renderContext {
+func newRenderContext(scopes []*EnvScope, envPrefix string) renderContext {
 	res := renderContext{
 		Sections: make([]renderSection, len(scopes)),
 	}
@@ -45,7 +45,7 @@ func newRenderContext(scopes []*EnvScope) renderContext {
 		}
 		for j, item := range scope.Vars {
 			section.Items[j] = renderItem{
-				EnvName:      item.Name,
+				EnvName:      fmt.Sprintf("%s%s", envPrefix, item.Name),
 				Doc:          item.Doc,
 				EnvDefault:   item.Opts.Default,
 				EnvSeparator: item.Opts.Separator,

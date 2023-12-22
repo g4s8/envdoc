@@ -43,11 +43,13 @@ type Config struct {
 //go:generate envdoc -output <output_file_name> -type <target_type_name> 
 ```
 
- * `-output` (**required**): Specify the output file name for the generated documentation.
- * `-type` (optional): Specify the target struct type name to generate documentation for.
+ * `-output` (**required**) - Specify the output file name for the generated documentation.
+ * `-type`: Specify the target struct type name to generate documentation for.
  If ommited, the next type after `go:generate` comment will be used.
- * `-format` (optional, default: `markdown`): Set output format type, either `markdown`,
+ * `-format` (default: `markdown`) - Set output format type, either `markdown`,
  `plaintext` or `html`.
+ * `-all` - Generate documentation for all types in the file.
+ * `-env-prefix` - Environment variable prefix.
 
 ## Example
 

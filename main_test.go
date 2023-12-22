@@ -9,7 +9,14 @@ import (
 
 func TestConfig(t *testing.T) {
 	t.Run("ok", func(t *testing.T) {
-		os.Args = []string{"cmd", "-output", "test.md", "-type", "test", "-format", "markdown"}
+		os.Args = []string{
+			"cmd",
+			"-output", "test.md",
+			"-type", "test",
+			"-format", "markdown",
+			"-env-prefix", "TEST_",
+			"-all",
+		}
 		t.Setenv("GOFILE", "test.go")
 		t.Setenv("GOLINE", "42")
 
@@ -25,6 +32,12 @@ func TestConfig(t *testing.T) {
 		}
 		if cfg.formatName != "markdown" {
 			t.Fatal("Invalid format name")
+		}
+		if cfg.envPrefix != "TEST_" {
+			t.Fatal("Invalid env prefix")
+		}
+		if !cfg.all {
+			t.Fatal("Invalid all flag")
 		}
 
 		if err := cfg.parseEnv(); err != nil {
@@ -111,6 +124,7 @@ func TestMainRun(t *testing.T) {
 			outputFileName: outputFile,
 			inputFileName:  inputFile,
 			execLine:       0,
+			envPrefix:      "TEST_",
 		}
 		if err := run(&config); err != nil {
 			t.Fatal("run", err)

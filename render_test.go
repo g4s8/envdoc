@@ -126,6 +126,42 @@ func TestRender(t *testing.T) {
 	})
 }
 
+func TestNewRenderContext(t *testing.T) {
+	src := []*EnvScope{
+		{
+			Name: "First",
+			Vars: []EnvDocItem{
+				{
+					Name: "ONE",
+					Doc:  "First one",
+				},
+			},
+		},
+	}
+	rc := newRenderContext(src, "PREFIX_")
+	const title = "Environment Variables"
+	if rc.Title != title {
+		t.Errorf("expected title %q, got %q", title, rc.Title)
+	}
+	if len(rc.Sections) != 1 {
+		t.Fatalf("expected 1 section, got %d", len(rc.Sections))
+	}
+	section := rc.Sections[0]
+	if section.Name != "First" {
+		t.Errorf("expected section name %q, got %q", "First", section.Name)
+	}
+	if len(section.Items) != 1 {
+		t.Fatalf("expected 1 variable, got %d", len(section.Items))
+	}
+	variable := section.Items[0]
+	if variable.EnvName != "PREFIX_ONE" {
+		t.Errorf("expected variable name %q, got %q", "PREFIX_ONE", variable.EnvName)
+	}
+	if variable.Doc != "First one" {
+		t.Errorf("expected variable doc %q, got %q", "First one", variable.Doc)
+	}
+}
+
 func testRenderer(tmpl template, c renderContext, expectLines ...string) func(*testing.T) {
 	return func(t *testing.T) {
 		var buf bytes.Buffer
