@@ -9,19 +9,20 @@ import (
 )
 
 type inspector struct {
-	typeName string
-	execLine int
+	typeName string // type name to generate documentation for, could be empty
+	all      bool   // generate documentation for all types in the file
+	execLine int    // line number of the go:generate directive
 
 	lines       []int
 	pendingType bool
-	items       []docItem
+	items       []*EnvScope
 }
 
-func newInspector(typeName string, execLine int) *inspector {
-	return &inspector{typeName: typeName, execLine: execLine}
+func newInspector(typeName string, all bool, execLine int) *inspector {
+	return &inspector{typeName: typeName, all: all, execLine: execLine}
 }
 
-func (i *inspector) inspectFile(fileName string) (error, []docItem) {
+func (i *inspector) inspectFile(fileName string) (error, []*EnvScope) {
 	fset := token.NewFileSet()
 	file, err := parser.ParseFile(fset, fileName, nil, parser.ParseComments)
 	if err != nil {
@@ -34,10 +35,25 @@ func (i *inspector) inspectFile(fileName string) (error, []docItem) {
 	return nil, items
 }
 
-func (i *inspector) inspect(node ast.Node) []docItem {
-	i.items = make([]docItem, 0)
+func (i *inspector) inspect(node ast.Node) []*EnvScope {
+	i.items = make([]*EnvScope, 0)
 	ast.Walk(i, node)
 	return i.items
+}
+
+func (i *inspector) getScope(t *ast.TypeSpec) (out *EnvScope) {
+	typeName := t.Name.Name
+	for _, s := range i.items {
+		if s.typeName == typeName {
+			out = s
+			return
+		}
+	}
+
+	out = new(EnvScope)
+	parseType(t, out)
+	i.items = append(i.items, out)
+	return
 }
 
 func (i *inspector) Visit(n ast.Node) ast.Visitor {
@@ -46,11 +62,11 @@ func (i *inspector) Visit(n ast.Node) ast.Visitor {
 		// if type name is not specified we should process the next type
 		// declaration after the comment with go:generate
 		// which causes this command to be executed.
-		if i.typeName != "" {
-			return nil
+		if i.typeName != "" || i.all {
+			return i
 		}
 		if !t.Pos().IsValid() {
-			return nil
+			return i
 		}
 		var line int
 		for l, pos := range i.lines {
@@ -61,11 +77,11 @@ func (i *inspector) Visit(n ast.Node) ast.Visitor {
 			line = l + 1
 		}
 		if line != i.execLine {
-			return nil
+			return i
 		}
 
 		i.pendingType = true
-		return nil
+		return i
 	case *ast.TypeSpec:
 		var generate bool
 		if i.typeName != "" && t.Name != nil && t.Name.Name == i.typeName {
@@ -74,28 +90,21 @@ func (i *inspector) Visit(n ast.Node) ast.Visitor {
 		if i.typeName == "" && i.pendingType {
 			generate = true
 		}
+		if i.all {
+			generate = true
+		}
 		if !generate {
 			return i
 		}
 
 		if st, ok := t.Type.(*ast.StructType); ok {
+			scope := i.getScope(t)
 			for _, field := range st.Fields.List {
-				if field.Tag == nil {
+				var item EnvDocItem
+				if !parseField(field, &item) {
 					continue
 				}
-				var item docItem
-				if !parseTag(field.Tag.Value, &item) {
-					continue
-				}
-				item.doc = strings.TrimSpace(field.Doc.Text())
-				if item.doc == "" && field.Comment != nil {
-					item.doc = strings.TrimSpace(field.Comment.Text())
-				}
-				// Check if the field type is a slice or array
-				if _, ok := field.Type.(*ast.ArrayType); ok && item.separator == "" {
-					item.separator = ","
-				}
-				i.items = append(i.items, item)
+				scope.Vars = append(scope.Vars, item)
 			}
 		}
 		// reset pending type flag event if this type
@@ -103,6 +112,13 @@ func (i *inspector) Visit(n ast.Node) ast.Visitor {
 		i.pendingType = false
 	}
 	return i
+}
+
+func parseType(t *ast.TypeSpec, out *EnvScope) {
+	typeName := t.Name.Name
+	out.Doc = strings.TrimSpace(t.Doc.Text())
+	out.Name = typeName
+	out.typeName = typeName
 }
 
 func getTagValues(tag, tagName string) []string {
@@ -123,7 +139,12 @@ func getTagValues(tag, tagName string) []string {
 	return strings.Split(tagValue, ",")
 }
 
-func parseTag(tag string, out *docItem) bool {
+func parseField(f *ast.Field, out *EnvDocItem) bool {
+	if f.Tag == nil {
+		return false
+	}
+
+	tag := f.Tag.Value
 	if !strings.Contains(tag, "env:") {
 		return false
 	}
@@ -132,30 +153,44 @@ func parseTag(tag string, out *docItem) bool {
 	if len(tagValues) == 0 {
 		return false
 	}
-	out.envName = tagValues[0]
+	out.Name = tagValues[0]
+	if f.Doc != nil {
+		out.Doc = strings.TrimSpace(f.Doc.Text())
+	}
+	if out.Doc == "" && f.Comment != nil {
+		out.Doc = strings.TrimSpace(f.Comment.Text())
+	}
+
+	var opts EnvVarOptions
 	for _, tagValue := range tagValues[1:] {
 		switch tagValue {
 		case "required":
-			out.flags |= docItemFlagRequired
+			opts.Required = true
 		case "expand":
-			out.flags |= docItemFlagExpand
+			opts.Expand = true
 		case "notEmpty":
-			out.flags |= docItemFlagRequired
-			out.flags |= docItemFlagNonEmpty
+			opts.Required = true
+			opts.NonEmpty = true
 		case "file":
-			out.flags |= docItemFlagFromFile
+			opts.FromFile = true
 		}
 	}
 
 	envDefault := getTagValues(tag, "envDefault")
 	if len(envDefault) > 0 {
-		out.envDefault = strings.Join(envDefault, ",")
+		opts.Default = strings.Join(envDefault, ",")
 	}
 
 	envSeparator := getTagValues(tag, "envSeparator")
 	if len(envSeparator) > 0 {
-		out.separator = envSeparator[0]
+		opts.Separator = envSeparator[0]
 	}
+	// Check if the field type is a slice or array
+	if _, ok := f.Type.(*ast.ArrayType); ok && opts.Separator == "" {
+		opts.Separator = ","
+	}
+
+	out.Opts = opts
 
 	return true
 }

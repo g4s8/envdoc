@@ -34,12 +34,23 @@ func TestOptions(t *testing.T) {
 			})
 		}
 	})
-	t.Run("empty", func(t *testing.T) {
-		_, err := newGenerator("stub", 1)
-		if err == nil {
-			t.Error("expected error, got nil")
+	t.Run("WithAll", func(t *testing.T) {
+		g, err := newGenerator("stub", 1, withAll())
+		if err != nil {
+			t.Fatal("new generator error", err)
 		}
-		t.Logf("got expected error: %v", err)
+		if g.all != true {
+			t.Fatal("expected all to be true")
+		}
+	})
+	t.Run("empty", func(t *testing.T) {
+		g, err := newGenerator("stub", 1)
+		if err != nil {
+			t.Fatal("create new generator", err)
+		}
+		if tmpl := g.tmpl; tmpl != tmplMarkdown {
+			t.Fatal("invalid default template", tmpl)
+		}
 	})
 }
 
@@ -66,7 +77,7 @@ func TestGenerator(t *testing.T) {
 	})
 	t.Run("broken-out", func(t *testing.T) {
 		src := path.Join(t.TempDir(), "example.go")
-		if err := copyTestFile("testdata/example_tags.go", src); err != nil {
+		if err := copyTestFile("testdata/tags.go", src); err != nil {
 			t.Fatal("copy test file error", err)
 		}
 		g, err := newGenerator(src, 1, withFormat(""))
@@ -80,7 +91,7 @@ func TestGenerator(t *testing.T) {
 	})
 	t.Run("success", func(t *testing.T) {
 		src := path.Join(t.TempDir(), "example.go")
-		if err := copyTestFile("testdata/example_tags.go", src); err != nil {
+		if err := copyTestFile("testdata/tags.go", src); err != nil {
 			t.Fatal("copy test file error", err)
 		}
 		g, err := newGenerator(src, 1, withFormat(""))

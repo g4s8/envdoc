@@ -2,7 +2,7 @@
 <html lang="en">
     <head>
     <meta charset="utf-8">
-    <title>Environment Variables</title>
+    <title>{{ .Title }}</title>
     <style>
 * {
   box-sizing: border-box;
@@ -19,6 +19,13 @@ article {
   line-height: 1.5;
   word-wrap: break-word;
   display: block;
+  padding: 32px;
+}
+article::first-child {
+  margin-top: 0 !important;
+}
+article::last-child {
+  margin-bottom: 0 !important;
 }
 section {
   margin-top: 46px;
@@ -30,13 +37,19 @@ section {
   margin-top: 46px;
   -moz-box-pack: center;
 }
-h1 {
-  padding-bottom: .3em;
-  font-size: 2em;
-  border-bottom: 1px solid hsla(210,18%,87%,1);
+h1, h2 {
+  margin-top: 24px;
   margin-bottom: 16px;
-  font-weight: 600;
   line-height: 1.25;
+  font-weight: 600;
+  padding-bottom: .3em;
+  border-bottom: 1px solid hsla(210,18%,87%,1);
+}
+h1 {
+  font-size: 2em;
+}
+h2 {
+  font-size: 1.5em;
 }
 li {
   margin-top: .25em;
@@ -49,7 +62,6 @@ li code {
   background-color: rgba(175,184,193,0.2);
   border-radius: 6px;
 }
-
 li strong {
     font-weight: 600;
 }
@@ -58,7 +70,12 @@ li strong {
   <body>
     <section>
       <article>
-        <h1>Environment Variables</h1>
+        <h1>{{ .Title }}</h1>
+{{ range .Sections }}
+  <h2>{{ .Name }}</h2>
+{{ if ne .Doc "" -}}
+<p>{{ .Doc }}</p>
+{{- end }}
   <ul>
 {{ range .Items }}    <li>
     {{- $comma := false -}}
@@ -96,7 +113,9 @@ li strong {
     {{- if $comma }}) {{ else }} {{ end -}}
  - {{ .Doc -}}
     </li>
-{{ end }}  </ul>
+{{ end }}
+  </ul>
+{{ end }}
       </article>
     </section>
   </body>
