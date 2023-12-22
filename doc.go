@@ -32,7 +32,9 @@ Options:
   - `-output` - Output file name.
   - `-type` - Type name to generate documentation for. Defaults for
     the next type after `go:generate` directive.
-  - `-format` (optional, default: `markdown`): Set output format type, either `markdown`,
+  - `-format` (default: `markdown`) - Set output format type, either `markdown`,
     `plaintext` or `html`.
+  - `-all` - Generate documentation for all types in the file.
+  - `-env-prefix` - Environment variable prefix.
 */
 package main
