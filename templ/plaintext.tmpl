@@ -1,6 +1,10 @@
-ENVIRONMENT VARIABLES
-
-{{range .Items -}}
+{{ .Title }}
+{{ range .Sections }}
+## {{ .Name }}
+{{ if ne .Doc "" }}
+{{ .Doc }}
+{{ end }}
+{{ range .Items }}
   {{- $comma := false -}}
   {{- .EnvName | printf " * `%s`" -}}
   {{- if eq .EnvSeparator "," -}}
@@ -35,4 +39,5 @@ ENVIRONMENT VARIABLES
   {{- end -}}
   {{- if $comma }}) {{ else }} {{ end -}}
  - {{.Doc}}
+{{ end -}}
 {{ end -}}

@@ -4,11 +4,16 @@ import (
 	"embed"
 	"fmt"
 	"io"
-	"strings"
 
 	htmltmpl "html/template"
 	texttmpl "text/template"
 )
+
+type renderSection struct {
+	Name  string
+	Doc   string
+	Items []renderItem
+}
 
 type renderItem struct {
 	EnvName      string
@@ -23,24 +28,34 @@ type renderItem struct {
 }
 
 type renderContext struct {
-	Items []renderItem
+	Title    string
+	Sections []renderSection
 }
 
-func newRenderContext(items []docItem) renderContext {
+func newRenderContext(scopes []*EnvScope) renderContext {
 	res := renderContext{
-		Items: make([]renderItem, len(items)),
+		Sections: make([]renderSection, len(scopes)),
 	}
-	for i, item := range items {
-		res.Items[i] = renderItem{
-			EnvName:      item.envName,
-			Doc:          item.doc,
-			EnvDefault:   item.envDefault,
-			EnvSeparator: item.separator,
-			Required:     item.flags&docItemFlagRequired != 0,
-			Expand:       item.flags&docItemFlagExpand != 0,
-			NonEmpty:     item.flags&docItemFlagNonEmpty != 0,
-			FromFile:     item.flags&docItemFlagFromFile != 0,
+	res.Title = "Environment Variables"
+	for i, scope := range scopes {
+		section := renderSection{
+			Name:  scope.Name,
+			Doc:   scope.Doc,
+			Items: make([]renderItem, len(scope.Vars)),
 		}
+		for j, item := range scope.Vars {
+			section.Items[j] = renderItem{
+				EnvName:      item.Name,
+				Doc:          item.Doc,
+				EnvDefault:   item.Opts.Default,
+				EnvSeparator: item.Opts.Separator,
+				Required:     item.Opts.Required,
+				Expand:       item.Opts.Expand,
+				NonEmpty:     item.Opts.NonEmpty,
+				FromFile:     item.Opts.FromFile,
+			}
+		}
+		res.Sections[i] = section
 	}
 	return res
 }
@@ -48,17 +63,10 @@ func newRenderContext(items []docItem) renderContext {
 //go:embed templ
 var templates embed.FS
 
-var renderFns = map[string]any{
-	"join": strings.Join,
-	"appendS": func(s []string, v string) []string {
-		return append(s, v)
-	},
-}
-
 var (
-	tmplMarkdown  = texttmpl.Must(texttmpl.ParseFS(templates, "templ/markdown.tmpl")).Funcs(renderFns)
-	tmplHTML      = htmltmpl.Must(htmltmpl.ParseFS(templates, "templ/html.tmpl")).Funcs(renderFns)
-	tmplPlaintext = texttmpl.Must(texttmpl.ParseFS(templates, "templ/plaintext.tmpl")).Funcs(renderFns)
+	tmplMarkdown  = texttmpl.Must(texttmpl.ParseFS(templates, "templ/markdown.tmpl"))
+	tmplHTML      = htmltmpl.Must(htmltmpl.ParseFS(templates, "templ/html.tmpl"))
+	tmplPlaintext = texttmpl.Must(texttmpl.ParseFS(templates, "templ/plaintext.tmpl"))
 )
 
 type template interface {

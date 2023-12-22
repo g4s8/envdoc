@@ -13,12 +13,14 @@ type appConfig struct {
 	outputFileName string
 	inputFileName  string
 	execLine       int
+	all            bool
 }
 
 func (cfg *appConfig) parseFlags(f *flag.FlagSet) error {
 	f.StringVar(&cfg.outputFileName, "output", "", "Output file name")
 	f.StringVar(&cfg.typeName, "type", "", "Type name")
 	f.StringVar(&cfg.formatName, "format", "", "Output format, default `markdown`")
+	f.BoolVar(&cfg.all, "all", false, "Generate documentation for all types in the file")
 	if err := f.Parse(os.Args[1:]); err != nil {
 		return fmt.Errorf("parsing CLI args: %w", err)
 	}
@@ -49,20 +51,27 @@ func (cfg *appConfig) parseEnv() error {
 }
 
 func main() {
-	var cfg appConfig
-	flagSet := flag.NewFlagSet(os.Args[0], flag.ExitOnError)
-	if err := cfg.parseFlags(flagSet); err != nil {
-		flagSet.Usage()
-		fatal("Invalid CLI args:", err)
+	cfg, err := getConfig()
+	if err != nil {
+		fatal(err)
 	}
-
-	if err := cfg.parseEnv(); err != nil {
-		fatal("Invalid environment:", err)
-	}
-
 	if err := run(&cfg); err != nil {
 		fatal("Generate error:", err)
 	}
+}
+
+func getConfig() (appConfig, error) {
+	var cfg appConfig
+	flagSet := flag.NewFlagSet(os.Args[0], flag.ContinueOnError)
+	if err := cfg.parseFlags(flagSet); err != nil {
+		flagSet.Usage()
+		return cfg, fmt.Errorf("invalid CLI args: %w", err)
+	}
+
+	if err := cfg.parseEnv(); err != nil {
+		return cfg, fmt.Errorf("invalid environment: %w", err)
+	}
+	return cfg, nil
 }
 
 func run(cfg *appConfig) (err error) {
@@ -76,8 +85,16 @@ func run(cfg *appConfig) (err error) {
 		}
 	})
 
-	gen, err := newGenerator(cfg.inputFileName, cfg.execLine,
-		withType(cfg.typeName), withFormat(cfg.formatName))
+	var opts []generatorOption
+	if cfg.all {
+		opts = append(opts, withAll())
+	} else if cfg.typeName != "" {
+		opts = append(opts, withType(cfg.typeName))
+	}
+	if cfg.formatName != "" {
+		opts = append(opts, withFormat(cfg.formatName))
+	}
+	gen, err := newGenerator(cfg.inputFileName, cfg.execLine, opts...)
 	if err != nil {
 		return fmt.Errorf("creating generator: %w", err)
 	}

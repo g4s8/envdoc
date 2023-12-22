@@ -9,6 +9,7 @@ type generator struct {
 	fileName   string
 	execLine   int
 	targetType string
+	all        bool // generate documentation for all types in the file
 	tmpl       template
 }
 
@@ -17,6 +18,15 @@ type generatorOption func(*generator) error
 func withType(targetType string) generatorOption {
 	return func(g *generator) error {
 		g.targetType = targetType
+		g.all = false
+		return nil
+	}
+}
+
+func withAll() generatorOption {
+	return func(g *generator) error {
+		g.targetType = ""
+		g.all = true
 		return nil
 	}
 }
@@ -47,13 +57,13 @@ func newGenerator(fileName string, execLine int, opts ...generatorOption) (*gene
 		}
 	}
 	if g.tmpl == nil {
-		return nil, fmt.Errorf("format is not specified")
+		g.tmpl = tmplMarkdown
 	}
 	return g, nil
 }
 
 func (g *generator) generate(out io.Writer) error {
-	insp := newInspector(g.targetType, g.execLine)
+	insp := newInspector(g.targetType, g.all, g.execLine)
 	err, data := insp.inspectFile(g.fileName)
 	if err != nil {
 		return fmt.Errorf("inspect file: %w", err)

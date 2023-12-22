@@ -1,19 +1,38 @@
 package main
 
-type docItemFlags int
+// EnvDocItem is a documentation item for one environment variable.
+type EnvDocItem struct {
+	// Name of the environment variable.
+	Name string
+	// Doc is a documentation text for the environment variable.
+	Doc string
+	// Opts is a set of options for environment variable parsing.
+	Opts EnvVarOptions
+}
 
-const (
-	docItemFlagNone     docItemFlags = 0
-	docItemFlagRequired docItemFlags = 1 << iota
-	docItemFlagExpand
-	docItemFlagNonEmpty
-	docItemFlagFromFile
-)
+type EnvScope struct {
+	// Name of the scope.
+	Name string
+	// Doc is a documentation text for the scope.
+	Doc string
+	// Vars is a list of environment variables.
+	Vars []EnvDocItem
 
-type docItem struct {
-	envName    string // environment variable name
-	doc        string // field documentation text
-	separator  string // separator for array types, not used for other types
-	flags      docItemFlags
-	envDefault string
+	typeName string // the internal name of the type associated with the scope
+}
+
+// EnvVarOptions is a set of options for environment variable parsing.
+type EnvVarOptions struct {
+	// Separator is a separator for array types.
+	Separator string
+	// Required is a flag that enables required check.
+	Required bool
+	// Expand is a flag that enables environment variable expansion.
+	Expand bool
+	// NonEmpty is a flag that enables non-empty check.
+	NonEmpty bool
+	// FromFile is a flag that enables reading environment variable from a file.
+	FromFile bool
+	// Default is a default value for the environment variable.
+	Default string
 }

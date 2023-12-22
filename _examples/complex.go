@@ -4,9 +4,9 @@ package main
 // It contains a few fields with different types of tags.
 // It is trying to cover all the possible cases.
 //
-//go:generate go run ../ -output complex.html -format html
-//go:generate go run ../ -output complex.md -type ComplexConfig
-//go:generate go run ../ -output complex.txt -format plaintext
+//go:generate go run ../ -output complex.html -all -format html
+//go:generate go run ../ -output complex.md -all
+//go:generate go run ../ -output complex.txt -all -format plaintext
 type ComplexConfig struct {
 	// Secret is a secret value that is read from a file.
 	Secret string `env:"SECRET,file"`
@@ -25,4 +25,10 @@ type ComplexConfig struct {
 	Words []string `env:"WORDS,file" envDefault:"one,two,three"`
 
 	Comment string `env:"COMMENT,required" envDefault:"This is a comment."` // Just a comment.
+}
+
+// NextConfig is an example configuration structure.
+type NextConfig struct { // NextConfig is a configuration structure.
+	// Mount is a mount point.
+	Mount string `env:"MOUNT,required"`
 }
