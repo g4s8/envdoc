@@ -18,3 +18,9 @@ It is trying to cover all the possible cases.
 ## NextConfig
 
  - `X_MOUNT` (**required**) - Mount is a mount point.
+
+## FieldNames
+
+FieldNames uses field names as env names.
+
+ - `X_QUUX` - Quux is a field with a tag.

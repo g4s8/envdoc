@@ -16,6 +16,7 @@ type appConfig struct {
 	all            bool
 	envPrefix      string
 	noStyles       bool
+	fieldNames     bool
 }
 
 func (cfg *appConfig) parseFlags(f *flag.FlagSet) error {
@@ -25,6 +26,7 @@ func (cfg *appConfig) parseFlags(f *flag.FlagSet) error {
 	f.BoolVar(&cfg.all, "all", false, "Generate documentation for all types in the file")
 	f.StringVar(&cfg.envPrefix, "env-prefix", "", "Environment variable prefix")
 	f.BoolVar(&cfg.noStyles, "no-styles", false, "Disable styles in html output")
+	f.BoolVar(&cfg.fieldNames, "field-names", false, "Use field names if tag is not specified")
 	if err := f.Parse(os.Args[1:]); err != nil {
 		return fmt.Errorf("parsing CLI args: %w", err)
 	}
@@ -103,6 +105,9 @@ func run(cfg *appConfig) (err error) {
 	}
 	if cfg.noStyles {
 		opts = append(opts, withNoStyles())
+	}
+	if cfg.fieldNames {
+		opts = append(opts, withFieldNames())
 	}
 	gen, err := newGenerator(cfg.inputFileName, cfg.execLine, opts...)
 	if err != nil {

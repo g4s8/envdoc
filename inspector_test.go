@@ -2,6 +2,7 @@ package main
 
 import (
 	"embed"
+	"errors"
 	"fmt"
 	"go/ast"
 	"io"
@@ -12,9 +13,12 @@ import (
 
 func TestTagParsers(t *testing.T) {
 	type testCase struct {
-		tag    string
-		expect EnvDocItem
-		fail   bool
+		tag           string
+		names         []string
+		useFieldNames bool
+		expect        EnvDocItem
+		expectList    []EnvDocItem
+		fail          bool
 	}
 	for i, c := range []testCase{
 		{tag: "", fail: true},
@@ -60,21 +64,83 @@ func TestTagParsers(t *testing.T) {
 				Opts: EnvVarOptions{Separator: ";"},
 			},
 		},
+		{
+			names: []string{"Foo", "BarBaz"},
+			expectList: []EnvDocItem{
+				{Name: "FOO"},
+				{Name: "BAR_BAZ"},
+			},
+			useFieldNames: true,
+		},
+		{
+			names: []string{"Foo"},
+			tag:   `env:",required"`,
+			expectList: []EnvDocItem{
+				{Name: "FOO", Opts: EnvVarOptions{Required: true}},
+			},
+			useFieldNames: true,
+		},
 	} {
 		t.Run(fmt.Sprint(i), func(t *testing.T) {
-			var out EnvDocItem
+			fieldNames := make([]*ast.Ident, len(c.names))
+			for i, name := range c.names {
+				fieldNames[i] = &ast.Ident{Name: name}
+			}
+			var tag *ast.BasicLit
+			if c.tag != "" {
+				tag = &ast.BasicLit{Value: c.tag}
+			}
 			field := &ast.Field{
-				Tag: &ast.BasicLit{Value: c.tag},
+				Tag:   tag,
+				Names: fieldNames,
 			}
 
-			ok := parseField(field, &out)
-			if ok != !c.fail {
-				t.Error("parseTag returned false")
+			i := inspector{
+				useFieldNames: c.useFieldNames,
 			}
-			if out != c.expect {
-				t.Errorf("parseTag of `%s` returned wrong result: %+v; expected: %+v", c.tag, out, c.expect)
+
+			expect := c.expectList
+			if len(expect) == 0 && c.expect.Name != "" {
+				expect = []EnvDocItem{c.expect}
+			}
+
+			actual := i.parseField(field)
+			if c.fail {
+				if actual != nil {
+					t.Errorf("expected nil, got %#v", actual)
+				}
+				return
+			}
+			if len(expect) != len(actual) {
+				t.Errorf("expected %d items, got %d", len(expect), len(actual))
+			}
+			for i, e := range expect {
+				a := actual[i]
+				if e.Name != a.Name {
+					t.Errorf("expected[%d] name %q, got %q", i, e.Name, a.Name)
+				}
+				if e.Doc != a.Doc {
+					t.Errorf("expected[%d] doc %q, got %q", i, e.Doc, a.Doc)
+				}
+				if e.Opts != a.Opts {
+					t.Errorf("expected[%d] opts %#v, got %#v", i, e.Opts, a.Opts)
+				}
 			}
 		})
+	}
+}
+
+func TestInspectorError(t *testing.T) {
+	sourceFile := path.Join(t.TempDir(), "tmp.go")
+	if err := copyTestFile(path.Join("testdata", "type.go"), sourceFile); err != nil {
+		t.Fatal("Copy test file data", err)
+	}
+	insp := newInspector("", true, 0, false)
+	targetErr := errors.New("target error")
+	insp.err = targetErr
+	_, err := insp.inspectFile(sourceFile)
+	if err != targetErr {
+		t.Errorf("Expected error %q, got %q", targetErr, err)
 	}
 }
 
@@ -252,7 +318,7 @@ func inspectorTester(name string, typeName string, all bool, lineN int, expect [
 		if err := copyTestFile(path.Join("testdata", name), sourceFile); err != nil {
 			t.Fatal("Copy test file data", err)
 		}
-		insp := newInspector(typeName, all, lineN)
+		insp := newInspector(typeName, all, lineN, false)
 		scopes, err := insp.inspectFile(sourceFile)
 		if err != nil {
 			t.Fatal("Inspector failed", err)

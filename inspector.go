@@ -10,9 +10,10 @@ import (
 )
 
 type inspector struct {
-	typeName string // type name to generate documentation for, could be empty
-	all      bool   // generate documentation for all types in the file
-	execLine int    // line number of the go:generate directive
+	typeName      string // type name to generate documentation for, could be empty
+	all           bool   // generate documentation for all types in the file
+	execLine      int    // line number of the go:generate directive
+	useFieldNames bool   // use field names if tag is not specified
 
 	fileSet     *token.FileSet
 	lines       []int
@@ -22,8 +23,8 @@ type inspector struct {
 	err         error
 }
 
-func newInspector(typeName string, all bool, execLine int) *inspector {
-	return &inspector{typeName: typeName, all: all, execLine: execLine}
+func newInspector(typeName string, all bool, execLine int, useFieldNames bool) *inspector {
+	return &inspector{typeName: typeName, all: all, execLine: execLine, useFieldNames: useFieldNames}
 }
 
 func (i *inspector) inspectFile(fileName string) ([]*EnvScope, error) {
@@ -44,19 +45,17 @@ func (i *inspector) inspect(node ast.Node) ([]*EnvScope, error) {
 	return i.items, i.err
 }
 
-func (i *inspector) getScope(t *ast.TypeSpec) (out *EnvScope) {
+func (i *inspector) getScope(t *ast.TypeSpec) *EnvScope {
 	typeName := t.Name.Name
 	for _, s := range i.items {
 		if s.typeName == typeName {
-			out = s
-			return
+			return s
 		}
 	}
 
-	out = new(EnvScope)
-	parseType(t, i.doc, out)
-	i.items = append(i.items, out)
-	return
+	s := i.parseType(t)
+	i.items = append(i.items, s)
+	return s
 }
 
 func (i *inspector) Visit(n ast.Node) ast.Visitor {
@@ -114,11 +113,11 @@ func (i *inspector) Visit(n ast.Node) ast.Visitor {
 		if st, ok := t.Type.(*ast.StructType); ok {
 			scope := i.getScope(t)
 			for _, field := range st.Fields.List {
-				var item EnvDocItem
-				if !parseField(field, &item) {
+				items := i.parseField(field)
+				if len(items) == 0 {
 					continue
 				}
-				scope.Vars = append(scope.Vars, item)
+				scope.Vars = append(scope.Vars, items...)
 			}
 		}
 		// reset pending type flag event if this type
@@ -128,19 +127,22 @@ func (i *inspector) Visit(n ast.Node) ast.Visitor {
 	return i
 }
 
-func parseType(t *ast.TypeSpec, doc *doc.Package, out *EnvScope) {
+func (i *inspector) parseType(t *ast.TypeSpec) *EnvScope {
 	typeName := t.Name.Name
-	out.Doc = strings.TrimSpace(t.Doc.Text())
-	if out.Doc == "" {
-		for _, t := range doc.Types {
+	docStr := strings.TrimSpace(t.Doc.Text())
+	if docStr == "" {
+		for _, t := range i.doc.Types {
 			if t.Name == typeName {
-				out.Doc = strings.TrimSpace(t.Doc)
+				docStr = strings.TrimSpace(t.Doc)
 				break
 			}
 		}
 	}
-	out.Name = typeName
-	out.typeName = typeName
+	return &EnvScope{
+		Name:     typeName,
+		Doc:      docStr,
+		typeName: typeName,
+	}
 }
 
 func getTagValues(tag, tagName string) []string {
@@ -161,40 +163,54 @@ func getTagValues(tag, tagName string) []string {
 	return strings.Split(tagValue, ",")
 }
 
-func parseField(f *ast.Field, out *EnvDocItem) bool {
-	if f.Tag == nil {
-		return false
+func (i *inspector) parseField(f *ast.Field) (out []EnvDocItem) {
+	if f.Tag == nil && !i.useFieldNames {
+		return
 	}
 
-	tag := f.Tag.Value
-	if !strings.Contains(tag, "env:") {
-		return false
+	var tag string
+	if t := f.Tag; t != nil {
+		tag = t.Value
+	}
+	if !strings.Contains(tag, "env:") && !i.useFieldNames {
+		return
 	}
 
 	tagValues := getTagValues(tag, "env")
-	if len(tagValues) == 0 {
-		return false
+	if len(tagValues) > 0 && tagValues[0] != "" {
+		var item EnvDocItem
+		item.Name = tagValues[0]
+		out = []EnvDocItem{item}
+	} else if i.useFieldNames {
+		out = make([]EnvDocItem, len(f.Names))
+		for i, name := range f.Names {
+			out[i].Name = camelToSnake(name.Name)
+		}
+	} else {
+		return
 	}
-	out.Name = tagValues[0]
-	if f.Doc != nil {
-		out.Doc = strings.TrimSpace(f.Doc.Text())
+	docStr := strings.TrimSpace(f.Doc.Text())
+	if docStr == "" {
+		docStr = strings.TrimSpace(f.Comment.Text())
 	}
-	if out.Doc == "" && f.Comment != nil {
-		out.Doc = strings.TrimSpace(f.Comment.Text())
+	for i := range out {
+		out[i].Doc = docStr
 	}
 
 	var opts EnvVarOptions
-	for _, tagValue := range tagValues[1:] {
-		switch tagValue {
-		case "required":
-			opts.Required = true
-		case "expand":
-			opts.Expand = true
-		case "notEmpty":
-			opts.Required = true
-			opts.NonEmpty = true
-		case "file":
-			opts.FromFile = true
+	if len(tagValues) > 1 {
+		for _, tagValue := range tagValues[1:] {
+			switch tagValue {
+			case "required":
+				opts.Required = true
+			case "expand":
+				opts.Expand = true
+			case "notEmpty":
+				opts.Required = true
+				opts.NonEmpty = true
+			case "file":
+				opts.FromFile = true
+			}
 		}
 	}
 
@@ -212,7 +228,8 @@ func parseField(f *ast.Field, out *EnvDocItem) bool {
 		opts.Separator = ","
 	}
 
-	out.Opts = opts
-
-	return true
+	for i := range out {
+		out[i].Opts = opts
+	}
+	return
 }

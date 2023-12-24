@@ -16,6 +16,7 @@ func TestConfig(t *testing.T) {
 			"-no-styles",
 			"-format", "markdown",
 			"-env-prefix", "TEST_",
+			"-field-names",
 			"-all",
 		}
 		t.Setenv("GOFILE", "test.go")
@@ -42,6 +43,9 @@ func TestConfig(t *testing.T) {
 		}
 		if !cfg.noStyles {
 			t.Fatal("Invalid no styles flag")
+		}
+		if !cfg.fieldNames {
+			t.Fatal("Invalid field names flag")
 		}
 
 		if err := cfg.parseEnv(); err != nil {
@@ -129,9 +133,31 @@ func TestMainRun(t *testing.T) {
 			inputFileName:  inputFile,
 			execLine:       0,
 			envPrefix:      "TEST_",
+			noStyles:       true,
+			fieldNames:     true,
+			all:            true,
 		}
 		if err := run(&config); err != nil {
 			t.Fatal("run", err)
 		}
+	})
+	t.Run("bad-out", func(t *testing.T) {
+		inputFile := path.Join(t.TempDir(), "example.go")
+		if err := copyTestFile(path.Join("testdata", "type.go"), inputFile); err != nil {
+			t.Fatal("copy test file", err)
+		}
+		config := appConfig{
+			typeName:       "Type1",
+			formatName:     "markdown",
+			outputFileName: "",
+			inputFileName:  inputFile,
+			execLine:       0,
+			envPrefix:      "TEST_",
+		}
+		err := run(&config)
+		if err == nil {
+			t.Fatal("Expect error for invalid output file name")
+		}
+		t.Logf("Got error as expected: %v", err)
 	})
 }

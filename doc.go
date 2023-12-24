@@ -37,5 +37,7 @@ Options:
   - `-all` - Generate documentation for all types in the file.
   - `-env-prefix` - Environment variable prefix.
   - `-no-styles` - Disable built-int CSS styles for HTML format.
+  - `-field-names` - Use field names instead of struct tags for variable names
+    if tags are not set.
 */
 package main

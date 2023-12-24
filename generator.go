@@ -13,6 +13,7 @@ type generator struct {
 	tmpl       template
 	prefix     string
 	noStyles   bool
+	fieldNames bool
 }
 
 type generatorOption func(*generator) error
@@ -65,6 +66,13 @@ func withNoStyles() generatorOption {
 	}
 }
 
+func withFieldNames() generatorOption {
+	return func(g *generator) error {
+		g.fieldNames = true
+		return nil
+	}
+}
+
 func newGenerator(fileName string, execLine int, opts ...generatorOption) (*generator, error) {
 	g := &generator{fileName: fileName, execLine: execLine}
 	for _, opt := range opts {
@@ -79,7 +87,7 @@ func newGenerator(fileName string, execLine int, opts ...generatorOption) (*gene
 }
 
 func (g *generator) generate(out io.Writer) error {
-	insp := newInspector(g.targetType, g.all, g.execLine)
+	insp := newInspector(g.targetType, g.all, g.execLine, g.fieldNames)
 	data, err := insp.inspectFile(g.fileName)
 	if err != nil {
 		return fmt.Errorf("inspect file: %w", err)
