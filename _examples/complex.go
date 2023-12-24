@@ -8,6 +8,7 @@ package main
 //go:generate go run ../ -output complex.md -all
 //go:generate go run ../ -output complex.txt -all -format plaintext
 //go:generate go run ../ -output x_complex.md -all -env-prefix X_
+//go:generate go run ../ -output complex-nostyle.html -format html -all -no-styles
 type ComplexConfig struct {
 	// Secret is a secret value that is read from a file.
 	Secret string `env:"SECRET,file"`

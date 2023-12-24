@@ -3,6 +3,7 @@
     <head>
     <meta charset="utf-8">
     <title>{{ .Title }}</title>
+{{ if .Styles -}}
     <style>
 * {
   box-sizing: border-box;
@@ -70,6 +71,7 @@ p {
   margin-bottom: 16px;
 }
     </style>
+{{- end }}
   </head>
   <body>
     <section>

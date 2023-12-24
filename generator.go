@@ -12,6 +12,7 @@ type generator struct {
 	all        bool // generate documentation for all types in the file
 	tmpl       template
 	prefix     string
+	noStyles   bool
 }
 
 type generatorOption func(*generator) error
@@ -57,6 +58,13 @@ func withPrefix(prefix string) generatorOption {
 	}
 }
 
+func withNoStyles() generatorOption {
+	return func(g *generator) error {
+		g.noStyles = true
+		return nil
+	}
+}
+
 func newGenerator(fileName string, execLine int, opts ...generatorOption) (*generator, error) {
 	g := &generator{fileName: fileName, execLine: execLine}
 	for _, opt := range opts {
@@ -77,7 +85,7 @@ func (g *generator) generate(out io.Writer) error {
 		return fmt.Errorf("inspect file: %w", err)
 	}
 	renderer := templateRenderer(g.tmpl)
-	rctx := newRenderContext(data, g.prefix)
+	rctx := newRenderContext(data, g.prefix, g.noStyles)
 	if err := renderer(rctx, out); err != nil {
 		return err
 	}

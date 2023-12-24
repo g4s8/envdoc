@@ -15,6 +15,7 @@ type appConfig struct {
 	execLine       int
 	all            bool
 	envPrefix      string
+	noStyles       bool
 }
 
 func (cfg *appConfig) parseFlags(f *flag.FlagSet) error {
@@ -23,6 +24,7 @@ func (cfg *appConfig) parseFlags(f *flag.FlagSet) error {
 	f.StringVar(&cfg.formatName, "format", "", "Output format, default `markdown`")
 	f.BoolVar(&cfg.all, "all", false, "Generate documentation for all types in the file")
 	f.StringVar(&cfg.envPrefix, "env-prefix", "", "Environment variable prefix")
+	f.BoolVar(&cfg.noStyles, "no-styles", false, "Disable styles in html output")
 	if err := f.Parse(os.Args[1:]); err != nil {
 		return fmt.Errorf("parsing CLI args: %w", err)
 	}
@@ -98,6 +100,9 @@ func run(cfg *appConfig) (err error) {
 	}
 	if cfg.envPrefix != "" {
 		opts = append(opts, withPrefix(cfg.envPrefix))
+	}
+	if cfg.noStyles {
+		opts = append(opts, withNoStyles())
 	}
 	gen, err := newGenerator(cfg.inputFileName, cfg.execLine, opts...)
 	if err != nil {

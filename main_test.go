@@ -13,6 +13,7 @@ func TestConfig(t *testing.T) {
 			"cmd",
 			"-output", "test.md",
 			"-type", "test",
+			"-no-styles",
 			"-format", "markdown",
 			"-env-prefix", "TEST_",
 			"-all",
@@ -38,6 +39,9 @@ func TestConfig(t *testing.T) {
 		}
 		if !cfg.all {
 			t.Fatal("Invalid all flag")
+		}
+		if !cfg.noStyles {
+			t.Fatal("Invalid no styles flag")
 		}
 
 		if err := cfg.parseEnv(); err != nil {

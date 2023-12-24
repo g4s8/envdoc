@@ -86,7 +86,7 @@ func TestRender(t *testing.T) {
 			`</html>`))
 	})
 	t.Run("sections", func(t *testing.T) {
-		rc := renderContext{Title: "Sections", Sections: testRenderSections}
+		rc := renderContext{Title: "Sections", Sections: testRenderSections, Styles: true}
 		t.Run("markdown", testRenderer(tmplMarkdown, rc,
 			"# Sections",
 			"## First",
@@ -107,6 +107,8 @@ func TestRender(t *testing.T) {
 			`<head>`,
 			`<meta charset="utf-8">`,
 			`<title>Sections</title>`,
+			`<style>`,
+			`</style>`,
 			`</head>`,
 			`<section>`,
 			`<article>`,
@@ -138,10 +140,13 @@ func TestNewRenderContext(t *testing.T) {
 			},
 		},
 	}
-	rc := newRenderContext(src, "PREFIX_")
+	rc := newRenderContext(src, "PREFIX_", false)
 	const title = "Environment Variables"
 	if rc.Title != title {
 		t.Errorf("expected title %q, got %q", title, rc.Title)
+	}
+	if rc.Styles != true {
+		t.Errorf("expected styles %v, got %v", true, rc.Styles)
 	}
 	if len(rc.Sections) != 1 {
 		t.Fatalf("expected 1 section, got %d", len(rc.Sections))

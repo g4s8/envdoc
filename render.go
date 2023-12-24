@@ -30,11 +30,13 @@ type renderItem struct {
 type renderContext struct {
 	Title    string
 	Sections []renderSection
+	Styles   bool
 }
 
-func newRenderContext(scopes []*EnvScope, envPrefix string) renderContext {
+func newRenderContext(scopes []*EnvScope, envPrefix string, noStyles bool) renderContext {
 	res := renderContext{
 		Sections: make([]renderSection, len(scopes)),
+		Styles:   !noStyles,
 	}
 	res.Title = "Environment Variables"
 	for i, scope := range scopes {

@@ -52,6 +52,15 @@ func TestOptions(t *testing.T) {
 			t.Fatal("expected prefix to be 'prefix'")
 		}
 	})
+	t.Run("WithNoStyles", func(t *testing.T) {
+		g, err := newGenerator("stub", 1, withNoStyles())
+		if err != nil {
+			t.Fatal("new generator error", err)
+		}
+		if g.noStyles != true {
+			t.Fatal("expected noStyles to be true")
+		}
+	})
 	t.Run("empty", func(t *testing.T) {
 		g, err := newGenerator("stub", 1)
 		if err != nil {
