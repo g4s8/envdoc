@@ -28,7 +28,6 @@ type ComplexConfig struct {
 	Comment string `env:"COMMENT,required" envDefault:"This is a comment."` // Just a comment.
 }
 
-// NextConfig is an example configuration structure.
 type NextConfig struct { // NextConfig is a configuration structure.
 	// Mount is a mount point.
 	Mount string `env:"MOUNT,required"`

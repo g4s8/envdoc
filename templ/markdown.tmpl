@@ -3,6 +3,9 @@
 {{ if ne .Name "" }}
 ## {{ .Name }}
 {{ end }}
+{{- if ne .Doc "" }}
+{{ .Doc }}
+{{ end }}
 {{ range .Items }}
   {{- $comma := false -}}
   {{- .EnvName | printf " - `%s`" -}}

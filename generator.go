@@ -72,7 +72,7 @@ func newGenerator(fileName string, execLine int, opts ...generatorOption) (*gene
 
 func (g *generator) generate(out io.Writer) error {
 	insp := newInspector(g.targetType, g.all, g.execLine)
-	err, data := insp.inspectFile(g.fileName)
+	data, err := insp.inspectFile(g.fileName)
 	if err != nil {
 		return fmt.Errorf("inspect file: %w", err)
 	}

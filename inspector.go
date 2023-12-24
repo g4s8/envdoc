@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"go/ast"
+	"go/doc"
 	"go/parser"
 	"go/token"
 	"strings"
@@ -13,32 +14,34 @@ type inspector struct {
 	all      bool   // generate documentation for all types in the file
 	execLine int    // line number of the go:generate directive
 
+	fileSet     *token.FileSet
 	lines       []int
 	pendingType bool
 	items       []*EnvScope
+	doc         *doc.Package
+	err         error
 }
 
 func newInspector(typeName string, all bool, execLine int) *inspector {
 	return &inspector{typeName: typeName, all: all, execLine: execLine}
 }
 
-func (i *inspector) inspectFile(fileName string) (error, []*EnvScope) {
-	fset := token.NewFileSet()
-	file, err := parser.ParseFile(fset, fileName, nil, parser.ParseComments)
+func (i *inspector) inspectFile(fileName string) ([]*EnvScope, error) {
+	i.fileSet = token.NewFileSet()
+	file, err := parser.ParseFile(i.fileSet, fileName, nil, parser.ParseComments)
 	if err != nil {
-		return fmt.Errorf("parse file: %w", err), nil
+		return nil, fmt.Errorf("parse file: %w", err)
 	}
 	// get a lines to position map for the file.
-	f := fset.File(file.Pos())
+	f := i.fileSet.File(file.Pos())
 	i.lines = f.Lines()
-	items := i.inspect(file)
-	return nil, items
+	return i.inspect(file)
 }
 
-func (i *inspector) inspect(node ast.Node) []*EnvScope {
+func (i *inspector) inspect(node ast.Node) ([]*EnvScope, error) {
 	i.items = make([]*EnvScope, 0)
 	ast.Walk(i, node)
-	return i.items
+	return i.items, i.err
 }
 
 func (i *inspector) getScope(t *ast.TypeSpec) (out *EnvScope) {
@@ -51,13 +54,24 @@ func (i *inspector) getScope(t *ast.TypeSpec) (out *EnvScope) {
 	}
 
 	out = new(EnvScope)
-	parseType(t, out)
+	parseType(t, i.doc, out)
 	i.items = append(i.items, out)
 	return
 }
 
 func (i *inspector) Visit(n ast.Node) ast.Visitor {
+	if i.err != nil {
+		return nil
+	}
+
 	switch t := n.(type) {
+	case *ast.File:
+		var err error
+		i.doc, err = doc.NewFromFiles(i.fileSet, []*ast.File{t}, "./", doc.PreserveAST)
+		if err != nil {
+			i.err = fmt.Errorf("parse package doc: %w", err)
+			return nil
+		}
 	case *ast.Comment:
 		// if type name is not specified we should process the next type
 		// declaration after the comment with go:generate
@@ -114,9 +128,17 @@ func (i *inspector) Visit(n ast.Node) ast.Visitor {
 	return i
 }
 
-func parseType(t *ast.TypeSpec, out *EnvScope) {
+func parseType(t *ast.TypeSpec, doc *doc.Package, out *EnvScope) {
 	typeName := t.Name.Name
 	out.Doc = strings.TrimSpace(t.Doc.Text())
+	if out.Doc == "" {
+		for _, t := range doc.Types {
+			if t.Name == typeName {
+				out.Doc = strings.TrimSpace(t.Doc)
+				break
+			}
+		}
+	}
 	out.Name = typeName
 	out.typeName = typeName
 }

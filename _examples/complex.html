@@ -65,6 +65,10 @@ li code {
 li strong {
     font-weight: 600;
 }
+p {
+  margin-top: 0;
+  margin-bottom: 16px;
+}
     </style>
   </head>
   <body>
@@ -73,7 +77,9 @@ li strong {
         <h1>Environment Variables</h1>
 
   <h2>ComplexConfig</h2>
-
+<p>ComplexConfig is an example configuration structure.
+It contains a few fields with different types of tags.
+It is trying to cover all the possible cases.</p>
   <ul>
     <li><code>SECRET</code> (from-file) - Secret is a secret value that is read from a file.</li>
     <li><code>PASSWORD</code> (from-file, default: <code>/tmp/password</code>) - Password is a password that is read from a file.</li>

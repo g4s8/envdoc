@@ -253,7 +253,7 @@ func inspectorTester(name string, typeName string, all bool, lineN int, expect [
 			t.Fatal("Copy test file data", err)
 		}
 		insp := newInspector(typeName, all, lineN)
-		err, scopes := insp.inspectFile(sourceFile)
+		scopes, err := insp.inspectFile(sourceFile)
 		if err != nil {
 			t.Fatal("Inspector failed", err)
 		}
