@@ -17,8 +17,6 @@ type EnvScope struct {
 	Doc string
 	// Vars is a list of environment variables.
 	Vars []EnvDocItem
-
-	typeName string // the internal name of the type associated with the scope
 }
 
 // EnvVarOptions is a set of options for environment variable parsing.

@@ -116,14 +116,14 @@ func TestTagParsers(t *testing.T) {
 			}
 			for i, e := range expect {
 				a := actual[i]
-				if e.Name != a.Name {
-					t.Errorf("expected[%d] name %q, got %q", i, e.Name, a.Name)
+				if e.Name != a.name {
+					t.Errorf("expected[%d] name %q, got %q", i, e.Name, a.name)
 				}
-				if e.Doc != a.Doc {
-					t.Errorf("expected[%d] doc %q, got %q", i, e.Doc, a.Doc)
+				if e.Doc != a.doc {
+					t.Errorf("expected[%d] doc %q, got %q", i, e.Doc, a.doc)
 				}
-				if e.Opts != a.Opts {
-					t.Errorf("expected[%d] opts %#v, got %#v", i, e.Opts, a.Opts)
+				if e.Opts != a.opts {
+					t.Errorf("expected[%d] opts %#v, got %#v", i, e.Opts, a.opts)
 				}
 			}
 		})
@@ -249,8 +249,7 @@ func TestInspector(t *testing.T) {
 			all:  true,
 			expectScopes: []EnvScope{
 				{
-					Name:     "Foo",
-					typeName: "Foo",
+					Name: "Foo",
 					Vars: []EnvDocItem{
 						{
 							Name: "ONE",
@@ -263,8 +262,7 @@ func TestInspector(t *testing.T) {
 					},
 				},
 				{
-					Name:     "Bar",
-					typeName: "Bar",
+					Name: "Bar",
 					Vars: []EnvDocItem{
 						{
 							Name: "THREE",
@@ -278,14 +276,28 @@ func TestInspector(t *testing.T) {
 				},
 			},
 		},
+		{
+			name:     "envprefix.go",
+			typeName: "Settings",
+			expect: []EnvDocItem{
+				{
+					Name: "DB_PORT",
+					Doc:  "Port is the port to connect to",
+					Opts: EnvVarOptions{Required: true},
+				},
+				{
+					Name: "DEBUG",
+					Doc:  "Debug is the debug flag",
+				},
+			},
+		},
 	} {
 		scopes := c.expectScopes
 		if scopes == nil {
 			scopes = []EnvScope{
 				{
-					Name:     c.typeName,
-					typeName: c.typeName,
-					Vars:     c.expect,
+					Name: c.typeName,
+					Vars: c.expect,
 				},
 			}
 		}
@@ -326,30 +338,27 @@ func inspectorTester(name string, typeName string, all bool, lineN int, expect [
 		if len(scopes) != len(expect) {
 			t.Fatalf("inspector found %d scopes; expected %d", len(scopes), len(expect))
 		}
-		skipScopesCheck := len(expect) == 1 && expect[0].typeName == ""
+		skipScopesCheck := len(expect) == 1 && expect[0].Name == ""
 		for i, s := range scopes {
 			e := expect[i]
 			if !skipScopesCheck {
 				if s.Name != e.Name {
-					t.Fatalf("[%d]scope: expect name %q; expected %q", i, e.Name, s.Name)
-				}
-				if s.typeName != e.typeName {
-					t.Fatalf("[%d]scope: expect type name %q; expected %q", i, e.typeName, s.typeName)
+					t.Fatalf("[%d]scope: expect name %q; was %q", i, e.Name, s.Name)
 				}
 				if len(s.Vars) != len(e.Vars) {
-					t.Fatalf("[%d]scope: expect %d vars; expected %d", i, len(e.Vars), len(s.Vars))
+					t.Fatalf("[%d]scope: expect %d vars; was %d", i, len(e.Vars), len(s.Vars))
 				}
 			}
 			for j, v := range s.Vars {
 				ev := e.Vars[j]
 				if v.Name != ev.Name {
-					t.Fatalf("[%d]scope: var[%d]: expect name %q; expected %q", i, j, ev.Name, v.Name)
+					t.Fatalf("[%d]scope: var[%d]: expect name %q; was %q", i, j, ev.Name, v.Name)
 				}
 				if v.Doc != ev.Doc {
-					t.Fatalf("[%d]scope: var[%d]: expect doc %q; expected %q", i, j, ev.Doc, v.Doc)
+					t.Fatalf("[%d]scope: var[%d]: expect doc %q; was %q", i, j, ev.Doc, v.Doc)
 				}
 				if v.Opts != ev.Opts {
-					t.Fatalf("[%d]scope: var[%d]: expect opts %+v; expected %+v", i, j, ev.Opts, v.Opts)
+					t.Fatalf("[%d]scope: var[%d]: expect opts %+v; was %+v", i, j, ev.Opts, v.Opts)
 				}
 			}
 
