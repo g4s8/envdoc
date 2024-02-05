@@ -22,6 +22,7 @@ type envField struct {
 	doc       string
 	opts      EnvVarOptions
 	typeRef   string
+	fieldName string
 	envPrefix string
 }
 
@@ -206,6 +207,11 @@ func (i *inspector) parseField(f *ast.Field) (out []envField) {
 		item.kind = envFieldKindStruct
 		fieldType := f.Type.(*ast.Ident)
 		item.typeRef = fieldType.Name
+		fieldNames := make([]string, len(f.Names))
+		for i, name := range f.Names {
+			fieldNames[i] = name.Name
+		}
+		item.fieldName = strings.Join(fieldNames, ", ")
 		out = []envField{item}
 		return
 	}
@@ -229,6 +235,7 @@ func (i *inspector) parseField(f *ast.Field) (out []envField) {
 	} else {
 		return
 	}
+
 	docStr := strings.TrimSpace(f.Doc.Text())
 	if docStr == "" {
 		docStr = strings.TrimSpace(f.Comment.Text())
@@ -288,51 +295,51 @@ func (i *inspector) buildScopes() ([]*EnvScope, error) {
 			Doc:  s.doc,
 		}
 		for _, f := range s.fields {
-			switch f.kind {
-			case envFieldKindPlain:
-				v := EnvDocItem{
-					Name: f.name,
-					Doc:  f.doc,
-					Opts: f.opts,
-				}
-				debug("[p] add docItem: %s <- %s", scope.Name, v.Name)
-				scope.Vars = append(scope.Vars, v)
-			case envFieldKindStruct:
-				envPrefix := f.envPrefix
-				var base *envStruct
-				for _, s := range i.items {
-					if s.name == f.typeRef {
-						base = s
-						break
-					}
-				}
-				if base == nil {
-					return nil, fmt.Errorf("struct %q not found", f.typeRef)
-				}
-				for _, f := range base.fields {
-					name := fmt.Sprintf("%s%s", envPrefix, f.name)
-					v := EnvDocItem{
-						Name: name,
-						Doc:  f.doc,
-						Opts: f.opts,
-					}
-					debug("[s] add docItem: %s <- %s (prefix: %s)", scope.Name, v.Name, envPrefix)
-					scope.Vars = append(scope.Vars, v)
-				}
-			default:
-				panic("unknown field kind")
+			item, err := i.buildItem(&f, "")
+			if err != nil {
+				return nil, err
 			}
+			scope.Vars = append(scope.Vars, item)
 		}
 		scopes = append(scopes, scope)
 	}
 	return scopes, nil
 }
 
-const debugLogs = false
-
-func debug(f string, args ...any) {
-	if !debugLogs {
-		return
+func (i *inspector) buildItem(f *envField, envPrefix string) (EnvDocItem, error) {
+	switch f.kind {
+	case envFieldKindPlain:
+		return EnvDocItem{
+			Name:      fmt.Sprintf("%s%s", envPrefix, f.name),
+			Doc:       f.doc,
+			Opts:      f.opts,
+			debugName: f.name,
+		}, nil
+	case envFieldKindStruct:
+		envPrefix := fmt.Sprintf("%s%s", envPrefix, f.envPrefix)
+		var base *envStruct
+		for _, s := range i.items {
+			if s.name == f.typeRef {
+				base = s
+				break
+			}
+		}
+		if base == nil {
+			return EnvDocItem{}, fmt.Errorf("struct %q not found", f.typeRef)
+		}
+		parentItem := EnvDocItem{
+			Doc:       base.doc,
+			debugName: base.name,
+		}
+		for _, f := range base.fields {
+			item, err := i.buildItem(&f, envPrefix)
+			if err != nil {
+				return EnvDocItem{}, fmt.Errorf("build item `%s`: %w", f.name, err)
+			}
+			parentItem.Children = append(parentItem.Children, item)
+		}
+		return parentItem, nil
+	default:
+		panic("unknown field kind")
 	}
-	fmt.Printf("DEBUG: "+f+"\n", args...)
 }

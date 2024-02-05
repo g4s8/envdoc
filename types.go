@@ -8,6 +8,10 @@ type EnvDocItem struct {
 	Doc string
 	// Opts is a set of options for environment variable parsing.
 	Opts EnvVarOptions
+	// Children is a list of child environment variables.
+	Children []EnvDocItem
+
+	debugName string // item name for debug logs.
 }
 
 type EnvScope struct {

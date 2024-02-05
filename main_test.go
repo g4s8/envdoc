@@ -22,10 +22,7 @@ func TestConfig(t *testing.T) {
 		t.Setenv("GOFILE", "test.go")
 		t.Setenv("GOLINE", "42")
 
-		cfg, err := getConfig()
-		if err != nil {
-			t.Fatal("Invalid CLI args:", err)
-		}
+		cfg := getTestConfig(t, false)
 		if cfg.outputFileName != "test.md" {
 			t.Fatal("Invalid output file name")
 		}
@@ -60,20 +57,12 @@ func TestConfig(t *testing.T) {
 	})
 	t.Run("bad-args", func(t *testing.T) {
 		os.Args = []string{"cmd", "-type"}
-		_, err := getConfig()
-		if err == nil {
-			t.Fatal("Expect error for invalid CLI args")
-		}
-		t.Logf("Got error as expected: %v", err)
+		_ = getTestConfig(t, true)
 	})
 	t.Run("bad-env", func(t *testing.T) {
 		t.Setenv("GOFILE", "")
 		t.Setenv("GOLINE", "abc")
-		_, err := getConfig()
-		if err == nil {
-			t.Fatal("Expect error for invalid environment")
-		}
-		t.Logf("Got error as expected: %v", err)
+		_ = getTestConfig(t, true)
 	})
 }
 
@@ -160,4 +149,19 @@ func TestMainRun(t *testing.T) {
 		}
 		t.Logf("Got error as expected: %v", err)
 	})
+}
+
+func getTestConfig(t *testing.T, expectErr bool) appConfig {
+	t.Helper()
+
+	cfg, err := getConfig(getConfigSilent)
+	if expectErr {
+		if err == nil {
+			t.Fatal("Expect error for invalid CLI args")
+		}
+		t.Logf("Got error as expected: %v", err)
+	} else if err != nil {
+		t.Fatal("Invalid CLI args:", err)
+	}
+	return cfg
 }

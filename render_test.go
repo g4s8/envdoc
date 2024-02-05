@@ -26,6 +26,28 @@ var testRenderItems = []renderItem{
 		NonEmpty: true,
 		FromFile: true,
 	},
+	{
+		Doc: "Nested item level one",
+		children: []renderItem{
+			{
+				EnvName: "NESTED_ENV1",
+				Doc:     "This is a first nested environment variable.",
+			},
+			{
+				EnvName: "NESTED_ENV2",
+				Doc:     "This is a second nested environment variable.",
+			},
+			{
+				Doc: "Nested item level two",
+				children: []renderItem{
+					{
+						EnvName: "NESTED_ENV3",
+						Doc:     "This is a third nested environment variable.",
+					},
+				},
+			},
+		},
+	},
 }
 
 var testRenderSections = []renderSection{
@@ -59,12 +81,24 @@ func TestRender(t *testing.T) {
 			"# Simple",
 			"- `TEST_ENV` - This is a test environment variable.",
 			"- `TEST_ENV2` (comma-separated, default: `default value`) - This is another test environment variable.",
-			"- `TEST_ENV3` (**required**, expand, non-empty, from-file) - This is a third test environment variable."))
+			"- `TEST_ENV3` (**required**, expand, non-empty, from-file) - This is a third test environment variable.",
+			"- Nested item level one",
+			"  - `NESTED_ENV1` - This is a first nested environment variable.",
+			"  - `NESTED_ENV2` - This is a second nested environment variable.",
+			"  - Nested item level two",
+			"    - `NESTED_ENV3` - This is a third nested environment variable.",
+		))
 		t.Run("plaintext", testRenderer(tmplPlaintext, rc,
 			"Simple",
 			" * `TEST_ENV` - This is a test environment variable.",
 			" * `TEST_ENV2` (comma-separated, default: `default value`) - This is another test environment variable.",
-			" * `TEST_ENV3` (required, expand, non-empty, from-file) - This is a third test environment variable."))
+			" * `TEST_ENV3` (required, expand, non-empty, from-file) - This is a third test environment variable.",
+			" * Nested item level one",
+			"   * `NESTED_ENV1` - This is a first nested environment variable.",
+			"   * `NESTED_ENV2` - This is a second nested environment variable.",
+			"   * Nested item level two",
+			"     * `NESTED_ENV3` - This is a third nested environment variable.",
+		))
 		t.Run("html", testRenderer(tmplHTML, rc,
 			`<!DOCTYPE html>`,
 			`<html lang="en">`,
@@ -79,6 +113,17 @@ func TestRender(t *testing.T) {
 			`<li><code>TEST_ENV</code> - This is a test environment variable.</li>`,
 			`<li><code>TEST_ENV2</code> (comma-separated, default: <code>default value</code>) - This is another test environment variable.</li>`,
 			`<li><code>TEST_ENV3</code> (<strong>required</strong>, expand, non-empty, from-file) - This is a third test environment variable.</li>`,
+			`<li>Nested item level one`,
+			`<ul>`,
+			`<li><code>NESTED_ENV1</code> - This is a first nested environment variable.</li>`,
+			`<li><code>NESTED_ENV2</code> - This is a second nested environment variable.</li>`,
+			`<li>Nested item level two`,
+			`<ul>`,
+			`<li><code>NESTED_ENV3</code> - This is a third nested environment variable.</li>`,
+			`</ul>`,
+			`</li>`,
+			`</ul>`,
+			`</li>`,
 			`</ul>`,
 			`</article>`,
 			`</section>`,
@@ -137,6 +182,15 @@ func TestNewRenderContext(t *testing.T) {
 					Name: "ONE",
 					Doc:  "First one",
 				},
+				{
+					Doc: "Nested",
+					Children: []EnvDocItem{
+						{
+							Name: "NESTED_ONE",
+							Doc:  "Nested one",
+						},
+					},
+				},
 			},
 		},
 	}
@@ -155,8 +209,8 @@ func TestNewRenderContext(t *testing.T) {
 	if section.Name != "First" {
 		t.Errorf("expected section name %q, got %q", "First", section.Name)
 	}
-	if len(section.Items) != 1 {
-		t.Fatalf("expected 1 variable, got %d", len(section.Items))
+	if len(section.Items) != 2 {
+		t.Fatalf("expected 2 variable, got %d", len(section.Items))
 	}
 	variable := section.Items[0]
 	if variable.EnvName != "PREFIX_ONE" {
@@ -164,6 +218,20 @@ func TestNewRenderContext(t *testing.T) {
 	}
 	if variable.Doc != "First one" {
 		t.Errorf("expected variable doc %q, got %q", "First one", variable.Doc)
+	}
+	nested := section.Items[1]
+	if nested.Doc != "Nested" {
+		t.Errorf("expected nested doc %q, got %q", "Nested", nested.Doc)
+	}
+	if len(nested.children) != 1 {
+		t.Fatalf("expected 1 child, got %d", len(variable.children))
+	}
+	child := nested.children[0]
+	if child.EnvName != "PREFIX_NESTED_ONE" {
+		t.Errorf("expected child name %q, got %q", "PREFIX_NESTED_ONE", child.EnvName)
+	}
+	if child.Doc != "Nested one" {
+		t.Errorf("expected child doc %q, got %q", "Nested one", child.Doc)
 	}
 }
 
@@ -182,6 +250,10 @@ func testRenderer(tmpl template, c renderContext, expectLines ...string) func(*t
 			line := strings.TrimSpace(scanner.Text())
 			logBuilder.WriteString(line)
 			logBuilder.WriteRune('\n')
+			if len(expectLines) <= currentLine {
+				t.Log(logBuilder.String())
+				t.Fatalf("unexpected line at %d: %q", currentLine, line)
+			}
 			expect := strings.TrimSpace(expectLines[currentLine])
 			if line == expect {
 				currentLine++

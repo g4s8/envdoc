@@ -1,3 +1,51 @@
+{{- define "item" }}
+  {{- $comma := false -}}
+  {{- repeat " " .Indent -}}
+  {{- if .EnvName }}
+    {{- .EnvName | printf "- `%s`" -}}
+    {{- if eq .EnvSeparator "," -}}
+      {{- $comma = true }} (comma-separated
+    {{- else if ne .EnvSeparator "" -}}
+      {{- $comma = true }} (separated by `{{.EnvSeparator}}`
+    {{- end -}}
+    {{- if .Required -}}
+      {{- if $comma }}, {{ else }} ({{ end -}}
+      {{- $comma = true -}}
+      **required**
+    {{- end -}}
+    {{- if .Expand -}}
+      {{- if $comma }}, {{ else }} ({{ end -}}
+      {{- $comma = true -}}
+      expand
+    {{- end -}}
+    {{- if .NonEmpty -}}
+      {{- if $comma }}, {{ else }} ({{ end -}}
+      {{- $comma = true -}}
+      non-empty
+    {{- end -}}
+    {{if .FromFile -}}
+      {{- if $comma }}, {{ else }} ({{ end -}}
+      {{- $comma = true -}}
+      from-file
+    {{- end -}}
+    {{- if ne .EnvDefault "" -}}
+      {{- if $comma }}, {{ else }} ({{ end -}}
+      {{- $comma = true -}}
+      {{- .EnvDefault | printf "default: `%s`" -}}
+    {{- end -}}
+    {{- if $comma }}){{ end -}}
+    {{- .Doc | printf " - %s"}}
+  {{- else }}
+    {{- .Doc | printf "- %s" }}
+  {{- end }}
+  {{- $children := .Children 2 }}
+  {{- if $children }}
+    {{- range $children }}
+{{ template "item" . }}
+    {{- end }}
+  {{- end -}}
+{{ end -}}
+
 # {{ .Title }}
 {{ range .Sections -}}
 {{ if ne .Name "" }}
@@ -7,39 +55,6 @@
 {{ .Doc }}
 {{ end }}
 {{ range .Items }}
-  {{- $comma := false -}}
-  {{- .EnvName | printf " - `%s`" -}}
-  {{- if eq .EnvSeparator "," -}}
-    {{- $comma = true }} (comma-separated
-  {{- else if ne .EnvSeparator "" -}}
-    {{- $comma = true }} (separated by `{{.EnvSeparator}}`
-  {{- end -}}
-  {{- if .Required -}}
-    {{- if $comma }}, {{ else }} ({{ end -}}
-    {{- $comma = true -}}
-    **required**
-  {{- end -}}
-  {{- if .Expand -}} 
-    {{- if $comma }}, {{ else }} ({{ end -}}
-    {{- $comma = true -}}
-    expand
-  {{- end -}}
-  {{- if .NonEmpty -}}
-    {{- if $comma }}, {{ else }} ({{ end -}}
-    {{- $comma = true -}}
-    non-empty
-  {{- end -}}
-  {{if .FromFile -}}
-    {{- if $comma }}, {{ else }} ({{ end -}}
-    {{- $comma = true -}}
-    from-file
-  {{- end -}}
-  {{- if ne .EnvDefault "" -}}
-    {{- if $comma }}, {{ else }} ({{ end -}}
-    {{- $comma = true -}}
-    {{- .EnvDefault | printf "default: `%s`" -}}
-  {{- end -}}
-  {{- if $comma }}) {{ else }} {{ end -}}
- - {{.Doc}}
+{{- template "item" . }}
 {{ end -}}
 {{ end -}}
