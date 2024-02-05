@@ -277,13 +277,114 @@ func TestInspector(t *testing.T) {
 			},
 		},
 		{
+			/*
+				type Settings struct {
+					// Database is the database settings
+					Database Database `envPrefix:"DB_"`
+
+					// Server is the server settings
+					Server ServerConfig `envPrefix:"SERVER_"`
+
+					// Debug is the debug flag
+					Debug bool `env:"DEBUG"`
+				}
+
+				// Database is the database settings.
+				type Database struct {
+					// Port is the port to connect to
+					Port Int `env:"PORT,required"`
+					// Host is the host to connect to
+					Host string `env:"HOST,nonempty" envDefault:"localhost"`
+					// User is the user to connect as
+					User string `env:"USER"`
+					// Password is the password to use
+					Password string `env:"PASSWORD"`
+					// DisableTLS is the flag to disable TLS
+					DisableTLS bool `env:"DISABLE_TLS"`
+				}
+
+				// ServerConfig is the server settings.
+				type ServerConfig struct {
+					// Port is the port to listen on
+					Port Int `env:"PORT,required"`
+
+					// Host is the host to listen on
+					Host string `env:"HOST,nonempty" envDefault:"localhost"`
+
+					// Timeout is the timeout settings
+					Timeout TimeoutConfig `envPrefix:"TIMEOUT_"`
+				}
+
+				// TimeoutConfig is the timeout settings.
+				type TimeoutConfig struct {
+					// Read is the read timeout
+					Read Int `env:"READ" envDefault:"30"`
+					// Write is the write timeout
+					Write Int `env:"WRITE" envDefault:"30"`
+				}
+			*/
 			name:     "envprefix.go",
 			typeName: "Settings",
 			expect: []EnvDocItem{
 				{
-					Name: "DB_PORT",
-					Doc:  "Port is the port to connect to",
-					Opts: EnvVarOptions{Required: true},
+					Doc:       "Database is the database settings.",
+					debugName: "Database",
+					Children: []EnvDocItem{
+						{
+							Name: "DB_PORT",
+							Doc:  "Port is the port to connect to",
+							Opts: EnvVarOptions{Required: true},
+						},
+						{
+							Name: "DB_HOST",
+							Doc:  "Host is the host to connect to",
+							Opts: EnvVarOptions{Required: true, NonEmpty: true, Default: "localhost"},
+						},
+						{
+							Name: "DB_USER",
+							Doc:  "User is the user to connect as",
+						},
+						{
+							Name: "DB_PASSWORD",
+							Doc:  "Password is the password to use",
+						},
+						{
+							Name: "DB_DISABLE_TLS",
+							Doc:  "DisableTLS is the flag to disable TLS",
+						},
+					},
+				},
+				{
+					Doc:       "ServerConfig is the server settings.",
+					debugName: "Server",
+					Children: []EnvDocItem{
+						{
+							Name: "SERVER_PORT",
+							Doc:  "Port is the port to listen on",
+							Opts: EnvVarOptions{Required: true},
+						},
+						{
+							Name: "SERVER_HOST",
+							Doc:  "Host is the host to listen on",
+							Opts: EnvVarOptions{Required: true, NonEmpty: true, Default: "localhost"},
+						},
+						{
+							Doc:       "TimeoutConfig is the timeout settings.",
+							debugName: "Timeout",
+							Children: []EnvDocItem{
+								{
+									Name: "SERVER_TIMEOUT_READ",
+									Doc:  "Read is the read timeout",
+									Opts: EnvVarOptions{Default: "30"},
+								},
+								{
+									Name: "SERVER_TIMEOUT_WRITE",
+									Doc:  "Write is the write timeout",
+									Opts: EnvVarOptions{Default: "30"},
+								},
+							},
+						},
+					},
 				},
 				{
 					Name: "DEBUG",
@@ -349,19 +450,30 @@ func inspectorTester(name string, typeName string, all bool, lineN int, expect [
 					t.Fatalf("[%d]scope: expect %d vars; was %d", i, len(e.Vars), len(s.Vars))
 				}
 			}
-			for j, v := range s.Vars {
-				ev := e.Vars[j]
-				if v.Name != ev.Name {
-					t.Fatalf("[%d]scope: var[%d]: expect name %q; was %q", i, j, ev.Name, v.Name)
-				}
-				if v.Doc != ev.Doc {
-					t.Fatalf("[%d]scope: var[%d]: expect doc %q; was %q", i, j, ev.Doc, v.Doc)
-				}
-				if v.Opts != ev.Opts {
-					t.Fatalf("[%d]scope: var[%d]: expect opts %+v; was %+v", i, j, ev.Opts, v.Opts)
-				}
+			for j, actual := range s.Vars {
+				expect := e.Vars[j]
+				testScopeVar(t, fmt.Sprintf("[%d]scope: var[%d]", i, j), expect, actual)
 			}
-
 		}
+	}
+}
+
+func testScopeVar(t *testing.T, logPrefix string, expect, actual EnvDocItem) {
+	t.Helper()
+
+	if expect.Name != actual.Name {
+		t.Fatalf("%s: expect name %q; was %q", logPrefix, expect.Name, actual.Name)
+	}
+	if expect.Doc != actual.Doc {
+		t.Fatalf("%s: expect doc %q; was %q", logPrefix, expect.Doc, actual.Doc)
+	}
+	if expect.Opts != actual.Opts {
+		t.Fatalf("%s: expect opts %+v; was %+v", logPrefix, expect.Opts, actual.Opts)
+	}
+	if len(expect.Children) != len(actual.Children) {
+		t.Fatalf("%s: expect %d children; was %d", logPrefix, len(expect.Children), len(actual.Children))
+	}
+	for i, c := range expect.Children {
+		testScopeVar(t, fmt.Sprintf("%s -> child[%d]", logPrefix, i), c, actual.Children[i])
 	}
 }

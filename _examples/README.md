@@ -12,7 +12,7 @@ There are few target files:
   [`x_complex.md`](./x_complex.md) with `-env-prefix` argument;
   and [`complex-nostyle.html`](./complex-nostyle.html) which is HTML documentation without built-in styles.
 - [`envprefix.go`](./envprefix.go) showcases a nested config structure with the `envPrefix` tag for a structure field.
-  It generates [`envprefix.md`](./envprefix.md).
+  It generates [`envprefix.md`](./envprefix.md), [`envprefix.txt`](./envprefix.txt) and [`envprefix.html`](./envprefix.html).
 
 The examples directory also contains helper script files:
  - `build-examples.sh` - modify any example Go file and regenerate all documentation outputs by executing it via `./build-examples.sh`.

@@ -66,9 +66,20 @@ func main() {
 	}
 }
 
-func getConfig() (appConfig, error) {
+type getConfigOpt func(f *flag.FlagSet)
+
+var getConfigSilent = func(f *flag.FlagSet) {
+	f.Usage = func() {}
+	nopWriter := os.NewFile(0, os.DevNull)
+	f.SetOutput(nopWriter)
+}
+
+func getConfig(opts ...getConfigOpt) (appConfig, error) {
 	var cfg appConfig
 	flagSet := flag.NewFlagSet(os.Args[0], flag.ContinueOnError)
+	for _, opt := range opts {
+		opt(flagSet)
+	}
 	if err := cfg.parseFlags(flagSet); err != nil {
 		flagSet.Usage()
 		return cfg, fmt.Errorf("invalid CLI args: %w", err)

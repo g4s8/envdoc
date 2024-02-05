@@ -76,14 +76,31 @@ p {
       <article>
         <h1>Environment Variables</h1>
 
-  <h2>Config</h2>
-<p>Config is an example configuration structure.
-It is used to generate documentation for the configuration
-using the commands below.</p>
+  <h2>Settings</h2>
+<p>Settings is the application settings.</p>
   <ul>
-    <li><code>HOST</code> (separated by "<code>;</code>", <strong>required</strong>) - Hosts name of hosts to listen on.</li>
-    <li><code>PORT</code> (<strong>required</strong>, non-empty) - Port to listen on.</li>
-    <li><code>DEBUG</code> (default: <code>false</code>) - Debug mode enabled.</li>
+    <li>Database is the database settings.
+    <ul>
+    <li><code>DB_PORT</code> (<strong>required</strong>) - Port is the port to connect to</li>
+    <li><code>DB_HOST</code> (<strong>required</strong>, non-empty, default: <code>localhost</code>) - Host is the host to connect to</li>
+    <li><code>DB_USER</code> - User is the user to connect as</li>
+    <li><code>DB_PASSWORD</code> - Password is the password to use</li>
+    <li><code>DB_DISABLE_TLS</code> - DisableTLS is the flag to disable TLS</li>
+    </ul>
+  </li>
+    <li>ServerConfig is the server settings.
+    <ul>
+    <li><code>SERVER_PORT</code> (<strong>required</strong>) - Port is the port to listen on</li>
+    <li><code>SERVER_HOST</code> (<strong>required</strong>, non-empty, default: <code>localhost</code>) - Host is the host to listen on</li>
+    <li>TimeoutConfig is the timeout settings.
+    <ul>
+    <li><code>SERVER_TIMEOUT_READ</code> (default: <code>30</code>) - Read is the read timeout</li>
+    <li><code>SERVER_TIMEOUT_WRITE</code> (default: <code>30</code>) - Write is the write timeout</li>
+    </ul>
+  </li>
+    </ul>
+  </li>
+    <li><code>DEBUG</code> - Debug is the debug flag</li>
   </ul>
 
       </article>
