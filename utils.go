@@ -2,6 +2,7 @@ package main
 
 import (
 	"io"
+	"math/rand"
 	"strings"
 	"unicode"
 )
@@ -28,4 +29,14 @@ func camelToSnake(s string) string {
 	}
 
 	return result.String()
+}
+
+func fastRandString(n int) string {
+	const letters = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
+	seed := rand.Intn(len(letters)*len(letters)) + 1
+	b := make([]byte, n)
+	for i := range b {
+		b[i] = letters[(seed+i)%len(letters)]
+	}
+	return string(b)
 }

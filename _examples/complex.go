@@ -27,6 +27,14 @@ type ComplexConfig struct {
 	Words []string `env:"WORDS,file" envDefault:"one,two,three"`
 
 	Comment string `env:"COMMENT,required" envDefault:"This is a comment."` // Just a comment.
+
+	// Anon is an anonymous structure.
+	Anon struct {
+		// User is a user name.
+		User string `env:"USER,required"`
+		// Pass is a password.
+		Pass string `env:"PASS,required"`
+	} `envPrefix:"ANON_"`
 }
 
 type NextConfig struct { // NextConfig is a configuration structure.
