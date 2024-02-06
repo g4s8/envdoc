@@ -32,22 +32,35 @@ type envStruct struct {
 	fields []envField
 }
 
+type anonymousStruct struct {
+	name     string // generated name
+	doc      *ast.CommentGroup
+	comments *ast.CommentGroup
+}
+
 type inspector struct {
 	typeName      string // type name to generate documentation for, could be empty
 	all           bool   // generate documentation for all types in the file
 	execLine      int    // line number of the go:generate directive
 	useFieldNames bool   // use field names if tag is not specified
 
-	fileSet     *token.FileSet
-	lines       []int
-	pendingType bool
-	items       []*envStruct
-	doc         *doc.Package
-	err         error
+	fileSet          *token.FileSet
+	lines            []int
+	pendingType      bool
+	items            []*envStruct
+	anonymousStructs map[[2]token.Pos]anonymousStruct // map of anonymous structs by token position
+	doc              *doc.Package
+	err              error
 }
 
 func newInspector(typeName string, all bool, execLine int, useFieldNames bool) *inspector {
-	return &inspector{typeName: typeName, all: all, execLine: execLine, useFieldNames: useFieldNames}
+	return &inspector{
+		typeName:         typeName,
+		all:              all,
+		execLine:         execLine,
+		useFieldNames:    useFieldNames,
+		anonymousStructs: make(map[[2]token.Pos]anonymousStruct),
+	}
 }
 
 func (i *inspector) inspectFile(fileName string) ([]*EnvScope, error) {
@@ -126,33 +139,45 @@ func (i *inspector) Visit(n ast.Node) ast.Visitor {
 		i.pendingType = true
 		return i
 	case *ast.TypeSpec:
+		debug("type spec: %s (%T) (%d-%d)", t.Name.Name, t.Type, t.Pos(), t.End())
 		if i.typeName == "" && i.pendingType {
 			i.typeName = t.Name.Name
 		}
 
 		if st, ok := t.Type.(*ast.StructType); ok {
-			str := i.getStruct(t)
-			debug("parsing struct %s", str.name)
-			for _, field := range st.Fields.List {
-				items := i.parseField(field)
-				for i, item := range items {
-					if item.kind == envFieldKindPlain {
-						debug("parsed field[%d] %s", i, item.name)
-					} else {
-						debug("parsed field[%d] %s (struct ref: %s, prefix: %s)", i, item.name, item.typeRef, item.envPrefix)
-					}
-				}
-				if len(items) == 0 {
-					continue
-				}
-				str.fields = append(str.fields, items...)
-			}
+			i.processStruct(t, st)
 		}
 		// reset pending type flag event if this type
 		// is not processable (e.g. interface type).
 		i.pendingType = false
+	case *ast.StructType:
+		posRange := [2]token.Pos{t.Pos(), t.End()}
+		as, ok := i.anonymousStructs[posRange]
+		if !ok {
+			return i
+		}
+		typeSpec := &ast.TypeSpec{
+			Name:    &ast.Ident{Name: as.name},
+			Doc:     as.doc,
+			Comment: as.comments,
+		}
+		i.processStruct(typeSpec, t)
+
+		debug("struct type: %T (%d-%d)", t, t.Pos(), t.End())
 	}
 	return i
+}
+
+func (i *inspector) processStruct(t *ast.TypeSpec, st *ast.StructType) {
+	str := i.getStruct(t)
+	debug("parsing struct %s", str.name)
+	for _, field := range st.Fields.List {
+		items := i.parseField(field)
+		if len(items) == 0 {
+			continue
+		}
+		str.fields = append(str.fields, items...)
+	}
 }
 
 func (i *inspector) parseType(t *ast.TypeSpec) *envStruct {
@@ -205,8 +230,28 @@ func (i *inspector) parseField(f *ast.Field) (out []envField) {
 		var item envField
 		item.envPrefix = envPrefix[0]
 		item.kind = envFieldKindStruct
-		fieldType := f.Type.(*ast.Ident)
-		item.typeRef = fieldType.Name
+		switch fieldType := f.Type.(type) {
+		case *ast.Ident:
+			item.typeRef = fieldType.Name
+		case *ast.StructType:
+			nameGen := fastRandString(16)
+			i.getStruct(&ast.TypeSpec{
+				Name: &ast.Ident{Name: nameGen},
+				Type: fieldType,
+				Doc:  &ast.CommentGroup{List: f.Doc.List},
+			})
+			item.typeRef = nameGen
+			posRange := [2]token.Pos{fieldType.Pos(), fieldType.End()}
+			i.anonymousStructs[posRange] = anonymousStruct{
+				name:     nameGen,
+				doc:      f.Doc,
+				comments: f.Comment,
+			}
+			debug("anonymous struct found: %s (%d-%d)", nameGen, f.Type.Pos(), f.Type.End())
+
+		default:
+			panic(fmt.Sprintf("unsupported field type: %T", f.Type))
+		}
 		fieldNames := make([]string, len(f.Names))
 		for i, name := range f.Names {
 			fieldNames[i] = name.Name
@@ -286,6 +331,17 @@ func (i *inspector) buildScopes() ([]*EnvScope, error) {
 	for _, s := range i.items {
 		if !i.all && s.name != i.typeName {
 			debug("skip %q", s.name)
+			continue
+		}
+		var isAnonymous bool
+		for _, f := range i.anonymousStructs {
+			if f.name == s.name {
+				isAnonymous = true
+				break
+			}
+		}
+		if isAnonymous {
+			debug("skip anonymous struct %q", s.name)
 			continue
 		}
 

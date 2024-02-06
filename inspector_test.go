@@ -277,52 +277,6 @@ func TestInspector(t *testing.T) {
 			},
 		},
 		{
-			/*
-				type Settings struct {
-					// Database is the database settings
-					Database Database `envPrefix:"DB_"`
-
-					// Server is the server settings
-					Server ServerConfig `envPrefix:"SERVER_"`
-
-					// Debug is the debug flag
-					Debug bool `env:"DEBUG"`
-				}
-
-				// Database is the database settings.
-				type Database struct {
-					// Port is the port to connect to
-					Port Int `env:"PORT,required"`
-					// Host is the host to connect to
-					Host string `env:"HOST,nonempty" envDefault:"localhost"`
-					// User is the user to connect as
-					User string `env:"USER"`
-					// Password is the password to use
-					Password string `env:"PASSWORD"`
-					// DisableTLS is the flag to disable TLS
-					DisableTLS bool `env:"DISABLE_TLS"`
-				}
-
-				// ServerConfig is the server settings.
-				type ServerConfig struct {
-					// Port is the port to listen on
-					Port Int `env:"PORT,required"`
-
-					// Host is the host to listen on
-					Host string `env:"HOST,nonempty" envDefault:"localhost"`
-
-					// Timeout is the timeout settings
-					Timeout TimeoutConfig `envPrefix:"TIMEOUT_"`
-				}
-
-				// TimeoutConfig is the timeout settings.
-				type TimeoutConfig struct {
-					// Read is the read timeout
-					Read Int `env:"READ" envDefault:"30"`
-					// Write is the write timeout
-					Write Int `env:"WRITE" envDefault:"30"`
-				}
-			*/
 			name:     "envprefix.go",
 			typeName: "Settings",
 			expect: []EnvDocItem{
@@ -389,6 +343,22 @@ func TestInspector(t *testing.T) {
 				{
 					Name: "DEBUG",
 					Doc:  "Debug is the debug flag",
+				},
+			},
+		},
+		{
+			name:     "anonymous.go",
+			typeName: "Config",
+			expect: []EnvDocItem{
+				{
+					Doc: "Repo is the configuration for the repository.",
+					Children: []EnvDocItem{
+						{
+							Name: "REPO_CONN",
+							Doc:  "Conn is the connection string for the repository.",
+							Opts: EnvVarOptions{Required: true, NonEmpty: true},
+						},
+					},
 				},
 			},
 		},

@@ -14,6 +14,9 @@ It is trying to cover all the possible cases.
  - `X_HOSTS` (separated by `:`, **required**) - Hosts is a list of hosts.
  - `X_WORDS` (comma-separated, from-file, default: `one,two,three`) - Words is just a list of words.
  - `X_COMMENT` (**required**, default: `This is a comment.`) - Just a comment.
+ - `X_` - Anon is an anonymous structure.
+   - `X_ANON_USER` (**required**) - User is a user name.
+   - `X_ANON_PASS` (**required**) - Pass is a password.
 
 ## NextConfig
 
