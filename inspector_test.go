@@ -362,6 +362,20 @@ func TestInspector(t *testing.T) {
 				},
 			},
 		},
+		{
+			name:     "nodocs.go",
+			typeName: "Config",
+			expect: []EnvDocItem{
+				{
+					Children: []EnvDocItem{
+						{
+							Name: "REPO_CONN",
+							Opts: EnvVarOptions{Required: true, NonEmpty: true},
+						},
+					},
+				},
+			},
+		},
 	} {
 		scopes := c.expectScopes
 		if scopes == nil {
