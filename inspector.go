@@ -235,11 +235,12 @@ func (i *inspector) parseField(f *ast.Field) (out []envField) {
 			item.typeRef = fieldType.Name
 		case *ast.StructType:
 			nameGen := fastRandString(16)
-			i.getStruct(&ast.TypeSpec{
+			typeSpec := &ast.TypeSpec{
 				Name: &ast.Ident{Name: nameGen},
 				Type: fieldType,
-				Doc:  &ast.CommentGroup{List: f.Doc.List},
-			})
+				Doc:  f.Doc,
+			}
+			i.getStruct(typeSpec)
 			item.typeRef = nameGen
 			posRange := [2]token.Pos{fieldType.Pos(), fieldType.End()}
 			i.anonymousStructs[posRange] = anonymousStruct{
