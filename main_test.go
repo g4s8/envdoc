@@ -60,7 +60,17 @@ func TestConfig(t *testing.T) {
 		_ = getTestConfig(t, true)
 	})
 	t.Run("bad-env", func(t *testing.T) {
-		t.Setenv("GOFILE", "")
+		os.Args = []string{
+			"cmd",
+			"-output", "test.md",
+			"-type", "test",
+			"-no-styles",
+			"-format", "markdown",
+			"-env-prefix", "TEST_",
+			"-field-names",
+			"-all",
+		}
+		t.Setenv("GOFILE", "test.go")
 		t.Setenv("GOLINE", "abc")
 		_ = getTestConfig(t, true)
 	})
@@ -116,7 +126,6 @@ func TestMainRun(t *testing.T) {
 		}
 		outputFile := path.Join(t.TempDir(), "example.md")
 		config := appConfig{
-			typeName:       "Type1",
 			formatName:     "markdown",
 			outputFileName: outputFile,
 			inputFileName:  inputFile,
@@ -125,6 +134,26 @@ func TestMainRun(t *testing.T) {
 			noStyles:       true,
 			fieldNames:     true,
 			all:            true,
+		}
+		if err := run(&config); err != nil {
+			t.Fatal("run", err)
+		}
+	})
+	t.Run("with-type", func(t *testing.T) {
+		inputFile := path.Join(t.TempDir(), "example.go")
+		if err := copyTestFile(path.Join("testdata", "type.go"), inputFile); err != nil {
+			t.Fatal("copy test file", err)
+		}
+		outputFile := path.Join(t.TempDir(), "example.md")
+		config := appConfig{
+			typeName:       "Type1",
+			formatName:     "markdown",
+			outputFileName: outputFile,
+			inputFileName:  inputFile,
+			execLine:       0,
+			envPrefix:      "TEST_",
+			noStyles:       true,
+			fieldNames:     true,
 		}
 		if err := run(&config); err != nil {
 			t.Fatal("run", err)

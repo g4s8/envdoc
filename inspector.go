@@ -2,292 +2,163 @@ package main
 
 import (
 	"fmt"
-	"go/ast"
-	"go/doc"
 	"go/parser"
 	"go/token"
+	"log"
 	"strings"
 )
-
-type envFieldKind int
-
-const (
-	envFieldKindPlain  envFieldKind = iota
-	envFieldKindStruct              // struct reference
-)
-
-type envField struct {
-	name      string
-	kind      envFieldKind
-	doc       string
-	opts      EnvVarOptions
-	typeRef   string
-	fieldName string
-	envPrefix string
-}
-
-type envStruct struct {
-	name   string
-	doc    string
-	fields []envField
-}
-
-type anonymousStruct struct {
-	name     string // generated name
-	doc      *ast.CommentGroup
-	comments *ast.CommentGroup
-}
 
 type inspector struct {
 	typeName      string // type name to generate documentation for, could be empty
 	all           bool   // generate documentation for all types in the file
 	execLine      int    // line number of the go:generate directive
 	useFieldNames bool   // use field names if tag is not specified
-
-	fileSet          *token.FileSet
-	lines            []int
-	pendingType      bool
-	items            []*envStruct
-	anonymousStructs map[[2]token.Pos]anonymousStruct // map of anonymous structs by token position
-	doc              *doc.Package
-	err              error
+	log           *log.Logger
 }
 
 func newInspector(typeName string, all bool, execLine int, useFieldNames bool) *inspector {
 	return &inspector{
-		typeName:         typeName,
-		all:              all,
-		execLine:         execLine,
-		useFieldNames:    useFieldNames,
-		anonymousStructs: make(map[[2]token.Pos]anonymousStruct),
+		typeName:      typeName,
+		all:           all,
+		execLine:      execLine,
+		useFieldNames: useFieldNames,
+		log:           logger(),
 	}
 }
 
 func (i *inspector) inspectFile(fileName string) ([]*EnvScope, error) {
-	i.fileSet = token.NewFileSet()
-	file, err := parser.ParseFile(i.fileSet, fileName, nil, parser.ParseComments)
+	fileSet := token.NewFileSet()
+	file, err := parser.ParseFile(fileSet, fileName, nil, parser.ParseComments)
 	if err != nil {
 		return nil, fmt.Errorf("parse file: %w", err)
 	}
-	// get a lines to position map for the file.
-	f := i.fileSet.File(file.Pos())
-	i.lines = f.Lines()
-	return i.inspect(file)
-}
-
-func (i *inspector) inspect(node ast.Node) ([]*EnvScope, error) {
-	i.items = make([]*envStruct, 0)
-	ast.Walk(i, node)
-	if i.err != nil {
-		return nil, i.err
-	}
-	scopes, err := i.buildScopes()
+	docResolver, err := newASTTypeDocResolver(fileSet, file)
 	if err != nil {
-		return nil, fmt.Errorf("build scopes: %w", err)
+		return nil, fmt.Errorf("new ast type doc resolver: %w", err)
 	}
-	return scopes, nil
+	var commentsHandler astCommentsHandler
+	if i.all {
+		commentsHandler = astCommentDummyHandler
+	} else {
+		commentsHandler = newASTCommentTargetLineHandler(i.execLine, fileSet.File(file.Pos()).Lines())
+	}
+	visitor := newAstVisitor(commentsHandler, docResolver)
+	visitor.Walk(file)
+	targetName := i.typeName
+	if targetName == "" {
+		targetName = visitor.targetName
+	}
+	return i.traverseAST(visitor.currentNode, targetName), nil
 }
 
-func (i *inspector) getStruct(t *ast.TypeSpec) *envStruct {
-	typeName := t.Name.Name
-	for _, s := range i.items {
-		if s.name == typeName {
-			return s
-		}
-	}
-
-	s := i.parseType(t)
-	i.items = append(i.items, s)
-	return s
-}
-
-func (i *inspector) Visit(n ast.Node) ast.Visitor {
-	if i.err != nil {
-		return nil
-	}
-
-	switch t := n.(type) {
-	case *ast.File:
-		var err error
-		i.doc, err = doc.NewFromFiles(i.fileSet, []*ast.File{t}, "./", doc.PreserveAST)
-		if err != nil {
-			i.err = fmt.Errorf("parse package doc: %w", err)
-			return nil
-		}
-	case *ast.Comment:
-		// if type name is not specified we should process the next type
-		// declaration after the comment with go:generate
-		// which causes this command to be executed.
-		if i.typeName != "" || i.all {
-			return i
-		}
-		if !t.Pos().IsValid() {
-			return i
-		}
-		var line int
-		for l, pos := range i.lines {
-			if token.Pos(pos) > t.Pos() {
-				break
-			}
-			// $GOLINE env var is 1-based.
-			line = l + 1
-		}
-		if line != i.execLine {
-			return i
+func (i *inspector) traverseAST(root *visitorNode, targetName string) []*EnvScope {
+	scopes := make([]*EnvScope, 0, len(root.children))
+	logger := logger()
+	for _, child := range root.children {
+		if child.kind != nodeType && child.kind != nodeStruct {
+			panic(fmt.Sprintf("expected type node root child, got %v", child.kind))
 		}
 
-		i.pendingType = true
-		return i
-	case *ast.TypeSpec:
-		debug("type spec: %s (%T) (%d-%d)", t.Name.Name, t.Type, t.Pos(), t.End())
-		if i.typeName == "" && i.pendingType {
-			i.typeName = t.Name.Name
-		}
-
-		if st, ok := t.Type.(*ast.StructType); ok {
-			i.processStruct(t, st)
-		}
-		// reset pending type flag event if this type
-		// is not processable (e.g. interface type).
-		i.pendingType = false
-	case *ast.StructType:
-		posRange := [2]token.Pos{t.Pos(), t.End()}
-		as, ok := i.anonymousStructs[posRange]
-		if !ok {
-			return i
-		}
-		typeSpec := &ast.TypeSpec{
-			Name:    &ast.Ident{Name: as.name},
-			Doc:     as.doc,
-			Comment: as.comments,
-		}
-		i.processStruct(typeSpec, t)
-
-		debug("struct type: %T (%d-%d)", t, t.Pos(), t.End())
-	}
-	return i
-}
-
-func (i *inspector) processStruct(t *ast.TypeSpec, st *ast.StructType) {
-	str := i.getStruct(t)
-	debug("parsing struct %s", str.name)
-	for _, field := range st.Fields.List {
-		items := i.parseField(field)
-		if len(items) == 0 {
+		if !i.all && targetName != child.typeName {
+			logger.Printf("inspector: (traverse) skipping node: %v", child.typeName)
 			continue
 		}
-		str.fields = append(str.fields, items...)
+		logger.Printf("inspector: (traverse) process node: %v", child.typeName)
+
+		if scope := newScope(child, i.useFieldNames); scope != nil {
+			scopes = append(scopes, scope)
+		}
 	}
+	return scopes
 }
 
-func (i *inspector) parseType(t *ast.TypeSpec) *envStruct {
-	typeName := t.Name.Name
-	docStr := strings.TrimSpace(t.Doc.Text())
-	if docStr == "" {
-		for _, t := range i.doc.Types {
-			if t.Name == typeName {
-				docStr = strings.TrimSpace(t.Doc)
-				break
-			}
+func newScope(node *visitorNode, useFieldNames bool) *EnvScope {
+	if len(node.names) != 1 {
+		panic("type node must have exactly one name")
+	}
+
+	logger := logger()
+	logger.Printf("inspecctor: (scope) got node: %v", node.names)
+
+	scope := &EnvScope{
+		Name: node.names[0],
+		Doc:  node.doc,
+	}
+	for _, child := range node.children {
+		if items := newDocItems(child, useFieldNames, ""); len(items) > 0 {
+			logger.Printf("inspector: (scope) add items: %d", len(items))
+			scope.Vars = append(scope.Vars, items...)
+		} else {
+			logger.Printf("inspector: (scope) no items")
 		}
 	}
-	return &envStruct{
-		name: typeName,
-		doc:  docStr,
+	if len(scope.Vars) == 0 {
+		return nil
 	}
+	return scope
 }
 
-func getTagValues(tag, tagName string) []string {
-	tagPrefix := tagName + ":"
-	if !strings.Contains(tag, tagPrefix) {
-		return nil
-	}
-	tagValue := strings.Split(tag, tagPrefix)[1]
-	leftQ := strings.Index(tagValue, `"`)
-	if leftQ == -1 || leftQ == len(tagValue)-1 {
-		return nil
-	}
-	rightQ := strings.Index(tagValue[leftQ+1:], `"`)
-	if rightQ == -1 {
-		return nil
-	}
-	tagValue = tagValue[leftQ+1 : leftQ+rightQ+1]
-	return strings.Split(tagValue, ",")
-}
-
-func (i *inspector) parseField(f *ast.Field) (out []envField) {
-	if f.Tag == nil && !i.useFieldNames {
-		return
-	}
-
-	var tag string
-	if t := f.Tag; t != nil {
-		tag = t.Value
-	}
-
-	envPrefix := getTagValues(tag, "envPrefix")
-	if len(envPrefix) > 0 && envPrefix[0] != "" {
-		var item envField
-		item.envPrefix = envPrefix[0]
-		item.kind = envFieldKindStruct
-		switch fieldType := f.Type.(type) {
-		case *ast.Ident:
-			item.typeRef = fieldType.Name
-		case *ast.StructType:
-			nameGen := fastRandString(16)
-			typeSpec := &ast.TypeSpec{
-				Name: &ast.Ident{Name: nameGen},
-				Type: fieldType,
-				Doc:  f.Doc,
+func newDocItems(node *visitorNode, useFieldNames bool, envPrefix string) []*EnvDocItem {
+	logger := logger()
+	builder := new(envDocItemsBuilder).apply(
+		withEnvDocItemEnvPrefix(envPrefix),
+		withEnvDocItemDoc(node.doc),
+	)
+	logger.Printf("inspector: (items) process node: %v, envPrefix=%q", node.names, envPrefix)
+	if node.kind == nodeField && node.typeRef != nil {
+		if tags := getTagValues(node.tag, "envPrefix"); len(tags) > 0 {
+			envPrefix = strConcat(envPrefix, tags[0])
+		}
+		logger.Printf("inspector: (items) get subitem fields for typeref: %q, envPrefix=%q", node.typeRef.names, envPrefix)
+		typeRef := node.typeRef
+		builder.apply(withEnvDocItemDoc(typeRef.doc), withEnvDocEmptyNames)
+		for _, subItem := range node.typeRef.children {
+			logger.Printf("inspector: (items) add subitem for typeref %q: %q", node.typeRef.names, subItem.names)
+			if items := newDocItems(subItem, useFieldNames, envPrefix); len(items) > 0 {
+				builder.apply(withEnvDocItemAddChildren(items))
 			}
-			i.getStruct(typeSpec)
-			item.typeRef = nameGen
-			posRange := [2]token.Pos{fieldType.Pos(), fieldType.End()}
-			i.anonymousStructs[posRange] = anonymousStruct{
-				name:     nameGen,
-				doc:      f.Doc,
-				comments: f.Comment,
-			}
-			debug("anonymous struct found: %s (%d-%d)", nameGen, f.Type.Pos(), f.Type.End())
-
-		default:
-			panic(fmt.Sprintf("unsupported field type: %T", f.Type))
 		}
-		fieldNames := make([]string, len(f.Names))
-		for i, name := range f.Names {
-			fieldNames[i] = name.Name
-		}
-		item.fieldName = strings.Join(fieldNames, ", ")
-		out = []envField{item}
-		return
+		debugBuilder(logger, "inspector: (items) typeref builder: ", builder)
+		return builder.items()
 	}
 
-	if !strings.Contains(tag, "env:") && !i.useFieldNames {
-		return
+	if node.tag == "" && !useFieldNames {
+		logger.Printf("inspector: (items) no tag and no field names, skip node: %q", node.names)
+		return nil
 	}
 
-	tagValues := getTagValues(tag, "env")
-	if len(tagValues) > 0 && tagValues[0] != "" {
-		var item envField
-		item.name = tagValues[0]
-		item.kind = envFieldKindPlain
-		out = []envField{item}
-	} else if i.useFieldNames {
-		out = make([]envField, len(f.Names))
-		for i, name := range f.Names {
-			out[i].name = camelToSnake(name.Name)
-			out[i].kind = envFieldKindPlain
+	tagName, opts := parseEnvTag(node.tag)
+	if tagName != "" {
+		logger.Printf("inspector: (items) tag name: %q", tagName)
+		builder.apply(withEnvDocItemNames(tagName))
+	} else if useFieldNames {
+		logger.Printf("inspector: (items) field names: %q", node.names)
+		names := make([]string, len(node.names))
+		for i, name := range node.names {
+			names[i] = camelToSnake(name)
 		}
+		builder.apply(withEnvDocItemNames(names...))
 	} else {
-		return
+		logger.Printf("inspector: (items) no tag name and not using field names")
+		return nil
 	}
 
-	docStr := strings.TrimSpace(f.Doc.Text())
-	if docStr == "" {
-		docStr = strings.TrimSpace(f.Comment.Text())
+	// Check if the field type is a slice or array, then use default separator
+	if node.isArray && opts.Separator == "" {
+		opts.Separator = ","
 	}
-	for i := range out {
-		out[i].doc = docStr
+
+	builder.apply(withEnvDocItemOpts(opts))
+
+	debugBuilder(logger, "inspector: (items) builder: ", builder)
+	return builder.items()
+}
+
+func parseEnvTag(tag string) (string, EnvVarOptions) {
+	tagValues := getTagValues(tag, "env")
+	var tagName string
+	if len(tagValues) > 0 {
+		tagName = tagValues[0]
 	}
 
 	var opts EnvVarOptions
@@ -316,87 +187,24 @@ func (i *inspector) parseField(f *ast.Field) (out []envField) {
 	if len(envSeparator) > 0 {
 		opts.Separator = envSeparator[0]
 	}
-	// Check if the field type is a slice or array
-	if _, ok := f.Type.(*ast.ArrayType); ok && opts.Separator == "" {
-		opts.Separator = ","
-	}
 
-	for i := range out {
-		out[i].opts = opts
-	}
-	return
+	return tagName, opts
 }
 
-func (i *inspector) buildScopes() ([]*EnvScope, error) {
-	scopes := make([]*EnvScope, 0, len(i.items))
-	for _, s := range i.items {
-		if !i.all && s.name != i.typeName {
-			debug("skip %q", s.name)
-			continue
-		}
-		var isAnonymous bool
-		for _, f := range i.anonymousStructs {
-			if f.name == s.name {
-				isAnonymous = true
-				break
-			}
-		}
-		if isAnonymous {
-			debug("skip anonymous struct %q", s.name)
-			continue
-		}
-
-		debug("process %q", s.name)
-		scope := &EnvScope{
-			Name: s.name,
-			Doc:  s.doc,
-		}
-		for _, f := range s.fields {
-			item, err := i.buildItem(&f, "")
-			if err != nil {
-				return nil, err
-			}
-			scope.Vars = append(scope.Vars, item)
-		}
-		scopes = append(scopes, scope)
+func getTagValues(tag, tagName string) []string {
+	tagPrefix := tagName + ":"
+	if !strings.Contains(tag, tagPrefix) {
+		return nil
 	}
-	return scopes, nil
-}
-
-func (i *inspector) buildItem(f *envField, envPrefix string) (EnvDocItem, error) {
-	switch f.kind {
-	case envFieldKindPlain:
-		return EnvDocItem{
-			Name:      fmt.Sprintf("%s%s", envPrefix, f.name),
-			Doc:       f.doc,
-			Opts:      f.opts,
-			debugName: f.name,
-		}, nil
-	case envFieldKindStruct:
-		envPrefix := fmt.Sprintf("%s%s", envPrefix, f.envPrefix)
-		var base *envStruct
-		for _, s := range i.items {
-			if s.name == f.typeRef {
-				base = s
-				break
-			}
-		}
-		if base == nil {
-			return EnvDocItem{}, fmt.Errorf("struct %q not found", f.typeRef)
-		}
-		parentItem := EnvDocItem{
-			Doc:       base.doc,
-			debugName: base.name,
-		}
-		for _, f := range base.fields {
-			item, err := i.buildItem(&f, envPrefix)
-			if err != nil {
-				return EnvDocItem{}, fmt.Errorf("build item `%s`: %w", f.name, err)
-			}
-			parentItem.Children = append(parentItem.Children, item)
-		}
-		return parentItem, nil
-	default:
-		panic("unknown field kind")
+	tagValue := strings.Split(tag, tagPrefix)[1]
+	leftQ := strings.Index(tagValue, `"`)
+	if leftQ == -1 || leftQ == len(tagValue)-1 {
+		return nil
 	}
+	rightQ := strings.Index(tagValue[leftQ+1:], `"`)
+	if rightQ == -1 {
+		return nil
+	}
+	tagValue = tagValue[leftQ+1 : leftQ+rightQ+1]
+	return strings.Split(tagValue, ",")
 }

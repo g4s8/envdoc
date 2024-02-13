@@ -177,14 +177,14 @@ func TestNewRenderContext(t *testing.T) {
 	src := []*EnvScope{
 		{
 			Name: "First",
-			Vars: []EnvDocItem{
+			Vars: []*EnvDocItem{
 				{
 					Name: "ONE",
 					Doc:  "First one",
 				},
 				{
 					Doc: "Nested",
-					Children: []EnvDocItem{
+					Children: []*EnvDocItem{
 						{
 							Name: "NESTED_ONE",
 							Doc:  "Nested one",
