@@ -17,6 +17,7 @@ type appConfig struct {
 	envPrefix      string
 	noStyles       bool
 	fieldNames     bool
+	debug          bool
 }
 
 func (cfg *appConfig) parseFlags(f *flag.FlagSet) error {
@@ -27,6 +28,8 @@ func (cfg *appConfig) parseFlags(f *flag.FlagSet) error {
 	f.StringVar(&cfg.envPrefix, "env-prefix", "", "Environment variable prefix")
 	f.BoolVar(&cfg.noStyles, "no-styles", false, "Disable styles in html output")
 	f.BoolVar(&cfg.fieldNames, "field-names", false, "Use field names if tag is not specified")
+	f.BoolVar(&cfg.debug, "debug", false, "Enable debug mode")
+
 	if err := f.Parse(os.Args[1:]); err != nil {
 		return fmt.Errorf("parsing CLI args: %w", err)
 	}
@@ -60,6 +63,9 @@ func main() {
 	cfg, err := getConfig()
 	if err != nil {
 		fatal(err)
+	}
+	if cfg.debug {
+		debugLogs = true
 	}
 	if err := run(&cfg); err != nil {
 		fatal("Generate error:", err)

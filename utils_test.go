@@ -52,3 +52,11 @@ func TestCamelToSnake(t *testing.T) {
 		}
 	}
 }
+
+func TestRandString(t *testing.T) {
+	for i := 0; i < 100; i++ {
+		if got := fastRandString(10); len(got) != 10 {
+			t.Fatalf("expected randString(10) to be 10 characters long, got %d", len(got))
+		}
+	}
+}

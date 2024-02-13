@@ -2,9 +2,7 @@ package main
 
 import (
 	"embed"
-	"errors"
 	"fmt"
-	"go/ast"
 	"io"
 	"os"
 	"path"
@@ -13,134 +11,62 @@ import (
 
 func TestTagParsers(t *testing.T) {
 	type testCase struct {
-		tag           string
-		names         []string
-		useFieldNames bool
-		expect        EnvDocItem
-		expectList    []EnvDocItem
-		fail          bool
+		tag        string
+		expectName string
+		expectOpts EnvVarOptions
 	}
 	for i, c := range []testCase{
-		{tag: "", fail: true},
-		{tag: " ", fail: true},
-		{tag: `env:"FOO"`, expect: EnvDocItem{Name: "FOO"}},
-		{tag: ` env:FOO `, fail: true},
-		{tag: `json:"bar"   env:"FOO"   qwe:"baz"`, expect: EnvDocItem{Name: "FOO"}},
-		{tag: `env:"SECRET,file"`, expect: EnvDocItem{Name: "SECRET", Opts: EnvVarOptions{FromFile: true}}},
+		{tag: ""},
+		{tag: " "},
+		{tag: `env:"FOO"`, expectName: "FOO"},
+		{tag: ` env:FOO `},
+		{tag: `json:"bar"   env:"FOO"   qwe:"baz"`, expectName: "FOO"},
+		{tag: `env:"SECRET,file"`, expectName: "SECRET", expectOpts: EnvVarOptions{FromFile: true}},
 		{
-			tag:    `env:"PASSWORD,file"           envDefault:"/tmp/password"   json:"password"`,
-			expect: EnvDocItem{Name: "PASSWORD", Opts: EnvVarOptions{FromFile: true, Default: "/tmp/password"}},
+			tag:        `env:"PASSWORD,file"           envDefault:"/tmp/password"   json:"password"`,
+			expectName: "PASSWORD",
+			expectOpts: EnvVarOptions{FromFile: true, Default: "/tmp/password"},
 		},
 		{
-			tag: `env:"CERTIFICATE,file,expand" envDefault:"${CERTIFICATE_FILE}"`,
-			expect: EnvDocItem{
-				Name: "CERTIFICATE", Opts: EnvVarOptions{
-					FromFile: true, Expand: true, Default: "${CERTIFICATE_FILE}",
-				},
+			tag:        `env:"CERTIFICATE,file,expand" envDefault:"${CERTIFICATE_FILE}"`,
+			expectName: "CERTIFICATE",
+			expectOpts: EnvVarOptions{
+				FromFile: true, Expand: true, Default: "${CERTIFICATE_FILE}",
 			},
 		},
 		{
-			tag:    `env:"SECRET_KEY,required" json:"secret_key"`,
-			expect: EnvDocItem{Name: "SECRET_KEY", Opts: EnvVarOptions{Required: true}},
+			tag:        `env:"SECRET_KEY,required" json:"secret_key"`,
+			expectName: "SECRET_KEY",
+			expectOpts: EnvVarOptions{Required: true},
 		},
 		{
-			tag:    `json:"secret_val" env:"SECRET_VAL,notEmpty"`,
-			expect: EnvDocItem{Name: "SECRET_VAL", Opts: EnvVarOptions{Required: true, NonEmpty: true}},
+			tag:        `json:"secret_val" env:"SECRET_VAL,notEmpty"`,
+			expectName: "SECRET_VAL",
+			expectOpts: EnvVarOptions{Required: true, NonEmpty: true},
 		},
 		{
-			tag: `fooo:"1" env:"JUST_A_MESS,required,notEmpty,file,expand" json:"just_a_mess" envDefault:"${JUST_A_MESS_FILE}" bar:"2"`,
-			expect: EnvDocItem{
-				Name: "JUST_A_MESS",
-				Opts: EnvVarOptions{
-					Required: true, NonEmpty: true, FromFile: true, Expand: true,
-					Default: "${JUST_A_MESS_FILE}",
-				},
+			tag:        `fooo:"1" env:"JUST_A_MESS,required,notEmpty,file,expand" json:"just_a_mess" envDefault:"${JUST_A_MESS_FILE}" bar:"2"`,
+			expectName: "JUST_A_MESS",
+			expectOpts: EnvVarOptions{
+				Required: true, NonEmpty: true, FromFile: true, Expand: true,
+				Default: "${JUST_A_MESS_FILE}",
 			},
 		},
 		{
-			tag: `env:"WORDS" envSeparator:";"`,
-			expect: EnvDocItem{
-				Name: "WORDS",
-				Opts: EnvVarOptions{Separator: ";"},
-			},
-		},
-		{
-			names: []string{"Foo", "BarBaz"},
-			expectList: []EnvDocItem{
-				{Name: "FOO"},
-				{Name: "BAR_BAZ"},
-			},
-			useFieldNames: true,
-		},
-		{
-			names: []string{"Foo"},
-			tag:   `env:",required"`,
-			expectList: []EnvDocItem{
-				{Name: "FOO", Opts: EnvVarOptions{Required: true}},
-			},
-			useFieldNames: true,
+			tag:        `env:"WORDS" envSeparator:";"`,
+			expectName: "WORDS",
+			expectOpts: EnvVarOptions{Separator: ";"},
 		},
 	} {
 		t.Run(fmt.Sprint(i), func(t *testing.T) {
-			fieldNames := make([]*ast.Ident, len(c.names))
-			for i, name := range c.names {
-				fieldNames[i] = &ast.Ident{Name: name}
+			name, opts := parseEnvTag(c.tag)
+			if e, a := c.expectName, name; e != a {
+				t.Errorf("expected[%d] name %q, got %q", i, e, a)
 			}
-			var tag *ast.BasicLit
-			if c.tag != "" {
-				tag = &ast.BasicLit{Value: c.tag}
-			}
-			field := &ast.Field{
-				Tag:   tag,
-				Names: fieldNames,
-			}
-
-			i := inspector{
-				useFieldNames: c.useFieldNames,
-			}
-
-			expect := c.expectList
-			if len(expect) == 0 && c.expect.Name != "" {
-				expect = []EnvDocItem{c.expect}
-			}
-
-			actual := i.parseField(field)
-			if c.fail {
-				if actual != nil {
-					t.Errorf("expected nil, got %#v", actual)
-				}
-				return
-			}
-			if len(expect) != len(actual) {
-				t.Errorf("expected %d items, got %d", len(expect), len(actual))
-			}
-			for i, e := range expect {
-				a := actual[i]
-				if e.Name != a.name {
-					t.Errorf("expected[%d] name %q, got %q", i, e.Name, a.name)
-				}
-				if e.Doc != a.doc {
-					t.Errorf("expected[%d] doc %q, got %q", i, e.Doc, a.doc)
-				}
-				if e.Opts != a.opts {
-					t.Errorf("expected[%d] opts %#v, got %#v", i, e.Opts, a.opts)
-				}
+			if e, a := c.expectOpts, opts; e != a {
+				t.Errorf("expected[%d] opts %#v, got %#v", i, e, a)
 			}
 		})
-	}
-}
-
-func TestInspectorError(t *testing.T) {
-	sourceFile := path.Join(t.TempDir(), "tmp.go")
-	if err := copyTestFile(path.Join("testdata", "type.go"), sourceFile); err != nil {
-		t.Fatal("Copy test file data", err)
-	}
-	insp := newInspector("", true, 0, false)
-	targetErr := errors.New("target error")
-	insp.err = targetErr
-	_, err := insp.inspectFile(sourceFile)
-	if err != targetErr {
-		t.Errorf("Expected error %q, got %q", targetErr, err)
 	}
 }
 
@@ -157,13 +83,13 @@ func TestInspector(t *testing.T) {
 		typeName     string
 		goLine       int
 		all          bool
-		expect       []EnvDocItem
-		expectScopes []EnvScope
+		expect       []*EnvDocItem
+		expectScopes []*EnvScope
 	}{
 		{
 			name:   "go_generate.go",
 			goLine: 3,
-			expect: []EnvDocItem{
+			expect: []*EnvDocItem{
 				{
 					Name: "FOO",
 					Doc:  "Foo stub",
@@ -173,7 +99,7 @@ func TestInspector(t *testing.T) {
 		{
 			name:     "tags.go",
 			typeName: "Type1",
-			expect: []EnvDocItem{
+			expect: []*EnvDocItem{
 				{
 					Name: "SECRET",
 					Doc:  "Secret is a secret value that is read from a file.",
@@ -207,7 +133,7 @@ func TestInspector(t *testing.T) {
 		{
 			name:     "type.go",
 			typeName: "Type1",
-			expect: []EnvDocItem{
+			expect: []*EnvDocItem{
 				{
 					Name: "FOO",
 					Doc:  "Foo stub",
@@ -217,7 +143,7 @@ func TestInspector(t *testing.T) {
 		{
 			name:     "arrays.go",
 			typeName: "Arrays",
-			expect: []EnvDocItem{
+			expect: []*EnvDocItem{
 				{
 					Name: "DOT_SEPARATED",
 					Doc:  "DotSeparated stub",
@@ -233,7 +159,7 @@ func TestInspector(t *testing.T) {
 		{
 			name:     "comments.go",
 			typeName: "Comments",
-			expect: []EnvDocItem{
+			expect: []*EnvDocItem{
 				{
 					Name: "FOO",
 					Doc:  "Foo stub",
@@ -247,10 +173,10 @@ func TestInspector(t *testing.T) {
 		{
 			name: "all.go",
 			all:  true,
-			expectScopes: []EnvScope{
+			expectScopes: []*EnvScope{
 				{
 					Name: "Foo",
-					Vars: []EnvDocItem{
+					Vars: []*EnvDocItem{
 						{
 							Name: "ONE",
 							Doc:  "One is a one.",
@@ -263,7 +189,7 @@ func TestInspector(t *testing.T) {
 				},
 				{
 					Name: "Bar",
-					Vars: []EnvDocItem{
+					Vars: []*EnvDocItem{
 						{
 							Name: "THREE",
 							Doc:  "Three is a three.",
@@ -279,11 +205,11 @@ func TestInspector(t *testing.T) {
 		{
 			name:     "envprefix.go",
 			typeName: "Settings",
-			expect: []EnvDocItem{
+			expect: []*EnvDocItem{
 				{
 					Doc:       "Database is the database settings.",
 					debugName: "Database",
-					Children: []EnvDocItem{
+					Children: []*EnvDocItem{
 						{
 							Name: "DB_PORT",
 							Doc:  "Port is the port to connect to",
@@ -311,7 +237,7 @@ func TestInspector(t *testing.T) {
 				{
 					Doc:       "ServerConfig is the server settings.",
 					debugName: "Server",
-					Children: []EnvDocItem{
+					Children: []*EnvDocItem{
 						{
 							Name: "SERVER_PORT",
 							Doc:  "Port is the port to listen on",
@@ -325,7 +251,7 @@ func TestInspector(t *testing.T) {
 						{
 							Doc:       "TimeoutConfig is the timeout settings.",
 							debugName: "Timeout",
-							Children: []EnvDocItem{
+							Children: []*EnvDocItem{
 								{
 									Name: "SERVER_TIMEOUT_READ",
 									Doc:  "Read is the read timeout",
@@ -349,10 +275,10 @@ func TestInspector(t *testing.T) {
 		{
 			name:     "anonymous.go",
 			typeName: "Config",
-			expect: []EnvDocItem{
+			expect: []*EnvDocItem{
 				{
 					Doc: "Repo is the configuration for the repository.",
-					Children: []EnvDocItem{
+					Children: []*EnvDocItem{
 						{
 							Name: "REPO_CONN",
 							Doc:  "Conn is the connection string for the repository.",
@@ -365,9 +291,9 @@ func TestInspector(t *testing.T) {
 		{
 			name:     "nodocs.go",
 			typeName: "Config",
-			expect: []EnvDocItem{
+			expect: []*EnvDocItem{
 				{
-					Children: []EnvDocItem{
+					Children: []*EnvDocItem{
 						{
 							Name: "REPO_CONN",
 							Opts: EnvVarOptions{Required: true, NonEmpty: true},
@@ -379,7 +305,7 @@ func TestInspector(t *testing.T) {
 	} {
 		scopes := c.expectScopes
 		if scopes == nil {
-			scopes = []EnvScope{
+			scopes = []*EnvScope{
 				{
 					Name: c.typeName,
 					Vars: c.expect,
@@ -409,8 +335,9 @@ func copyTestFile(name string, dest string) error {
 	return nil
 }
 
-func inspectorTester(name string, typeName string, all bool, lineN int, expect []EnvScope) func(*testing.T) {
+func inspectorTester(name string, typeName string, all bool, lineN int, expect []*EnvScope) func(*testing.T) {
 	return func(t *testing.T) {
+		t.Logf("inspect name=%q typeName=%q all=%v lineN=%d", name, typeName, all, lineN)
 		sourceFile := path.Join(t.TempDir(), "tmp.go")
 		if err := copyTestFile(path.Join("testdata", name), sourceFile); err != nil {
 			t.Fatal("Copy test file data", err)
@@ -442,7 +369,7 @@ func inspectorTester(name string, typeName string, all bool, lineN int, expect [
 	}
 }
 
-func testScopeVar(t *testing.T, logPrefix string, expect, actual EnvDocItem) {
+func testScopeVar(t *testing.T, logPrefix string, expect, actual *EnvDocItem) {
 	t.Helper()
 
 	if expect.Name != actual.Name {

@@ -70,6 +70,16 @@ func TestOptions(t *testing.T) {
 			t.Fatal("expected fieldNames to be true")
 		}
 	})
+	t.Run("WithType", func(t *testing.T) {
+		const typeName = "Foo"
+		g, err := newGenerator("stub", 1, withType(typeName))
+		if err != nil {
+			t.Fatal("new generator error", err)
+		}
+		if g.targetType != typeName {
+			t.Fatalf("expected targetType to be %q, got %q", typeName, g.targetType)
+		}
+	})
 	t.Run("empty", func(t *testing.T) {
 		g, err := newGenerator("stub", 1)
 		if err != nil {

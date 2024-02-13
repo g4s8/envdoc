@@ -69,11 +69,12 @@ func newRenderContext(scopes []*EnvScope, envPrefix string, noStyles bool) rende
 	return res
 }
 
-func newRenderItem(item EnvDocItem, envPrefix string) renderItem {
+func newRenderItem(item *EnvDocItem, envPrefix string) renderItem {
+	log := logger()
 	children := make([]renderItem, len(item.Children))
-	debug("render item %s", item.Name)
+	log.Printf("render item %s", item.Name)
 	for i, child := range item.Children {
-		debug("render child item %s", child.Name)
+		log.Printf("render child item %s", child.Name)
 		children[i] = newRenderItem(child, envPrefix)
 	}
 	return renderItem{
