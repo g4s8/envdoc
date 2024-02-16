@@ -45,6 +45,8 @@ func withFormat(formatName string) generatorOption {
 			g.tmpl = tmplPlaintext
 		case "html":
 			g.tmpl = tmplHTML
+		case "dotenv":
+			g.tmpl = tmplDotEnv
 		default:
 			return fmt.Errorf("unknown format: %s", formatName)
 		}

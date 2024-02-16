@@ -105,6 +105,7 @@ var (
 	tmplMarkdown  = texttmpl.Must(texttmpl.New("markdown.tmpl").Funcs(tplFuncs).ParseFS(templates, "templ/markdown.tmpl"))
 	tmplHTML      = htmltmpl.Must(htmltmpl.New("html.tmpl").Funcs(tplFuncs).ParseFS(templates, "templ/html.tmpl"))
 	tmplPlaintext = texttmpl.Must(texttmpl.New("plaintext.tmpl").Funcs(tplFuncs).ParseFS(templates, "templ/plaintext.tmpl"))
+	tmplDotEnv    = texttmpl.Must(texttmpl.New("dotenv.tmpl").Funcs(tplFuncs).ParseFS(templates, "templ/dotenv.tmpl"))
 )
 
 type template interface {
