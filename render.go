@@ -94,7 +94,8 @@ func newRenderItem(item *EnvDocItem, envPrefix string) renderItem {
 var templates embed.FS
 
 var tplFuncs = map[string]any{
-	"repeat": strings.Repeat,
+	"repeat":      strings.Repeat,
+	"prefixLines": prefixLines,
 }
 
 func _() {
@@ -119,4 +120,8 @@ func templateRenderer(t template) func(renderContext, io.Writer) error {
 		}
 		return nil
 	}
+}
+
+func prefixLines(lines, prefix string) string {
+	return "\n" + prefix + strings.Join(strings.Split(lines, "\n"), "\n"+prefix)
 }

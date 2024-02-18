@@ -1,42 +1,45 @@
 {{- define "item" }}
   {{- $comma := false -}}
-# {{ .Doc }}
   {{- if .EnvName -}}
-    {{ if eq .EnvSeparator "," }}
-      {{- $comma = true -}}
-# (comma-separated
-    {{ else if ne .EnvSeparator "" }}
-      {{- $comma = true -}}
-# (separated by `{{.EnvSeparator}}`
-    {{ end -}}
+    {{ prefixLines .Doc "# " -}}
+    {{- if eq .EnvSeparator "," -}}
+      {{ $comma = true }} (comma-separated
+    {{- else if ne .EnvSeparator "" -}}
+      {{ $comma = true }} (separated by '{{.EnvSeparator}}'
+    {{- end -}}
     {{- if .Required -}}
-      {{- if $comma -}}, {{- else -}}
-# (
-{{- end -}}
+      {{- if $comma }}, {{ else }} ({{ end -}}
       {{- $comma = true -}}
       required
     {{- end -}}
     {{- if .Expand -}}
-      {{- if $comma }}, {{ else }}# ({{ end -}}
+      {{- if $comma }}, {{ else }} ({{ end -}}
       {{- $comma = true -}}
       expand
     {{- end -}}
     {{- if .NonEmpty -}}
-      {{- if $comma }}, {{ else }}# ({{ end -}}
+      {{- if $comma }}, {{ else }} ({{ end -}}
       {{- $comma = true -}}
       non-empty
     {{- end -}}
     {{if .FromFile -}}
-      {{- if $comma }}, {{ else }}# ({{ end -}}
+      {{- if $comma }}, {{ else }} ({{ end -}}
       {{- $comma = true -}}
       from-file
     {{- end -}}
     {{- if ne .EnvDefault "" -}}
-      {{- if $comma }}, {{ else }}# ({{ end -}}
+      {{- if $comma }}, {{ else }} ({{ end -}}
       {{- $comma = true -}}
-      {{- .EnvDefault | printf "default: `%s`" -}}
+      {{- .EnvDefault | printf "default: %s" -}}
     {{- end -}}
     {{- if $comma }}){{ end -}}
+  {{ else -}}
+    {{ prefixLines .Doc "## " }}
+  {{- end }}
+  {{ if ne .EnvDefault "" -}}
+    {{- printf "# %s=%s" .EnvName .EnvDefault -}}
+  {{- else -}}
+    {{- printf `# %s=""` .EnvName -}}
   {{- end }}
   {{- $children := .Children 2 }}
   {{- if $children }}
@@ -44,17 +47,17 @@
 {{ template "item" . }}
     {{- end }}
   {{- end -}}
-
-    Save me: {{- .EnvName | printf "* `%s`" -}}
 {{ end -}}
 
-{{ .Title }}
-{{ range .Sections }}
+# {{ .Title }}
+{{ range .Sections -}}
+{{ if ne .Name "" }}
 ## {{ .Name }}
-{{ if ne .Doc "" }}
-# {{ .Doc }}
+{{ end }}
+{{- if ne .Doc "" }}
+{{ prefixLines .Doc "## " -}}
 {{ end }}
 {{ range .Items }}
-{{- template "item" . }}
+{{- template "item" . -}}
 {{ end -}}
 {{ end -}}
