@@ -30,16 +30,16 @@
     {{- if ne .EnvDefault "" -}}
       {{- if $comma }}, {{ else }} ({{ end -}}
       {{- $comma = true -}}
-      {{- .EnvDefault | printf "default: %s" -}}
+      {{- printf "default: '%s'" .EnvDefault -}}
     {{- end -}}
     {{- if $comma }}){{ end -}}
+    {{ if ne .EnvDefault "" }}
+{{ printf "# %s=%s" .EnvName .EnvDefault -}}
+    {{ else }}
+{{ printf `# %s=""` .EnvName -}}
+    {{ end -}}
   {{ else -}}
     {{ prefixLines .Doc "## " }}
-  {{- end }}
-  {{ if ne .EnvDefault "" -}}
-    {{- printf "# %s=%s" .EnvName .EnvDefault -}}
-  {{- else -}}
-    {{- printf `# %s=""` .EnvName -}}
   {{- end }}
   {{- $children := .Children 2 }}
   {{- if $children }}
@@ -47,17 +47,18 @@
 {{ template "item" . }}
     {{- end }}
   {{- end -}}
-{{ end -}}
+{{- end -}}
 
 # {{ .Title }}
-{{ range .Sections -}}
+{{- range .Sections -}}
 {{ if ne .Name "" }}
 ## {{ .Name }}
-{{ end }}
-{{- if ne .Doc "" }}
-{{ prefixLines .Doc "## " -}}
-{{ end }}
-{{ range .Items }}
-{{- template "item" . -}}
-{{ end -}}
-{{ end -}}
+{{- end }}
+{{- if ne .Doc "" -}}
+{{ prefixLines .Doc "## " }}
+{{- end -}}
+{{- range .Items }}
+{{- template "item" . }}
+{{- end -}}
+{{- end -}}
+
