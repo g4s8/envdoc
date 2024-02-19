@@ -1,7 +1,7 @@
 {{- define "item" }}
   {{- $comma := false -}}
   {{- if .EnvName -}}
-    {{ prefixLines .Doc "# " -}}
+    {{ prefixLines .Doc "## " -}}
     {{- if eq .EnvSeparator "," -}}
       {{ $comma = true }} (comma-separated
     {{- else if ne .EnvSeparator "" -}}
@@ -40,22 +40,25 @@
     {{ end -}}
   {{ else -}}
     {{ prefixLines .Doc "## " }}
-  {{- end }}
+#
+  {{- end -}}
   {{- $children := .Children 2 }}
   {{- if $children }}
     {{- range $children }}
 {{ template "item" . }}
-    {{- end }}
+    {{- end -}}
   {{- end -}}
-{{- end -}}
+{{ end -}}
 
 # {{ .Title }}
-{{- range .Sections -}}
-{{ if ne .Name "" }}
+
+{{ range .Sections -}}
+{{- if ne .Name "" }}
 ## {{ .Name }}
 {{- end }}
 {{- if ne .Doc "" -}}
 {{ prefixLines .Doc "## " }}
+#
 {{- end -}}
 {{- range .Items }}
 {{- template "item" . }}
