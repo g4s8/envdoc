@@ -269,12 +269,3 @@ func testRenderer(tmpl template, c renderContext, expectLines ...string) func(*t
 		}
 	}
 }
-
-func TestPrefixLines(t *testing.T) {
-    lines := "first line\nsecond line\nthird line"
-    actual := prefixLines(lines, "## ")
-    expected := "\n## first line\n## second line\n## third line"
-    if actual != expected {
-		t.Errorf("expected prefiex lines '%v', got '%v'", expected, actual)
-    }
-}

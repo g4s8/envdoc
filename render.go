@@ -94,12 +94,15 @@ func newRenderItem(item *EnvDocItem, envPrefix string) renderItem {
 var templates embed.FS
 
 var tplFuncs = map[string]any{
-	"repeat":      strings.Repeat,
-	"prefixLines": prefixLines,
-}
-
-func _() {
-	// texttmpl.ParseFS
+	"repeat": strings.Repeat,
+	"split":  strings.Split,
+	"strAppend": func(arr []string, item string) []string {
+		return append(arr, item)
+	},
+	"join": strings.Join,
+	"strSlice": func() []string {
+		return make([]string, 0)
+	},
 }
 
 var (
@@ -120,8 +123,4 @@ func templateRenderer(t template) func(renderContext, io.Writer) error {
 		}
 		return nil
 	}
-}
-
-func prefixLines(lines, prefix string) string {
-	return "\n" + prefix + strings.Join(strings.Split(lines, "\n"), "\n"+prefix)
 }
