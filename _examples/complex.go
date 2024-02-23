@@ -9,11 +9,12 @@ package main
 //go:generate go run ../ -output complex.txt -all -format plaintext
 //go:generate go run ../ -output x_complex.md -all -env-prefix X_
 //go:generate go run ../ -output complex-nostyle.html -format html -all -no-styles
+//go:generate go run ../ -output complex.env -all -format dotenv
 type ComplexConfig struct {
 	// Secret is a secret value that is read from a file.
 	Secret string `env:"SECRET,file"`
 	// Password is a password that is read from a file.
-	Password string `env:"PASSWORD,file"    envDefault:"/tmp/password"   json:"password"`
+	Password string `env:"PASSWORD,file" envDefault:"/tmp/password" json:"password"`
 	// Certificate is a certificate that is read from a file.
 	Certificate string `env:"CERTIFICATE,file,expand" envDefault:"${CERTIFICATE_FILE}"`
 	// Key is a secret key.

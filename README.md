@@ -47,7 +47,7 @@ type Config struct {
  * `-type`: Specify the target struct type name to generate documentation for.
  If ommited, the next type after `go:generate` comment will be used.
  * `-format` (default: `markdown`) - Set output format type, either `markdown`,
- `plaintext` or `html`.
+ `plaintext`, `html`, or `dotenv`.
  * `-all` - Generate documentation for all types in the file.
  * `-env-prefix` - Environment variable prefix.
  * `-no-styles` - Disable built-int CSS styles for HTML format.

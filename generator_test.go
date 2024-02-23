@@ -18,6 +18,7 @@ func TestOptions(t *testing.T) {
 			{name: "markdown", expect: tmplMarkdown},
 			{name: "html", expect: tmplHTML},
 			{name: "plaintext", expect: tmplPlaintext},
+			{name: "dotenv", expect: tmplDotEnv},
 			{name: "unknown", expectErr: true},
 		} {
 			t.Run(c.name, func(t *testing.T) {

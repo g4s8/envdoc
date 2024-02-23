@@ -95,16 +95,21 @@ var templates embed.FS
 
 var tplFuncs = map[string]any{
 	"repeat": strings.Repeat,
-}
-
-func _() {
-	// texttmpl.ParseFS
+	"split":  strings.Split,
+	"strAppend": func(arr []string, item string) []string {
+		return append(arr, item)
+	},
+	"join": strings.Join,
+	"strSlice": func() []string {
+		return make([]string, 0)
+	},
 }
 
 var (
 	tmplMarkdown  = texttmpl.Must(texttmpl.New("markdown.tmpl").Funcs(tplFuncs).ParseFS(templates, "templ/markdown.tmpl"))
 	tmplHTML      = htmltmpl.Must(htmltmpl.New("html.tmpl").Funcs(tplFuncs).ParseFS(templates, "templ/html.tmpl"))
 	tmplPlaintext = texttmpl.Must(texttmpl.New("plaintext.tmpl").Funcs(tplFuncs).ParseFS(templates, "templ/plaintext.tmpl"))
+	tmplDotEnv    = texttmpl.Must(texttmpl.New("dotenv.tmpl").Funcs(tplFuncs).ParseFS(templates, "templ/dotenv.tmpl"))
 )
 
 type template interface {
