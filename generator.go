@@ -6,14 +6,15 @@ import (
 )
 
 type generator struct {
-	fileName   string
-	execLine   int
-	targetType string
-	all        bool // generate documentation for all types in the file
-	tmpl       template
-	prefix     string
-	noStyles   bool
-	fieldNames bool
+	fileName     string
+	execLine     int
+	targetType   string
+	all          bool // generate documentation for all types in the file
+	tmpl         template
+	renderConfig renderConfig
+	prefix       string
+	noStyles     bool
+	fieldNames   bool
 }
 
 type generatorOption func(*generator) error
@@ -41,12 +42,16 @@ func withFormat(formatName string) generatorOption {
 			fallthrough
 		case "markdown":
 			g.tmpl = tmplMarkdown
+			g.renderConfig = renderMarkdown
 		case "plaintext":
 			g.tmpl = tmplPlaintext
+			g.renderConfig = renderPlaintext
 		case "html":
 			g.tmpl = tmplHTML
+			g.renderConfig = renderHTML
 		case "dotenv":
 			g.tmpl = tmplDotEnv
+			g.renderConfig = renderDotenv
 		default:
 			return fmt.Errorf("unknown format: %s", formatName)
 		}
@@ -84,6 +89,7 @@ func newGenerator(fileName string, execLine int, opts ...generatorOption) (*gene
 	}
 	if g.tmpl == nil {
 		g.tmpl = tmplMarkdown
+		g.renderConfig = renderMarkdown
 	}
 	return g, nil
 }
@@ -95,7 +101,7 @@ func (g *generator) generate(out io.Writer) error {
 		return fmt.Errorf("inspect file: %w", err)
 	}
 	renderer := templateRenderer(g.tmpl)
-	rctx := newRenderContext(data, g.prefix, g.noStyles)
+	rctx := newRenderContext(data, g.renderConfig, g.prefix, g.noStyles)
 	if err := renderer(rctx, out); err != nil {
 		return err
 	}

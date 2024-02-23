@@ -1,13 +1,8 @@
 package main
 
 import (
-	"embed"
 	"fmt"
 	"io"
-	"strings"
-
-	htmltmpl "html/template"
-	texttmpl "text/template"
 )
 
 type renderSection struct {
@@ -41,16 +36,31 @@ func (i renderItem) Children(indentInc int) []renderItem {
 	return res
 }
 
+type renderItemConfigt struct {
+	SeparatorFormat  string
+	SeparatorDefault string
+	OptRequired      string
+	OptExpand        string
+	OptNonEmpty      string
+	OptFromFile      string
+	EnvDefaultFormat string
+}
+type renderConfig struct {
+	Item renderItemConfigt
+}
+
 type renderContext struct {
 	Title    string
 	Sections []renderSection
 	Styles   bool
+	Config   renderConfig
 }
 
-func newRenderContext(scopes []*EnvScope, envPrefix string, noStyles bool) renderContext {
+func newRenderContext(scopes []*EnvScope, cfg renderConfig, envPrefix string, noStyles bool) renderContext {
 	res := renderContext{
 		Sections: make([]renderSection, len(scopes)),
 		Styles:   !noStyles,
+		Config:   cfg,
 	}
 	res.Title = "Environment Variables"
 	for i, scope := range scopes {
@@ -90,26 +100,56 @@ func newRenderItem(item *EnvDocItem, envPrefix string) renderItem {
 	}
 }
 
-//go:embed templ
-var templates embed.FS
-
-var tplFuncs = map[string]any{
-	"repeat": strings.Repeat,
-	"split":  strings.Split,
-	"strAppend": func(arr []string, item string) []string {
-		return append(arr, item)
-	},
-	"join": strings.Join,
-	"strSlice": func() []string {
-		return make([]string, 0)
-	},
-}
-
 var (
-	tmplMarkdown  = texttmpl.Must(texttmpl.New("markdown.tmpl").Funcs(tplFuncs).ParseFS(templates, "templ/markdown.tmpl"))
-	tmplHTML      = htmltmpl.Must(htmltmpl.New("html.tmpl").Funcs(tplFuncs).ParseFS(templates, "templ/html.tmpl"))
-	tmplPlaintext = texttmpl.Must(texttmpl.New("plaintext.tmpl").Funcs(tplFuncs).ParseFS(templates, "templ/plaintext.tmpl"))
-	tmplDotEnv    = texttmpl.Must(texttmpl.New("dotenv.tmpl").Funcs(tplFuncs).ParseFS(templates, "templ/dotenv.tmpl"))
+	tmplMarkdown  = newTmplText("markdown.tmpl")
+	tmplHTML      = newTmplText("html.tmpl")
+	tmplPlaintext = newTmplText("plaintext.tmpl")
+	tmplDotEnv    = newTmplText("dotenv.tmpl")
+
+	renderMarkdown = renderConfig{
+		Item: renderItemConfigt{
+			SeparatorFormat:  "separated by `%s`",
+			SeparatorDefault: "comma-separated",
+			OptRequired:      "**required**",
+			OptExpand:        "expand",
+			OptFromFile:      "from-file",
+			OptNonEmpty:      "non-empty",
+			EnvDefaultFormat: "default: `%s`",
+		},
+	}
+	renderPlaintext = renderConfig{
+		Item: renderItemConfigt{
+			SeparatorFormat:  "separated by `%s`",
+			SeparatorDefault: "comma-separated",
+			OptRequired:      "required",
+			OptExpand:        "expand",
+			OptFromFile:      "from-file",
+			OptNonEmpty:      "non-empty",
+			EnvDefaultFormat: "default: `%s`",
+		},
+	}
+	renderDotenv = renderConfig{
+		Item: renderItemConfigt{
+			SeparatorFormat:  "separated by '%s'",
+			SeparatorDefault: "comma-separated",
+			OptRequired:      "required",
+			OptExpand:        "expand",
+			OptFromFile:      "from-file",
+			OptNonEmpty:      "non-empty",
+			EnvDefaultFormat: "default: '%s'",
+		},
+	}
+	renderHTML = renderConfig{
+		Item: renderItemConfigt{
+			SeparatorFormat:  `separated by "<code>%s</code>"`,
+			SeparatorDefault: "comma-separated",
+			OptRequired:      "<strong>required</strong>",
+			OptExpand:        "expand",
+			OptFromFile:      "from-file",
+			OptNonEmpty:      "non-empty",
+			EnvDefaultFormat: "default: <code>%s</code>",
+		},
+	}
 )
 
 type template interface {
