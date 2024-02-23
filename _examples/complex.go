@@ -45,7 +45,10 @@ type NextConfig struct { // NextConfig is a configuration structure.
 
 // FieldNames uses field names as env names.
 //
-//go:generate go run ../ -output complex-fields.md -field-names
+//go:generate go run ../ -output complex-fields.txt  -field-names  -format plaintext
+//go:generate go run ../ -output complex-fields.md   -field-names  -format markdown
+//go:generate go run ../ -output complex-fields.html -field-names  -format html
+//go:generate go run ../ -output complex-fields.env  -field-names  -format dotenv
 type FieldNames struct {
 	// Foo is a single field.
 	Foo string

@@ -79,12 +79,13 @@ func TestInspector(t *testing.T) {
 	// flags      EnvDocItemFlags
 	// envDefault string
 	for _, c := range []struct {
-		name         string
-		typeName     string
-		goLine       int
-		all          bool
-		expect       []*EnvDocItem
-		expectScopes []*EnvScope
+		name          string
+		typeName      string
+		goLine        int
+		all           bool
+		expect        []*EnvDocItem
+		expectScopes  []*EnvScope
+		useFieldNames bool
 	}{
 		{
 			name:   "go_generate.go",
@@ -302,6 +303,39 @@ func TestInspector(t *testing.T) {
 				},
 			},
 		},
+		{
+			name:          "field_names.go",
+			typeName:      "FieldNames",
+			useFieldNames: true,
+			expect: []*EnvDocItem{
+				{
+					Name: "FOO",
+					Doc:  "Foo is a single field.",
+				},
+				{
+					Name: "BAR",
+					Doc:  "Bar and Baz are two fields.",
+				},
+				{
+					Name: "BAZ",
+					Doc:  "Bar and Baz are two fields.",
+				},
+				{
+					Name: "QUUX",
+					Doc:  "Quux is a field with a tag.",
+				},
+				{
+					Name: "FOO_BAR",
+					Doc:  "FooBar is a field with a default value.",
+					Opts: EnvVarOptions{Default: "quuux"},
+				},
+				{
+					Name: "REQUIRED",
+					Doc:  "Required is a required field.",
+					Opts: EnvVarOptions{Required: true},
+				},
+			},
+		},
 	} {
 		scopes := c.expectScopes
 		if scopes == nil {
@@ -312,7 +346,8 @@ func TestInspector(t *testing.T) {
 				},
 			}
 		}
-		t.Run(c.name, inspectorTester(c.name, c.typeName, c.all, c.goLine, scopes))
+		t.Run(c.name, inspectorTester(c.name, c.typeName, c.all, c.goLine, c.useFieldNames,
+			scopes))
 	}
 }
 
@@ -335,14 +370,16 @@ func copyTestFile(name string, dest string) error {
 	return nil
 }
 
-func inspectorTester(name string, typeName string, all bool, lineN int, expect []*EnvScope) func(*testing.T) {
+func inspectorTester(name string, typeName string, all bool, lineN int, useFieldNames bool,
+	expect []*EnvScope,
+) func(*testing.T) {
 	return func(t *testing.T) {
 		t.Logf("inspect name=%q typeName=%q all=%v lineN=%d", name, typeName, all, lineN)
 		sourceFile := path.Join(t.TempDir(), "tmp.go")
 		if err := copyTestFile(path.Join("testdata", name), sourceFile); err != nil {
 			t.Fatal("Copy test file data", err)
 		}
-		insp := newInspector(typeName, all, lineN, false)
+		insp := newInspector(typeName, all, lineN, useFieldNames)
 		scopes, err := insp.inspectFile(sourceFile)
 		if err != nil {
 			t.Fatal("Inspector failed", err)
