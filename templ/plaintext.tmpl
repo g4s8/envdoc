@@ -1,58 +1,31 @@
 {{- define "item" }}
-  {{- $comma := false -}}
-  {{- repeat " " .Indent -}}
-  {{- if .EnvName }}
-    {{- .EnvName | printf "* `%s`" -}}
-    {{- if eq .EnvSeparator "," -}}
-      {{- $comma = true }} (comma-separated
-    {{- else if ne .EnvSeparator "" -}}
-      {{- $comma = true }} (separated by `{{.EnvSeparator}}`
-    {{- end -}}
-    {{- if .Required -}}
-      {{- if $comma }}, {{ else }} ({{ end -}}
-      {{- $comma = true -}}
-      required
-    {{- end -}}
-    {{- if .Expand -}}
-      {{- if $comma }}, {{ else }} ({{ end -}}
-      {{- $comma = true -}}
-      expand
-    {{- end -}}
-    {{- if .NonEmpty -}}
-      {{- if $comma }}, {{ else }} ({{ end -}}
-      {{- $comma = true -}}
-      non-empty
-    {{- end -}}
-    {{if .FromFile -}}
-      {{- if $comma }}, {{ else }} ({{ end -}}
-      {{- $comma = true -}}
-      from-file
-    {{- end -}}
-    {{- if ne .EnvDefault "" -}}
-      {{- if $comma }}, {{ else }} ({{ end -}}
-      {{- $comma = true -}}
-      {{- .EnvDefault | printf "default: `%s`" -}}
-    {{- end -}}
-    {{- if $comma }}){{ end -}}
-    {{- .Doc | printf " - %s" }}
+  {{- $ := index . 0 }}
+  {{- $cfg := index . 1 }}
+  {{- $indent := index . 2 }}
+  {{- repeat " " $indent }}
+  {{- if $.EnvName }}
+    {{- $.EnvName | printf "* `%s`" -}}
+    {{- template "item.options" (list $ $cfg " (%s)") }}
+    {{- $.Doc | printf " - %s" }}
   {{- else }}
-    {{- .Doc | printf "* %s" }}
+    {{- $.Doc | printf "* %s" }}
   {{- end }}
-  {{- $children := .Children 2 }}
+  {{- $children := $.Children 0 }}
   {{- if $children }}
-    {{- range $children }}
-{{ template "item" . }}
+    {{- range $child := $children }}
+{{ template "item" (list $child $cfg (sum $indent 2)) }}
     {{- end }}
   {{- end -}}
 {{ end -}}
 
+{{- $cfg := $.Config -}}
 {{ .Title }}
 {{ range .Sections }}
 ## {{ .Name }}
-{{ if ne .Doc "" }}
+{{ if .Doc }}
 {{ .Doc }}
 {{ end }}
-{{ range .Items }}
-{{- template "item" . }}
+{{ range $item := .Items }}
+{{- template "item" (list $item $cfg.Item 1) }}
 {{ end -}}
-{{ end -}}
+{{ end }}

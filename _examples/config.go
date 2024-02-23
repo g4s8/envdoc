@@ -16,4 +16,7 @@ type Config struct {
 
 	// Debug mode enabled.
 	Debug bool `env:"DEBUG" envDefault:"false"`
+
+	// Prefix for something.
+	Prefix string `env:"PREFIX"`
 }

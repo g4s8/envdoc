@@ -17,3 +17,4 @@ Settings is the application settings.
      - `SERVER_TIMEOUT_READ` (default: `30`) - Read is the read timeout
      - `SERVER_TIMEOUT_WRITE` (default: `30`) - Write is the write timeout
  - `DEBUG` - Debug is the debug flag
+

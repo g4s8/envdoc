@@ -77,7 +77,7 @@ var testRenderSections = []renderSection{
 func TestRender(t *testing.T) {
 	t.Run("simple", func(t *testing.T) {
 		rc := renderContext{Title: "Simple", Sections: []renderSection{{Items: testRenderItems}}}
-		t.Run("markdown", testRenderer(tmplMarkdown, rc,
+		t.Run("markdown", testRenderer(tmplMarkdown, rc, renderMarkdown,
 			"# Simple",
 			"- `TEST_ENV` - This is a test environment variable.",
 			"- `TEST_ENV2` (comma-separated, default: `default value`) - This is another test environment variable.",
@@ -87,8 +87,9 @@ func TestRender(t *testing.T) {
 			"  - `NESTED_ENV2` - This is a second nested environment variable.",
 			"  - Nested item level two",
 			"    - `NESTED_ENV3` - This is a third nested environment variable.",
+			"",
 		))
-		t.Run("plaintext", testRenderer(tmplPlaintext, rc,
+		t.Run("plaintext", testRenderer(tmplPlaintext, rc, renderPlaintext,
 			"Simple",
 			" * `TEST_ENV` - This is a test environment variable.",
 			" * `TEST_ENV2` (comma-separated, default: `default value`) - This is another test environment variable.",
@@ -98,8 +99,9 @@ func TestRender(t *testing.T) {
 			"   * `NESTED_ENV2` - This is a second nested environment variable.",
 			"   * Nested item level two",
 			"     * `NESTED_ENV3` - This is a third nested environment variable.",
+			"",
 		))
-		t.Run("html", testRenderer(tmplHTML, rc,
+		t.Run("html", testRenderer(tmplHTML, rc, renderHTML,
 			`<!DOCTYPE html>`,
 			`<html lang="en">`,
 			`<head>`,
@@ -132,21 +134,25 @@ func TestRender(t *testing.T) {
 	})
 	t.Run("sections", func(t *testing.T) {
 		rc := renderContext{Title: "Sections", Sections: testRenderSections, Styles: true}
-		t.Run("markdown", testRenderer(tmplMarkdown, rc,
+		t.Run("markdown", testRenderer(tmplMarkdown, rc, renderMarkdown,
 			"# Sections",
 			"## First",
 			" - `ONE` - First one",
 			" - `TWO` - First two",
 			"## Second",
-			" - `THREE` - Second three"))
-		t.Run("plaintext", testRenderer(tmplPlaintext, rc,
+			" - `THREE` - Second three",
+			"",
+		))
+		t.Run("plaintext", testRenderer(tmplPlaintext, rc, renderPlaintext,
 			"Sections",
 			"## First",
 			" * `ONE` - First one",
 			" * `TWO` - First two",
 			"## Second",
-			" * `THREE` - Second three"))
-		t.Run("html", testRenderer(tmplHTML, rc,
+			" * `THREE` - Second three",
+			"",
+		))
+		t.Run("html", testRenderer(tmplHTML, rc, renderHTML,
 			`<!DOCTYPE html>`,
 			`<html lang="en">`,
 			`<head>`,
@@ -169,7 +175,8 @@ func TestRender(t *testing.T) {
 			`</article>`,
 			`</section>`,
 			`</body>`,
-			`</html>`))
+			`</html>`,
+		))
 	})
 }
 
@@ -194,7 +201,7 @@ func TestNewRenderContext(t *testing.T) {
 			},
 		},
 	}
-	rc := newRenderContext(src, "PREFIX_", false)
+	rc := newRenderContext(src, renderPlaintext, "PREFIX_", false)
 	const title = "Environment Variables"
 	if rc.Title != title {
 		t.Errorf("expected title %q, got %q", title, rc.Title)
@@ -235,8 +242,9 @@ func TestNewRenderContext(t *testing.T) {
 	}
 }
 
-func testRenderer(tmpl template, c renderContext, expectLines ...string) func(*testing.T) {
+func testRenderer(tmpl template, c renderContext, cfg renderConfig, expectLines ...string) func(*testing.T) {
 	return func(t *testing.T) {
+		c.Config = cfg
 		var buf bytes.Buffer
 		r := templateRenderer(tmpl)
 		err := r(c, &buf)

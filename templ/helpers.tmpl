@@ -1,0 +1,55 @@
+{{/*
+Render doc lines: split doc by newline and prefix with `##` each line.
+*/}}
+{{- define "doc.lines" }}
+  {{- $ := index . 0 }}
+  {{- $prefix := index . 1 }}
+  {{- if $ }}
+    {{- $docLines := split $ "\n" }}
+    {{- range $line := $docLines }}
+{{ $prefix }} {{ $line }}
+    {{- end }}
+  {{- end }}
+{{- end -}}
+
+{{/*
+Render item options using items config (inline rendering).
+*/}}
+{{- define "item.options" -}}
+  {{- $ := index . 0 -}}
+  {{- $cfg := index . 1 -}}
+  {{- $format := index . 2 -}}
+  {{/*
+	SeparatorFormat  string
+	SeparatorDefault string
+	OptRequired      string
+	OptExpand        string
+	OptNonEmpty      string
+	OptFromFile      string
+	EnvDefaultFormat string
+  */}}
+  {{- $opts := strSlice -}}
+  {{- if eq $.EnvSeparator "," -}}
+    {{- $opts = (strAppend $opts $cfg.SeparatorDefault) -}}
+  {{- else if $.EnvSeparator -}}
+    {{- $opts = (printf $cfg.SeparatorFormat $.EnvSeparator | strAppend $opts) -}}
+  {{- end }}
+  {{- if $.Required -}}
+    {{- $opts = (strAppend $opts $cfg.OptRequired) -}}
+  {{- end -}}
+  {{- if $.Expand -}}
+    {{- $opts = (strAppend $opts $cfg.OptExpand) -}}
+  {{- end -}}
+  {{- if $.NonEmpty -}}
+    {{- $opts = (strAppend $opts $cfg.OptNonEmpty) -}}
+  {{- end -}}
+  {{- if $.FromFile -}}
+    {{- $opts = (strAppend $opts $cfg.OptFromFile) -}}
+  {{- end -}}
+  {{- if $.EnvDefault -}}
+    {{- $opts = (printf $cfg.EnvDefaultFormat $.EnvDefault | strAppend $opts) -}}
+  {{- end -}}
+  {{- if $opts -}}
+    {{- join $opts ", " | printf $format -}}
+  {{- end -}}
+{{- end -}}

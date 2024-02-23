@@ -1,54 +1,27 @@
 {{- define "item" }}
+  {{- $ := index . 0 }}
+  {{- $cfg := index . 1 }}
     <li>
     {{- $comma := false -}}
-    {{- if .EnvName -}}
-      <code>{{ .EnvName }}</code>
-      {{- if eq .EnvSeparator "," -}}
-        {{- $comma = true }} (comma-separated
-      {{- else if ne .EnvSeparator "" -}}
-        {{- $comma = true }} (separated by "<code>{{.EnvSeparator}}</code>"
-      {{- end -}}
-      {{- if .Required -}}
-        {{- if $comma }}, {{ else }} ({{ end -}}
-        {{- $comma = true -}}
-        <strong>required</strong>
-      {{- end -}}
-      {{- if .Expand -}}
-        {{- if $comma }}, {{ else }} ({{ end -}}
-        {{- $comma = true -}}
-        expand
-      {{- end -}}
-      {{- if .NonEmpty -}}
-        {{- if $comma }}, {{ else }} ({{ end -}}
-        {{- $comma = true -}}
-        non-empty
-      {{- end -}}
-      {{if .FromFile -}}
-        {{- if $comma }}, {{ else }} ({{ end -}}
-        {{- $comma = true -}}
-        from-file
-      {{- end -}}
-      {{- if ne .EnvDefault "" -}}
-        {{- if $comma }}, {{ else }} ({{ end -}}
-        {{- $comma = true -}}
-        default: <code>{{ .EnvDefault }}</code>
-      {{- end -}}
-      {{- if $comma }}){{ end -}}
-      {{- .Doc | printf " - %s" -}}
+    {{- if $.EnvName -}}
+      <code>{{ $.EnvName }}</code>
+      {{- template "item.options" (list $ $cfg " (%s)") }}
+      {{- $.Doc | printf " - %s" -}}
     {{- else -}}
-      {{- .Doc | printf "%s" -}}
+      {{- $.Doc | printf "%s" -}}
     {{- end}}
-  {{- $children := .Children 0 -}}
+  {{- $children := $.Children 0 -}}
   {{- if $children }}
     <ul>
-    {{- range $children -}}
-      {{ template "item" . -}}
+    {{- range $child := $children -}}
+      {{ template "item" (list $child $cfg) -}}
     {{- end }}
     </ul>
   {{ end -}}
     </li>
 {{- end -}}
 
+{{- $cfg := $.Config -}}
 <!DOCTYPE html>
 <html lang="en">
     <head>
@@ -134,8 +107,8 @@ p {
 <p>{{ .Doc }}</p>
 {{- end }}
   <ul>
-{{- range .Items }}
-{{- template "item" . -}}
+{{- range $item := .Items }}
+{{- template "item" (list $item $cfg.Item) -}}
 {{ end }}
   </ul>
 {{ end }}

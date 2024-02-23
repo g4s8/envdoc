@@ -1,72 +1,41 @@
-{{/*
-Render doc lines: split doc by newline and prefix with `##` each line.
-*/}}
-{{- define "doc.lines" }}
-  {{- if . }}
-    {{- $docLines := split . "\n" }}
-    {{- range $line := $docLines }}
-## {{ $line }}
-    {{- end }}
-  {{- end }}
-{{- end -}}
-
 {{- define "item" }}
-  {{- if eq .EnvName "" }}
+  {{- $ := index . 0 }}
+  {{- $cfg := index . 1 }}
+  {{- if eq $.EnvName "" }}
 #
   {{- end }}
-  {{- template "doc.lines" .Doc }}
-  {{- if .EnvName }}
-    {{- if .Doc }}
+  {{- template "doc.lines" (list $.Doc "##") }}
+  {{- if $.EnvName }}
+    {{- if $.Doc }}
       {{- printf "\n" }}
     {{- end }}
-    {{- $opts := strSlice }}
-    {{- if eq .EnvSeparator "," }}
-      {{- $opts = (strAppend $opts "comma-separated") }}
-    {{- else if ne .EnvSeparator "" }}
-      {{- $opts = (printf "separated by '%s'" .EnvSeparator | strAppend $opts) }}
-    {{- end }}
-    {{- if .Required }}
-      {{- $opts = (strAppend $opts "required") }}
-    {{- end }}
-    {{- if .Expand }}
-      {{- $opts = (strAppend $opts "expand") }}
-    {{- end }}
-    {{- if .NonEmpty }}
-      {{- $opts = (strAppend $opts "non-empty") }}
-    {{- end }}
-    {{- if .FromFile }}
-      {{- $opts = (strAppend $opts "from-file") }}
-    {{- end }}
-    {{- if ne .EnvDefault "" }}
-      {{- $opts = (printf "default: '%s'" .EnvDefault | strAppend $opts) }}
-    {{- end }}
-    {{- if $opts }}
-      {{- join $opts ", " | printf "## (%s)\n" }}
-    {{- end }}
-    {{- if .EnvDefault }}
-      {{- printf `# %s="%s"` .EnvName .EnvDefault }}
+    {{- template "item.options" (list $ $cfg "## (%s)\n") }}
+    {{- if $.EnvDefault }}
+      {{- printf `# %s="%s"` $.EnvName $.EnvDefault }}
     {{- else }}
-      {{- printf `# %s=""` .EnvName }}
+      {{- printf `# %s=""` $.EnvName }}
     {{- end }}
   {{- end }}
-  {{- $children := .Children 0 }}
+  {{- $children := $.Children 0 }}
   {{- if $children }}
 #
     {{- range $child := $children }}
-      {{- template "item" $child }}
+      {{- template "item" (list $child $cfg) }}
     {{- end }}
   {{- end }}
 {{- end -}}
 
+{{- $cfg := $.Config -}}
 # {{ .Title }}
 {{ range .Sections }}
 {{- print "\n" }}
   {{- if .Name }}
 ## {{ .Name }}
   {{- end }}
-  {{- template "doc.lines" .Doc }}
+  {{- template "doc.lines" (list .Doc "##") }}
 #
   {{- range $item := .Items }}
-    {{- template "item" $item }}
+    {{- template "item" (list $item $cfg.Item) }}
   {{- end }}
-{{- end -}}
+{{- end }}
+
