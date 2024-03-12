@@ -55,14 +55,15 @@ func (i *inspector) traverseAST(root *visitorNode, targetName string) []*EnvScop
 	scopes := make([]*EnvScope, 0, len(root.children))
 	logger := logger()
 	for _, child := range root.children {
-		if child.kind != nodeType && child.kind != nodeStruct {
-			panic(fmt.Sprintf("expected type node root child, got %v", child.kind))
-		}
-
 		if !i.all && targetName != child.typeName {
 			logger.Printf("inspector: (traverse) skipping node: %v", child.typeName)
 			continue
 		}
+
+		if child.kind != nodeType && child.kind != nodeStruct {
+			panic(fmt.Sprintf("expected type node root child, got %v (%v)", child.kind, child.typeName))
+		}
+
 		logger.Printf("inspector: (traverse) process node: %v", child.typeName)
 
 		if scope := newScope(child, i.useFieldNames); scope != nil {
@@ -78,7 +79,7 @@ func newScope(node *visitorNode, useFieldNames bool) *EnvScope {
 	}
 
 	logger := logger()
-	logger.Printf("inspecctor: (scope) got node: %v", node.names)
+	logger.Printf("inspector: (scope) got node: %v", node.names)
 
 	scope := &EnvScope{
 		Name: node.names[0],

@@ -9,9 +9,12 @@ import (
 	"strings"
 )
 
-// visitor nodes types
+//go:generate go run golang.org/x/tools/cmd/stringer@v0.19.0 -type=nodeKind
+type nodeKind int
+
+// visitor nodes kinds
 const (
-	nodeUnknown int = iota
+	nodeUnknown nodeKind = iota
 	nodeType
 	nodeRoot
 	nodeStruct
@@ -19,7 +22,7 @@ const (
 )
 
 type visitorNode struct {
-	kind     int
+	kind     nodeKind
 	typeName string         // type name if node is a type or field type name if node is a field
 	names    []string       // it's possible that a field has multiple names
 	doc      string         // field or type documentation or comment if doc is empty
