@@ -27,6 +27,7 @@ type visitorNode struct {
 	names    []string       // it's possible that a field has multiple names
 	doc      string         // field or type documentation or comment if doc is empty
 	children []*visitorNode // optional children nodes for structs
+	parent   *visitorNode   // parent node
 	typeRef  *visitorNode   // type reference if field is a struct
 	tag      string         // field tag
 	isArray  bool           // true if field is an array
@@ -58,6 +59,7 @@ func newAstVisitor(commentsHandler astCommentsHandler, typeDocsResolver astTypeD
 }
 
 func (v *astVisitor) push(node *visitorNode, appendChild bool) *astVisitor {
+	node.parent = v.currentNode
 	if appendChild {
 		v.currentNode.children = append(v.currentNode.children, node)
 	}
@@ -89,7 +91,7 @@ func (v *astVisitor) Visit(n ast.Node) ast.Visitor {
 		}
 		return v
 	case *ast.TypeSpec:
-		v.logger.Printf("ast(%d): visit type: %q", v.depth, t.Name.Name)
+		v.logger.Printf("ast(%d): visit type (%T): %q", v.depth, t.Type, t.Name.Name)
 		doc := v.typeDocResolver(t)
 		name := t.Name.Name
 		if v.pendingType {
@@ -105,7 +107,20 @@ func (v *astVisitor) Visit(n ast.Node) ast.Visitor {
 		}
 		return v.push(typeNode, true)
 	case *ast.StructType:
-		v.logger.Printf("ast(%d): found struct", v.depth)
+		v.logger.Printf("ast(%d): found struct (`%T`, incomplete: %t, fields: %v)", v.depth, t, t.Incomplete, len(t.Fields.List))
+		embedStruct := true
+		for i, f := range t.Fields.List {
+			if len(f.Names) > 0 {
+				embedStruct = false
+				break
+			}
+			v.logger.Printf("ast(%d): debug struct field [%d]%v ", v.depth, i, f.Names)
+		}
+		if embedStruct {
+			v.logger.Printf("ast(%d): struct is embedded", v.depth)
+			return v
+		}
+
 		switch v.currentNode.kind {
 		case nodeType:
 			v.currentNode.kind = nodeStruct
@@ -122,7 +137,7 @@ func (v *astVisitor) Visit(n ast.Node) ast.Visitor {
 		}
 	case *ast.Field:
 		names := fieldNamesToStr(t)
-		v.logger.Printf("ast(%d): visit field (%v)", v.depth, names)
+		v.logger.Printf("ast(%d): visit field ([%d]%v)", v.depth, len(names), names)
 		doc := getFieldDoc(t)
 		var (
 			tag     string
