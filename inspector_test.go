@@ -336,6 +336,27 @@ func TestInspector(t *testing.T) {
 				},
 			},
 		},
+		{
+			name:     "embedded.go",
+			typeName: "Config",
+			expect: []*EnvDocItem{
+				{
+					Name: "START",
+					Doc:  "Start date.",
+					Opts: EnvVarOptions{Required: true, NonEmpty: true},
+				},
+			},
+		},
+		{
+			name:     "typedef.go",
+			typeName: "Config",
+			expect: []*EnvDocItem{
+				{
+					Name: "START",
+					Doc:  "Start date.",
+				},
+			},
+		},
 	} {
 		scopes := c.expectScopes
 		if scopes == nil {

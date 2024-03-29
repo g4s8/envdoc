@@ -2,5 +2,5 @@
 
 ## Config
 
- - `SOME_TIME` - Some time.
+ - `START` - Start date.
 
