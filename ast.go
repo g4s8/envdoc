@@ -79,6 +79,12 @@ func (v *astVisitor) Walk(n ast.Node) {
 }
 
 func (v *astVisitor) Visit(n ast.Node) ast.Visitor {
+	if n == nil {
+		return nil
+	}
+
+	v.logger.Printf("ast(%d): visit node (%T)", v.depth, n)
+
 	if v.currentNode == nil {
 		v.currentNode = &visitorNode{kind: nodeRoot}
 	}
@@ -211,7 +217,7 @@ func fieldNamesToStr(f *ast.Field) []string {
 }
 
 func newASTTypeDocResolver(fileSet *token.FileSet, astFile *ast.File) (func(t *ast.TypeSpec) string, error) {
-	docs, err := doc.NewFromFiles(fileSet, []*ast.File{astFile}, "./", doc.PreserveAST)
+	docs, err := doc.NewFromFiles(fileSet, []*ast.File{astFile}, "./", doc.PreserveAST|doc.AllDecls)
 	if err != nil {
 		return nil, fmt.Errorf("extract package docs: %w", err)
 	}

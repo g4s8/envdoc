@@ -357,6 +357,17 @@ func TestInspector(t *testing.T) {
 				},
 			},
 		},
+		{
+			name:     "unexported.go",
+			typeName: "appconfig",
+			expect: []*EnvDocItem{
+				{
+					Name: "PORT",
+					Doc:  "Port the application will listen on inside the container",
+					Opts: EnvVarOptions{Default: "8080"},
+				},
+			},
+		},
 	} {
 		scopes := c.expectScopes
 		if scopes == nil {
