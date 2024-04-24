@@ -166,6 +166,8 @@ func (v *astVisitor) Visit(n ast.Node) ast.Visitor {
 			fieldNode.typeName = expr.Name
 		}
 		return v.push(fieldNode, true)
+	case *ast.FuncDecl:
+		return nil
 	}
 	return v
 }

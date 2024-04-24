@@ -368,6 +368,17 @@ func TestInspector(t *testing.T) {
 				},
 			},
 		},
+		{
+			name: "funcs.go",
+			all:  true,
+			expect: []*EnvDocItem{
+				{
+					Name: "SOME_VALUE",
+					Opts: EnvVarOptions{Default: "somevalue"},
+					Doc:  "this is some value",
+				},
+			},
+		},
 	} {
 		scopes := c.expectScopes
 		if scopes == nil {
