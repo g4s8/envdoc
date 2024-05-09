@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"go/ast"
 	"go/parser"
 	"go/token"
 	"log"
@@ -28,22 +29,31 @@ func newInspector(typeName string, all bool, execLine int, useFieldNames bool) *
 
 func (i *inspector) inspectFile(fileName string) ([]*EnvScope, error) {
 	fileSet := token.NewFileSet()
-	file, err := parser.ParseFile(fileSet, fileName, nil, parser.ParseComments)
+	var astFiles []*ast.File
+	astFile, err := parser.ParseFile(fileSet, fileName, nil, parser.ParseComments)
 	if err != nil {
 		return nil, fmt.Errorf("parse file: %w", err)
 	}
-	docResolver, err := newASTTypeDocResolver(fileSet, file)
-	if err != nil {
-		return nil, fmt.Errorf("new ast type doc resolver: %w", err)
-	}
+	astFiles = append(astFiles, astFile)
 	var commentsHandler astCommentsHandler
 	if i.all {
 		commentsHandler = astCommentDummyHandler
 	} else {
-		commentsHandler = newASTCommentTargetLineHandler(i.execLine, fileSet.File(file.Pos()).Lines())
+		commentsHandler = newASTCommentTargetLineHandler(i.execLine, fileSet.File(astFile.Pos()).Lines())
 	}
-	visitor := newAstVisitor(commentsHandler, docResolver)
-	visitor.Walk(file)
+	visitor := newAstVisitor(commentsHandler, fileSet)
+	var verr error
+	for _, astFile := range astFiles {
+		visitor.Walk(astFile)
+		if err := visitor.Error(); err != nil {
+			verr = err
+			break
+		}
+	}
+	if verr != nil {
+		return nil, fmt.Errorf("walk file: %w", verr)
+	}
+
 	targetName := i.typeName
 	if targetName == "" {
 		targetName = visitor.targetName

@@ -22,15 +22,17 @@ const (
 )
 
 type visitorNode struct {
-	kind     nodeKind
-	typeName string         // type name if node is a type or field type name if node is a field
-	names    []string       // it's possible that a field has multiple names
-	doc      string         // field or type documentation or comment if doc is empty
-	children []*visitorNode // optional children nodes for structs
-	parent   *visitorNode   // parent node
-	typeRef  *visitorNode   // type reference if field is a struct
-	tag      string         // field tag
-	isArray  bool           // true if field is an array
+	kind        nodeKind
+	typeName    string         // type name if node is a type or field type name if node is a field
+	packageName string         // package name if node is a type
+	currentFile string         // current file name
+	names       []string       // it's possible that a field has multiple names
+	doc         string         // field or type documentation or comment if doc is empty
+	children    []*visitorNode // optional children nodes for structs
+	parent      *visitorNode   // parent node
+	typeRef     *visitorNode   // type reference if field is a struct
+	tag         string         // field tag
+	isArray     bool           // true if field is an array
 }
 
 type (
@@ -39,22 +41,25 @@ type (
 )
 
 type astVisitor struct {
-	commentHandler  astCommentsHandler
-	typeDocResolver astTypeDocResolver
-	logger          *log.Logger
+	commentHandler astCommentsHandler
+	logger         *log.Logger
+	fileSet        *token.FileSet
 
-	currentNode *visitorNode
-	pendingType bool   // true if the next type is a target type
-	targetName  string // name of the type we are looking for
-	depth       int    // current depth in the AST (used for debugging, 1 based)
+	typeDocResolver astTypeDocResolver
+	currentNode     *visitorNode
+	pendingType     bool   // true if the next type is a target type
+	targetName      string // name of the type we are looking for
+	depth           int    // current depth in the AST (used for debugging, 1 based)
+
+	err error // error that occurred during AST traversal
 }
 
-func newAstVisitor(commentsHandler astCommentsHandler, typeDocsResolver astTypeDocResolver) *astVisitor {
+func newAstVisitor(commentsHandler astCommentsHandler, fileSet *token.FileSet) *astVisitor {
 	return &astVisitor{
-		commentHandler:  commentsHandler,
-		typeDocResolver: typeDocsResolver,
-		logger:          logger(),
-		depth:           1,
+		commentHandler: commentsHandler,
+		fileSet:        fileSet,
+		logger:         logger(),
+		depth:          1,
 	}
 }
 
@@ -78,8 +83,21 @@ func (v *astVisitor) Walk(n ast.Node) {
 	v.resolveFieldTypes()
 }
 
+func (v *astVisitor) Error() error {
+	return v.err
+}
+
+func (v *astVisitor) setErr(err error) {
+	v.logger.Printf("ast(%d): error: %v", v.depth, err)
+	v.err = err
+}
+
 func (v *astVisitor) Visit(n ast.Node) ast.Visitor {
 	if n == nil {
+		return nil
+	}
+
+	if v.err != nil {
 		return nil
 	}
 
@@ -90,6 +108,18 @@ func (v *astVisitor) Visit(n ast.Node) ast.Visitor {
 	}
 
 	switch t := n.(type) {
+	case *ast.File:
+		v.logger.Printf("ast(%d): visit file %q", v.depth, t.Name)
+		v.currentNode.packageName = t.Name.Name
+		f := v.fileSet.File(t.Pos())
+		v.currentNode.currentFile = f.Name()
+		typeDocResolver, err := newASTTypeDocResolver(v.fileSet, t)
+		if err != nil {
+			v.setErr(fmt.Errorf("new ast type doc resolver: %w", err))
+			return nil
+		}
+		v.typeDocResolver = typeDocResolver
+		return v
 	case *ast.Comment:
 		v.logger.Printf("ast(%d): visit comment", v.depth)
 		if !v.pendingType {
@@ -106,10 +136,11 @@ func (v *astVisitor) Visit(n ast.Node) ast.Visitor {
 			v.logger.Printf("ast(%d): detect target type: %q", v.depth, name)
 		}
 		typeNode := &visitorNode{
-			names:    []string{name},
-			typeName: name,
-			kind:     nodeType,
-			doc:      doc,
+			names:       []string{name},
+			typeName:    name,
+			packageName: v.currentNode.packageName,
+			kind:        nodeType,
+			doc:         doc,
 		}
 		return v.push(typeNode, true)
 	case *ast.StructType:
