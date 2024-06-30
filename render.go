@@ -5,6 +5,49 @@ import (
 	"io"
 )
 
+type Renderer struct {
+	format    OutFormat
+	envPrefix string
+	noStyles  bool
+}
+
+func NewRenderer(format OutFormat, envPrefix string, noStyles bool) *Renderer {
+	return &Renderer{
+		format:    format,
+		envPrefix: envPrefix,
+		noStyles:  noStyles,
+	}
+}
+
+func (r *Renderer) Render(scopes []*EnvScope, out io.Writer) error {
+	var tmpl template
+	var cfg renderConfig
+	switch r.format {
+	case OutFormatMarkdown:
+		tmpl = tmplMarkdown
+		cfg = renderMarkdown
+	case OutFormatHTML:
+		tmpl = tmplHTML
+		cfg = renderHTML
+	case OutFormatTxt:
+		tmpl = tmplPlaintext
+		cfg = renderPlaintext
+	case OutFormatEnv:
+		tmpl = tmplDotEnv
+		cfg = renderDotenv
+	default:
+		return fmt.Errorf("unknown format: %s", r.format)
+	}
+
+	c := newRenderContext(scopes, cfg, r.envPrefix, r.noStyles)
+	f := templateRenderer(tmpl)
+
+	if err := f(c, out); err != nil {
+		return fmt.Errorf("render: %w", err)
+	}
+	return nil
+}
+
 type renderSection struct {
 	Name  string
 	Doc   string
@@ -36,7 +79,7 @@ func (i renderItem) Children(indentInc int) []renderItem {
 	return res
 }
 
-type renderItemConfigt struct {
+type renderItemConfig struct {
 	SeparatorFormat  string
 	SeparatorDefault string
 	OptRequired      string
@@ -46,7 +89,7 @@ type renderItemConfigt struct {
 	EnvDefaultFormat string
 }
 type renderConfig struct {
-	Item renderItemConfigt
+	Item renderItemConfig
 }
 
 type renderContext struct {
@@ -80,11 +123,8 @@ func newRenderContext(scopes []*EnvScope, cfg renderConfig, envPrefix string, no
 }
 
 func newRenderItem(item *EnvDocItem, envPrefix string) renderItem {
-	log := logger()
 	children := make([]renderItem, len(item.Children))
-	log.Printf("render item %s", item.Name)
 	for i, child := range item.Children {
-		log.Printf("render child item %s", child.Name)
 		children[i] = newRenderItem(child, envPrefix)
 	}
 	return renderItem{
@@ -107,7 +147,7 @@ var (
 	tmplDotEnv    = newTmplText("dotenv.tmpl")
 
 	renderMarkdown = renderConfig{
-		Item: renderItemConfigt{
+		Item: renderItemConfig{
 			SeparatorFormat:  "separated by `%s`",
 			SeparatorDefault: "comma-separated",
 			OptRequired:      "**required**",
@@ -118,7 +158,7 @@ var (
 		},
 	}
 	renderPlaintext = renderConfig{
-		Item: renderItemConfigt{
+		Item: renderItemConfig{
 			SeparatorFormat:  "separated by `%s`",
 			SeparatorDefault: "comma-separated",
 			OptRequired:      "required",
@@ -129,7 +169,7 @@ var (
 		},
 	}
 	renderDotenv = renderConfig{
-		Item: renderItemConfigt{
+		Item: renderItemConfig{
 			SeparatorFormat:  "separated by '%s'",
 			SeparatorDefault: "comma-separated",
 			OptRequired:      "required",
@@ -140,7 +180,7 @@ var (
 		},
 	}
 	renderHTML = renderConfig{
-		Item: renderItemConfigt{
+		Item: renderItemConfig{
 			SeparatorFormat:  `separated by "<code>%s</code>"`,
 			SeparatorDefault: "comma-separated",
 			OptRequired:      "<strong>required</strong>",
