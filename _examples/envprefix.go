@@ -2,10 +2,10 @@ package main
 
 // Settings is the application settings.
 //
-//go:generate go run ../ -output envprefix.txt -format plaintext -type Settings
 //go:generate go run ../ -output envprefix.md -type Settings
 //go:generate go run ../ -output envprefix.html -format html -type Settings
 //go:generate go run ../ -output envprefix.env -format dotenv -type Settings
+//go:generate go run ../ -output envprefix.txt -format plaintext -types Settings -debug
 type Settings struct {
 	// Database is the database settings
 	Database Database `envPrefix:"DB_"`
