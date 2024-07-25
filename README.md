@@ -40,19 +40,26 @@ type Config struct {
 ## Usage
 
 ```go
-//go:generate envdoc -output <output_file_name> -type <target_type_name> 
+//go:generate envdoc -output <output_file_name>
 ```
 
- * `-output` (**required**) - Specify the output file name for the generated documentation.
- * `-type`: Specify the target struct type name to generate documentation for.
- If ommited, the next type after `go:generate` comment will be used.
- * `-format` (default: `markdown`) - Set output format type, either `markdown`,
- `plaintext`, `html`, or `dotenv`.
- * `-all` - Generate documentation for all types in the file.
- * `-env-prefix` - Environment variable prefix.
- * `-no-styles` - Disable built-int CSS styles for HTML format.
- * `-field-names` - Use field names instead of struct tags for variable names
-   if tags are not set.
+ * `-dir` (path string, *optional*) - Specify the directory to search for files. Default is the file dir with `go:generate` command.
+ * `-files` (glob string, *optional*) - File glob pattern to specify file names to process. Default is the single file with `go:generate`.
+ * `-types` (glob string, *optional*) - Type glob pattern for type names to process. If not specified, the next type after `go:generate` is used.
+ * `-output` (path string, **required**) - Output file name for generated documentation.
+ * `-format` (`enum(markdown, plaintext, html, dotenv)` string, *optional*) - Output format for documentation.  Default is `markdown`.
+ * `-no-styles` (`bool`, *optional*) - If true, CSS styles will not be included for `html` format.
+ * `-env-prefix` (`string`, *optional*) - Sets additional global prefix for all environment variables.
+ * `-field-names` (`bool`, *optional*) - Use field names as env names if `env:` tag is not specified.
+ * `-debug` (`bool`, *optional*) - Enable debug output.
+
+These params are deprecated and will be removed in the next major release:
+ * `-type` - Specify one type to process.
+ * `-all` - Process all types in a file.
+
+Both parameters could be replaced with `-types` param:
+ - Use `-types=Foo` instead of `-type=Foo`.
+ - Use `-types='*'` instead of `-all`.
 
 ## Example
 

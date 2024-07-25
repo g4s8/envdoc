@@ -5,6 +5,7 @@ import (
 	"go/parser"
 	"go/token"
 	"io/fs"
+	"path/filepath"
 
 	"github.com/g4s8/envdoc/ast"
 )
@@ -58,11 +59,6 @@ func (p *Parser) Parse() ([]*ast.FileSpec, error) {
 		matcher = m
 	}
 
-	pkgs, err := parser.ParseDir(fset, p.dir, matcher, parser.ParseComments|parser.SkipObjectResolution)
-	if err != nil {
-		return nil, fmt.Errorf("failed to parse dir: %w", err)
-	}
-
 	var colOpts []ast.RootCollectorOption
 	if p.typeGlob == "" {
 		colOpts = append(colOpts, ast.WithGoGenDecl(p.gogenLine, p.gogenFile))
@@ -81,14 +77,43 @@ func (p *Parser) Parse() ([]*ast.FileSpec, error) {
 		colOpts = append(colOpts, ast.WithFileGlob(m))
 	}
 
-	col := ast.NewRootCollector(colOpts...)
-	for _, pkg := range pkgs {
-		ast.Walk(pkg, fset, col)
+	col := ast.NewRootCollector(p.dir, colOpts...)
+
+	if p.debug {
+		fmt.Printf("Parsing dir %q (f=%q t=%q)\n", p.dir, p.fileGlob, p.typeGlob)
+	}
+	// walk through the directory and each subdirectory and call parseDir for each of them
+	if err := filepath.Walk(p.dir, func(path string, info fs.FileInfo, err error) error {
+		if err != nil {
+			return fmt.Errorf("failed to walk through dir: %w", err)
+		}
+		if !info.IsDir() {
+			return nil
+		}
+		if err := parseDir(path, fset, matcher, col); err != nil {
+			return fmt.Errorf("failed to parse dir %q: %w", path, err)
+		}
+		return nil
+	}); err != nil {
+		return nil, fmt.Errorf("failed to walk through dir: %w", err)
 	}
 
 	if p.debug {
+		fmt.Printf("Resolved types:\n")
 		printTraverse(col.Files(), 0)
 	}
 
 	return col.Files(), nil
+}
+
+func parseDir(dir string, fset *token.FileSet, matcher func(fs.FileInfo) bool, col *ast.RootCollector) error {
+	pkgs, err := parser.ParseDir(fset, dir, nil, parser.ParseComments|parser.SkipObjectResolution)
+	if err != nil {
+		return fmt.Errorf("failed to parse dir: %w", err)
+	}
+
+	for _, pkg := range pkgs {
+		ast.Walk(pkg, fset, col)
+	}
+	return nil
 }

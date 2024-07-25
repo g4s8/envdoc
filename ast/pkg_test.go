@@ -6,15 +6,6 @@ import (
 	"testing"
 )
 
-type testFileHandler struct {
-	files []*FileSpec
-}
-
-func (h *testFileHandler) onFile(f *FileSpec) fileVisitorHandler {
-	h.files = append(h.files, f)
-	return nil
-}
-
 func TestPkgVisitor(t *testing.T) {
 	fset, pkg, _ := loadTestFileSet(t)
 	h := &testFileHandler{}

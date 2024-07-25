@@ -1,9 +1,13 @@
+//go:build !coverage
+
 package main
 
 import (
 	"bufio"
 	"fmt"
 	"os"
+
+	"github.com/g4s8/envdoc/debug"
 )
 
 func main() {
@@ -12,6 +16,7 @@ func main() {
 		fatal("Failed to load config: %v", err)
 	}
 	if cfg.Debug {
+		debug.Config.Enabled = true
 		cfg.fprint(os.Stdout)
 	}
 
@@ -30,6 +35,7 @@ func main() {
 
 	conv := NewConverter(cfg.EnvPrefix, cfg.FieldNames)
 	scopes := conv.ScopesFromFiles(res, files)
+	printScopesTree(scopes)
 
 	r := NewRenderer(cfg.OutFormat, cfg.EnvPrefix, cfg.NoStyles)
 	out, err := os.Create(cfg.OutFile)

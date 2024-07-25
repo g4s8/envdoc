@@ -1,5 +1,12 @@
 package ast
 
+import (
+	"sort"
+	"strings"
+
+	"github.com/g4s8/envdoc/debug"
+)
+
 type RootCollectorOption func(*RootCollector)
 
 func WithFileGlob(glob func(string) bool) RootCollectorOption {
@@ -41,6 +48,7 @@ var (
 )
 
 type RootCollector struct {
+	baseDir   string
 	fileGlob  func(string) bool
 	typeGlob  func(string) bool
 	gogenDecl *struct {
@@ -57,8 +65,9 @@ type RootCollector struct {
 
 var globAcceptAll = func(string) bool { return true }
 
-func NewRootCollector(opts ...RootCollectorOption) *RootCollector {
+func NewRootCollector(baseDir string, opts ...RootCollectorOption) *RootCollector {
 	c := &RootCollector{
+		baseDir:  baseDir,
 		fileGlob: globAcceptAll,
 		typeGlob: globAcceptAll,
 	}
@@ -69,16 +78,33 @@ func NewRootCollector(opts ...RootCollectorOption) *RootCollector {
 }
 
 func (c *RootCollector) Files() []*FileSpec {
-	return c.files
+	// order by file name
+	res := make([]*FileSpec, len(c.files))
+	copy(res, c.files)
+	sort.Slice(res, func(i, j int) bool {
+		return res[i].Name < res[j].Name
+	})
+	return res
 }
 
 func (c *RootCollector) onFile(f *FileSpec) interface {
 	TypeHandler
 	CommentHandler
 } {
+	// convert file name to relative path using baseDir
+	// if baseDir is empty or `.` then the file name is used as is.
+	name := f.Name
+	if c.baseDir != "" && c.baseDir != "." {
+		name, _ = strings.CutPrefix(name, c.baseDir)
+		name, _ = strings.CutPrefix(name, "/")
+		name = "./" + name
+	}
+	f.Name = name
+
 	if c.fileGlob(f.Name) {
 		f.Export = true
 	}
+	debug.Logf("# COL: file %q, export=%t\n", f.Name, f.Export)
 	c.files = append(c.files, f)
 	return c
 }

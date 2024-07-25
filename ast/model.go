@@ -1,5 +1,8 @@
 package ast
 
+import "strings"
+
+//go:generate stringer -type=FieldTypeRefKind -trimprefix=FieldType
 type FieldTypeRefKind int
 
 const (
@@ -94,4 +97,16 @@ func (tr FieldTypeRef) String() string {
 		return "struct"
 	}
 	return ""
+}
+
+func (fs *FileSpec) String() string {
+	return fs.Name
+}
+
+func (ts *TypeSpec) String() string {
+	return ts.Name
+}
+
+func (fs *FieldSpec) String() string {
+	return strings.Join(fs.Names, ", ")
 }

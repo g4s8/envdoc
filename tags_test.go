@@ -1,9 +1,17 @@
 package main
 
 import (
+	"fmt"
 	"slices"
 	"testing"
 )
+
+func tagShouldErr(t *testing.T, tag string) {
+	t.Helper()
+	if len(ParseFieldTag(tag)) != 0 {
+		t.Errorf("expected empty, got %v", tag)
+	}
+}
 
 func TestFieldTags(t *testing.T) {
 	const src = `env:"PASSWORD,required,file" envDefault:"/tmp/password" json:"password"`
@@ -38,5 +46,70 @@ func TestFieldTags(t *testing.T) {
 		if got, ok := tag.GetFirst(k); ok {
 			t.Errorf("%q: expected empty, got %v", k, got)
 		}
+	}
+
+	t.Run("error", func(t *testing.T) {
+		tagShouldErr(t, `envPASSWORD`)
+		tagShouldErr(t, `env:"PASSWORD`)
+		tagShouldErr(t, `env:PASSWORD"`)
+	})
+}
+
+func TestFieldTagValues(t *testing.T) {
+	tests := []struct {
+		tag, key string
+		expect   []string
+		err      bool
+	}{
+		{
+			tag:    `env:"PASSWORD,required,file"`,
+			key:    "env",
+			expect: []string{"PASSWORD", "required", "file"},
+		},
+		{
+			tag:    `envDefault:"/tmp/password"`,
+			key:    "envDefault",
+			expect: []string{"/tmp/password"},
+		},
+		{
+			tag:    `json:"password"`,
+			key:    "json",
+			expect: []string{"password"},
+		},
+		{
+			tag: `jsonpassword`,
+			key: "json",
+			err: true,
+		},
+		{
+			tag: `json:"password`,
+			key: "env",
+			err: true,
+		},
+		{
+			tag: `env:PASSWORD"`,
+			key: "env",
+			err: true,
+		},
+		{
+			tag: `env:"PASSWORD`,
+			key: "env",
+			err: true,
+		},
+	}
+	for i, test := range tests {
+		t.Run(fmt.Sprintf("case%d", i), func(t *testing.T) {
+			vals := fieldTagValues(test.tag, test.key)
+			if test.err {
+				if vals != nil {
+					t.Errorf("expected nil, got %v", vals)
+				}
+				return
+			}
+
+			if !slices.Equal(vals, test.expect) {
+				t.Errorf("expected %v, got %v", test.expect, vals)
+			}
+		})
 	}
 }

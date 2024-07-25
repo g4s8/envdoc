@@ -1,11 +1,12 @@
 package ast
 
 import (
-	"fmt"
 	"go/ast"
 	"go/doc"
 	"go/token"
 	"strings"
+
+	"github.com/g4s8/envdoc/debug"
 )
 
 func getFieldTypeRef(f ast.Expr, ref *FieldTypeRef) bool {
@@ -76,39 +77,38 @@ func getFieldSpec(n *ast.Field, pkg string) *FieldSpec {
 		fs.Doc = doc
 	}
 	if tag := n.Tag; tag != nil {
-		fs.Tag = tag.Value
+		fs.Tag = strings.Trim(tag.Value, "`")
 	}
 
 	return &fs
 }
 
-const debugLogs = false
-
 func debugNode(src string, n ast.Node) {
-	if !debugLogs {
+	if !debug.Config.Enabled {
 		return
 	}
 	if n == nil {
 		return
 	}
+
 	switch t := n.(type) {
 	case *ast.File:
-		fmt.Printf("# AST(%s): File pkg=%q\n", src, t.Name.Name)
+		debug.Logf("# AST(%s): File pkg=%q\n", src, t.Name.Name)
 	case *ast.Package:
-		fmt.Printf("# AST(%s): Package %s\n", src, t.Name)
+		debug.Logf("# AST(%s): Package %s\n", src, t.Name)
 	case *ast.TypeSpec:
-		fmt.Printf("# AST(%s): Type %s\n", src, t.Name.Name)
+		debug.Logf("# AST(%s): Type %s\n", src, t.Name.Name)
 	case *ast.Field:
 		names := extractFieldNames(t)
-		fmt.Printf("# AST(%s): Field %s\n", src, strings.Join(names, ", "))
+		debug.Logf("# AST(%s): Field %s\n", src, strings.Join(names, ", "))
 	case *ast.Comment:
-		fmt.Printf("# AST(%s): Comment %s\n", src, t.Text)
+		debug.Logf("# AST(%s): Comment %s\n", src, t.Text)
 	case *ast.StructType:
-		fmt.Printf("# AST(%s): Struct\n", src)
+		debug.Logf("# AST(%s): Struct\n", src)
 	case *ast.GenDecl, *ast.Ident, *ast.FuncDecl:
 		// ignore
 	default:
-		fmt.Printf("# AST(%s): %T\n", src, t)
+		debug.Logf("# AST(%s): %T\n", src, t)
 	}
 }
 

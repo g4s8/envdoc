@@ -5,37 +5,25 @@ import (
 	"testing"
 )
 
-type testFileVisitorHandler struct {
-	comments []*CommentSpec
-	types    []*TypeSpec
-}
-
-func (h *testFileVisitorHandler) setComment(c *CommentSpec) {
-	h.comments = append(h.comments, c)
-}
-
-func (h *testFileVisitorHandler) onType(t *TypeSpec) typeVisitorHandler {
-	h.types = append(h.types, t)
-	return nil
-}
-
 func TestFileVisitor(t *testing.T) {
 	fset, pkg, docs := loadTestFileSet(t)
-	h := &testFileVisitorHandler{}
-	file := pkg.Files["testdata/onetype.go"]
-	v := newFileVisitor(fset, file, docs, h)
-	ast.Walk(v, file)
+	fh, fv, file := testFileVisitor(fset, pkg, "testdata/onetype.go", docs)
+	ast.Walk(fv, file)
 
-	if expect, actual := 1, len(h.comments); expect != actual {
+	if expect, actual := 1, len(fh.comments); expect != actual {
 		t.Fatalf("expected %d comments, got %d", expect, actual)
 	}
 	checkCommentsEq(t, &CommentSpec{
 		Text: "onetype",
-	}, h.comments[0])
-	if expect, actual := 1, len(h.types); expect != actual {
+	}, fh.comments[0])
+	types := make([]*TypeSpec, 0)
+	for _, f := range fh.files {
+		types = append(types, f.Types...)
+	}
+	if expect, actual := 1, len(types); expect != actual {
 		t.Fatalf("expected %d types, got %d", expect, actual)
 	}
-	if expect, actual := "One", h.types[0].Name; expect != actual {
+	if expect, actual := "One", types[0].Name; expect != actual {
 		t.Fatalf("expected type name %q, got %q", expect, actual)
 	}
 }

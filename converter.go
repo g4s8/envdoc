@@ -3,8 +3,10 @@ package main
 import (
 	"fmt"
 	"os"
+	"strings"
 
 	"github.com/g4s8/envdoc/ast"
+	"github.com/g4s8/envdoc/debug"
 )
 
 type Converter struct {
@@ -23,10 +25,12 @@ func (c *Converter) ScopesFromFiles(res *TypeResolver, files []*ast.FileSpec) []
 	var scopes []*EnvScope
 	for _, f := range files {
 		if !f.Export {
+			debug.Logf("# CONV: skip file %q\n", f.Name)
 			continue
 		}
 		for _, t := range f.Types {
 			if !t.Export {
+				debug.Logf("# CONV: skip type %q\n", t.Name)
 				continue
 			}
 			scopes = append(scopes, c.ScopeFromType(res, t))
@@ -41,12 +45,14 @@ func (c *Converter) ScopeFromType(res *TypeResolver, t *ast.TypeSpec) *EnvScope 
 		Doc:  t.Doc,
 	}
 	scope.Vars = c.DocItemsFromFields(res, c.envPrefix, t.Fields)
+	debug.Logf("# CONV: found scope %q\n", scope.Name)
 	return scope
 }
 
 func (c *Converter) DocItemsFromFields(res *TypeResolver, prefix string, fields []*ast.FieldSpec) []*EnvDocItem {
 	var items []*EnvDocItem
 	for _, f := range fields {
+		debug.Logf("\t# CONV: field [%s]\n", strings.Join(f.Names, ","))
 		if len(f.Names) == 0 {
 			// embedded field
 			items = append(items, c.DocItemsFromFields(res, prefix, f.Fields)...)
@@ -69,9 +75,9 @@ func (c *Converter) DocItemsFromField(resolver *TypeResolver, prefix string, f *
 		}
 	}
 	for i, name := range names {
-		if name == "" {
-			continue
-		}
+		// if name == "" {
+		// 	continue
+		// }
 		names[i] = prefix + name
 	}
 
@@ -112,6 +118,7 @@ func (c *Converter) DocItemsFromField(resolver *TypeResolver, prefix string, f *
 	switch f.TypeRef.Kind {
 	case ast.FieldTypeStruct:
 		children = c.DocItemsFromFields(resolver, prefix, f.Fields)
+		debug.Logf("\t# CONV: struct %q (%d childrens)\n", f.TypeRef.String(), len(children))
 	case ast.FieldTypeSelector, ast.FieldTypeIdent, ast.FieldTypeArray, ast.FieldTypePtr:
 		if !envPrefixed {
 			break
@@ -122,6 +129,7 @@ func (c *Converter) DocItemsFromField(resolver *TypeResolver, prefix string, f *
 			break
 		}
 		children = c.DocItemsFromFields(resolver, prefix, tpe.Fields)
+		debug.Logf("\t# CONV: selector %q (%d childrens)\n", f.TypeRef.String(), len(children))
 	}
 
 	res := make([]*EnvDocItem, len(names), len(names)+1)
@@ -132,14 +140,11 @@ func (c *Converter) DocItemsFromField(resolver *TypeResolver, prefix string, f *
 			Opts:     opts,
 			Children: children,
 		}
+		debug.Logf("\t# CONV: docItem %q (%d childrens)\n", name, len(children))
 	}
-	if len(res) == 0 && len(children) > 0 {
-		res = append(res, &EnvDocItem{
-			Name:     "",
-			Doc:      f.Doc,
-			Opts:     opts,
-			Children: children,
-		})
+
+	if len(names) == 0 && len(children) > 0 {
+		return children
 	}
 	return res
 }
