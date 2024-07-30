@@ -87,14 +87,10 @@ It is trying to cover all the possible cases.</p>
     <li><code>SECRET_KEY</code> (<strong>required</strong>) - Key is a secret key.</li>
     <li><code>SECRET_VAL</code> (<strong>required</strong>, non-empty) - SecretVal is a secret value.</li>
     <li><code>HOSTS</code> (separated by "<code>:</code>", <strong>required</strong>) - Hosts is a list of hosts.</li>
-    <li><code>WORDS</code> (comma-separated, from-file, default: <code>one,two,three</code>) - Words is just a list of words.</li>
+    <li><code>WORDS</code> (comma-separated, from-file, default: <code>one</code>) - Words is just a list of words.</li>
     <li><code>COMMENT</code> (<strong>required</strong>, default: <code>This is a comment.</code>) - Just a comment.</li>
-    <li>Anon is an anonymous structure.
-    <ul>
     <li><code>ANON_USER</code> (<strong>required</strong>) - User is a user name.</li>
     <li><code>ANON_PASS</code> (<strong>required</strong>) - Pass is a password.</li>
-    </ul>
-  </li>
   </ul>
 
   <h2>NextConfig</h2>
@@ -107,6 +103,7 @@ It is trying to cover all the possible cases.</p>
 <p>FieldNames uses field names as env names.</p>
   <ul>
     <li><code>QUUX</code> - Quux is a field with a tag.</li>
+    <li>Required is a required field.</li>
   </ul>
 
       </article>

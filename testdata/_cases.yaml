@@ -1,0 +1,451 @@
+test_cases:
+
+- src_file: all.go
+  file_glob: "*.go"
+  type_glob: "*"
+  files:
+  - name: all.go
+    pkg: testdata
+    export: true
+    types:
+    - name: Foo
+      export: true
+      fields:
+      - names: [One]
+        doc: One is a one.
+        tag: env:"ONE"
+        type_ref: {name: string, kind: Ident}
+      - names: [Two]
+        doc: Two is a two.
+        tag: env:"TWO"
+        type_ref: {name: string, kind: Ident}
+    - name: Bar
+      export: true
+      doc: Bar is a bar.
+      fields:
+      - names: [Three]
+        doc: Three is a three.
+        tag: env:"THREE"
+        type_ref: {name: string, kind: Ident}
+      - names: [Four]
+        doc: Four is a four.
+        tag: env:"FOUR"
+        type_ref: {name: string, kind: Ident}
+
+- src_file: anonymous.go
+  file_glob: "*.go"
+  type_glob: "*"
+  files:
+  - name: anonymous.go
+    pkg: main
+    export: true
+    types:
+    - name: Config
+      export: true
+      doc: Config is the configuration for the application.
+      fields:
+      - names: [Repo]
+        doc: Repo is the configuration for the repository.
+        tag: envPrefix:"REPO_"
+        type_ref: {kind: Struct}
+        fields:
+        - names: [Conn]
+          doc: Conn is the connection string for the repository.
+          tag: env:"CONN,notEmpty"
+          type_ref: {name: string, kind: Ident}
+
+- src_file: arrays.go
+  file_glob: "*.go"
+  type_glob: "*"
+  files:
+  - name: arrays.go
+    pkg: testdata
+    export: true
+    types:
+    - name: Arrays
+      export: true
+      doc: Arrays stub
+      fields:
+      - names: [DotSeparated]
+        doc: DotSeparated stub
+        tag: env:"DOT_SEPARATED" envSeparator:"."
+        type_ref: {name: string, kind: Array}
+      - names: [CommaSeparated]
+        doc: CommaSeparated stub
+        tag: env:"COMMA_SEPARATED"
+        type_ref: {name: string, kind: Array}
+
+- src_file: comments.go
+  file_glob: "*.go"
+  type_glob: "*"
+  files:
+  - name: comments.go
+    pkg: testdata
+    export: true
+    types:
+    - name: Comments
+      export: true
+      fields:
+      - names: [Foo]
+        doc: Foo stub
+        tag: env:"FOO"
+        type_ref: {name: int, kind: Ident}
+      - names: [Bar]
+        doc: Bar stub
+        tag: env:"BAR"
+        type_ref: {name: int, kind: Ident}
+
+- src_file: embedded.go
+  file_glob: "*.go"
+  type_glob: Config
+  files:
+  - name: embedded.go
+    pkg: testdata
+    export: true
+    types:
+    - name: Config
+      export: true
+      fields:
+      - names: [Start]
+        doc: Start date.
+        tag: env:"START,notEmpty"
+        type_ref: {name: Date, kind: Ident}
+    - name: Date
+      export: false
+      doc: Date is a time.Time wrapper that uses the time.DateOnly layout.
+      fields:
+      - type_ref: {name: Time, package: time, kind: Selector}
+      
+- src_file: envprefix.go
+  file_glob: "*.go"
+  type_glob: Settings
+  files:
+  - name: envprefix.go
+    pkg: main
+    export: true
+    types:
+    - name: Settings
+      export: true
+      doc: Settings is the application settings.
+      fields:
+      - names: [Database]
+        doc: Database is the database settings
+        tag: envPrefix:"DB_"
+        type_ref: {name: Database, kind: Ident}
+      - names: [Server]
+        doc: Server is the server settings
+        tag: envPrefix:"SERVER_"
+        type_ref: {name: ServerConfig, kind: Ident}
+      - names: [Debug]
+        doc: Debug is the debug flag
+        tag: env:"DEBUG"
+        type_ref: {name: bool, kind: Ident}
+    - name: Database
+      export: false
+      doc: Database is the database settings.
+      fields:
+      - names: [Port]
+        doc: Port is the port to connect to
+        tag: env:"PORT,required"
+        type_ref: {name: Int, kind: Ident}
+      - names: [Host]
+        doc: Host is the host to connect to
+        tag: env:"HOST,notEmpty" envDefault:"localhost"
+        type_ref: {name: string, kind: Ident}
+      - names: [User]
+        doc: User is the user to connect as
+        tag: env:"USER"
+        type_ref: {name: string, kind: Ident}
+      - names: [Password]
+        doc: Password is the password to use
+        tag: env:"PASSWORD"
+        type_ref: {name: string, kind: Ident}
+      - names: [DisableTLS]
+        doc: DisableTLS is the flag to disable TLS
+        tag: env:"DISABLE_TLS"
+        type_ref: {name: bool, kind: Ident}
+    - name: ServerConfig
+      export: false
+      doc: ServerConfig is the server settings.
+      fields:
+      - names: [Port]
+        doc: Port is the port to listen on
+        tag: env:"PORT,required"
+        type_ref: {name: Int, kind: Ident}
+      - names: [Host]
+        doc: Host is the host to listen on
+        tag: env:"HOST,notEmpty" envDefault:"localhost"
+        type_ref: {name: string, kind: Ident}
+      - names: [Timeout]
+        doc: Timeout is the timeout settings
+        tag: envPrefix:"TIMEOUT_"
+        type_ref: {name: TimeoutConfig, kind: Ident}
+    - name: TimeoutConfig
+      export: false
+      doc: TimeoutConfig is the timeout settings.
+      fields:
+      - names: [Read]
+        doc: Read is the read timeout
+        tag: env:"READ" envDefault:"30"
+        type_ref: {name: Int, kind: Ident}
+      - names: [Write]
+        doc: Write is the write timeout
+        tag: env:"WRITE" envDefault:"30"
+        type_ref: {name: Int, kind: Ident}
+
+- src_file: field_names.go
+  file_glob: "*.go"
+  type_glob: FieldNames
+  files:
+  - name: field_names.go
+    pkg: testdata
+    export: true
+    types:
+    - name: FieldNames
+      export: true
+      doc: FieldNames uses field names as env names.
+      fields:
+      - names: [Foo]
+        doc: Foo is a single field.
+        type_ref: {name: string, kind: Ident}
+      - names: [Bar, Baz]
+        doc: Bar and Baz are two fields.
+        type_ref: {name: string, kind: Ident}
+      - names: [Quux]
+        doc: Quux is a field with a tag.
+        tag: env:"QUUX"
+        type_ref: {name: string, kind: Ident}
+      - names: [FooBar]
+        doc: FooBar is a field with a default value.
+        tag: envDefault:"quuux"
+        type_ref: {name: string, kind: Ident}
+      - names: [Required]
+        doc: Required is a required field.
+        tag: env:",required"
+        type_ref: {name: string, kind: Ident}
+
+- src_file: funcs.go
+  file_glob: "*.go"
+  type_glob: aconfig
+  files:
+  - name: funcs.go
+    pkg: testdata
+    export: true
+    types:
+    - name: aconfig
+      export: true
+      fields:
+      - names: [somevalue]
+        doc: this is some value
+        tag: env:"SOME_VALUE" envDefault:"somevalue"
+        type_ref: {name: string, kind: Ident}
+
+- src_file: go_generate.go
+  file_glob: "*.go"
+  type_glob: "*"
+  files:
+  - name: go_generate.go
+    pkg: testdata
+    export: true
+    types:
+    - name: Type1
+      export: true
+      fields:
+      - names: [Foo]
+        doc: Foo stub
+        tag: env:"FOO"
+        type_ref: {name: int, kind: Ident}
+    - name: Type2
+      export: true
+      fields:
+      - names: [Baz]
+        doc: Baz stub
+        tag: env:"BAZ"
+        type_ref: {name: int, kind: Ident}
+
+- src_file: nodocs.go
+  file_glob: "*.go"
+  type_glob: Config
+  files:
+  - name: nodocs.go
+    pkg: main
+    export: true
+    types:
+    - name: Config
+      export: true
+      fields:
+      - names: [Repo]
+        type_ref: {kind: Struct}
+        tag: envPrefix:"REPO_"
+        fields:
+        - names: [Conn]
+          tag: env:"CONN,notEmpty"
+          type_ref: {name: string, kind: Ident}
+
+- src_file: tags.go
+  file_glob: "*.go"
+  type_glob: Type1
+  files:
+  - name: tags.go
+    pkg: testdata
+    export: true
+    types:
+    - name: Type1
+      export: true
+      fields:
+      - names: [Secret]
+        doc: Secret is a secret value that is read from a file.
+        tag: env:"SECRET,file"
+        type_ref: {name: string, kind: Ident}
+      - names: [Password]
+        doc: Password is a password that is read from a file.
+        tag: env:"PASSWORD,file"    envDefault:"/tmp/password"   json:"password"
+        type_ref: {name: string, kind: Ident}
+      - names: [Certificate]
+        doc: Certificate is a certificate that is read from a file.
+        tag: env:"CERTIFICATE,file,expand" envDefault:"${CERTIFICATE_FILE}"
+        type_ref: {name: string, kind: Ident}
+      - names: [SecretKey]
+        doc: Key is a secret key.
+        tag: env:"SECRET_KEY,required" json:"secret_key"
+        type_ref: {name: string, kind: Ident}
+      - names: [SecretVal]
+        doc: SecretVal is a secret value.
+        tag: json:"secret_val" env:"SECRET_VAL,notEmpty"
+        type_ref: {name: string, kind: Ident}
+      - names: [NotEnv]
+        doc: NotEnv is not an environment variable.
+        tag: json:"not_env"
+        type_ref: {name: string, kind: Ident}
+      - names: [NoTag]
+        doc: NoTag is not tagged.
+        type_ref: {name: string, kind: Ident}
+      - names: [BrokenTag]
+        doc: BrokenTag is a tag that is broken.
+        tag: 'env:"BROKEN_TAG,required'
+        type_ref: {name: string, kind: Ident}
+
+- src_file: type.go
+  file_glob: "*.go"
+  type_glob: Type*
+  files:
+  - name: type.go
+    pkg: testdata
+    export: true
+    types:
+    - name: Type1
+      export: true
+      fields:
+      - names: [Foo]
+        doc: Foo stub
+        tag: env:"FOO"
+        type_ref: {name: int, kind: Ident}
+    - name: Type2
+      export: true
+      fields:
+      - names: [Baz]
+        doc: Baz stub
+        tag: env:"BAZ"
+        type_ref: {name: int, kind: Ident}
+
+- src_file: typedef.go
+  file_glob: "*.go"
+  type_glob: Config
+  files:
+  - name: typedef.go
+    pkg: testdata
+    export: true
+    types:
+    - name: Config
+      export: true
+      fields:
+      - names: [Start]
+        doc: Start date.
+        tag: env:"START"
+        type_ref: {name: Date, kind: Ident}
+    - name: Date
+      export: false
+      doc: Date is a time.Time wrapper that uses the time.DateOnly layout.
+
+- src_file: unexported.go
+  file_glob: "*.go"
+  type_glob: appconfig
+  files:
+  - name: unexported.go
+    pkg: testdata
+    export: true
+    types:
+    - name: appconfig
+      export: true
+      fields:
+      - names: [Port]
+        doc: Port the application will listen on inside the container
+        tag: env:"PORT" envDefault:"8080"
+        type_ref: {name: int, kind: Ident}
+
+- src_dir: project
+  file_glob: "*/cfg/config.go"
+  type_glob: 'Config'
+  # debug: true
+  files:
+  - name: ./cfg/config.go
+    pkg: cfg
+    export: true
+    types:
+    - name: 'Config'
+      export: true
+      fields:
+      - names: [Environment]
+        doc: Environment of the application.
+        tag: env:"ENVIRONMENT,notEmpty" envDefault:"development"
+        type_ref: {name: string, kind: Ident}
+      - 
+        type_ref: {name: ServerConfig, kind: Ident}
+        tag: envPrefix:"SERVER_"
+      - names: [Database]
+        doc: Database config.
+        tag: envPrefix:"DB_"
+        type_ref: {name: Config, kind: Selector}
+  - name: ./cfg/server.go
+    pkg: cfg
+    export: false
+    types:
+    - name: Config
+      export: true
+      fields:
+      - names: [Host]
+        doc: Host of the server. 
+        tag: env:"HOST,notEmpty"
+        type_ref: {name: string, kind: Ident}
+      - names: [Port]
+        doc: Port of the server.
+        tag: env:"PORT" envDefault:"8080"
+        type_ref: {name: int, kind: Ident}
+  - name: ./db/config.go
+    pkg: db
+    export: false
+    types:
+    - name: Config
+      doc: Config for the database.
+      export: true
+      fields:
+      - names: [Host]
+        doc: Host of the database. 
+        tag: env:"HOST,notEmpty"
+        type_ref: {name: string, kind: Ident}
+      - names: [Port]
+        doc: Port of the database. 
+        tag: env:"PORT" envDefault:"5432"
+        type_ref: {name: int, kind: Ident}
+      - names: [Username]
+        doc: Username of the database.
+        tag: env:"USERNAME,notEmpty"
+        type_ref: {name: string, kind: Ident}
+      - names: [Password]
+        doc: Password of the database.
+        tag: env:"PASSWORD,notEmpty"
+        type_ref: {name: string, kind: Ident}
+      - names: [Name]
+        doc: Name of the database.
+        tag: env:"NAME,notEmpty"
+        type_ref: {name: string, kind: Ident}

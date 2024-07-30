@@ -2,18 +2,30 @@ package main
 
 import (
 	"fmt"
-	"io"
-	"log"
-	"math/rand"
+	"io/fs"
 	"strings"
 	"unicode"
+	"unicode/utf8"
+
+	"github.com/gobwas/glob"
 )
 
-func closeWith(closer io.Closer, handler func(error)) {
-	err := closer.Close()
+func newGlobMatcher(ptn string) (func(string) bool, error) {
+	g, err := glob.Compile(ptn)
 	if err != nil {
-		handler(err)
+		return nil, fmt.Errorf("inalid glob pattern: %w", err)
 	}
+	return g.Match, nil
+}
+
+func newGlobFileMatcher(ptn string) (func(fs.FileInfo) bool, error) {
+	m, err := newGlobMatcher(ptn)
+	if err != nil {
+		return nil, err
+	}
+	return func(fi fs.FileInfo) bool {
+		return m(fi.Name())
+	}, nil
 }
 
 func camelToSnake(s string) string {
@@ -21,9 +33,17 @@ func camelToSnake(s string) string {
 	var result strings.Builder
 	result.Grow(len(s) + 5)
 
+	var buf [utf8.UTFMax]byte
 	var prev rune
+	var pos int
 	for i, r := range s {
-		if i > 0 && prev != underscore && r != underscore && unicode.IsUpper(r) {
+		pos += utf8.EncodeRune(buf[:], r)
+		// read next rune
+		var next rune
+		if pos < len(s) {
+			next, _ = utf8.DecodeRuneInString(s[pos:])
+		}
+		if i > 0 && prev != underscore && r != underscore && unicode.IsUpper(r) && (unicode.IsLower(next)) {
 			result.WriteRune(underscore)
 		}
 		result.WriteRune(unicode.ToUpper(r))
@@ -31,102 +51,4 @@ func camelToSnake(s string) string {
 	}
 
 	return result.String()
-}
-
-func fastRandString(n int) string {
-	const letters = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
-	seed := rand.Intn(len(letters)*len(letters)) + 1
-	b := make([]byte, n)
-	for i := range b {
-		b[i] = letters[(seed+i)%len(letters)]
-	}
-	return string(b)
-}
-
-type (
-	envDocItemBuilderOp func(*envDocItemsBuilder)
-	envDocItemsBuilder  struct {
-		envPrefix string
-		names     []string
-		doc       string
-		opts      EnvVarOptions
-		children  []*EnvDocItem
-	}
-)
-
-func withEnvDocItemEnvPrefix(envPrefix string) envDocItemBuilderOp {
-	return func(b *envDocItemsBuilder) {
-		b.envPrefix = envPrefix
-	}
-}
-
-func withEnvDocItemDoc(doc string) envDocItemBuilderOp {
-	return func(b *envDocItemsBuilder) {
-		b.doc = doc
-	}
-}
-
-func withEnvDocItemOpts(opts EnvVarOptions) envDocItemBuilderOp {
-	return func(b *envDocItemsBuilder) {
-		b.opts = opts
-	}
-}
-
-func withEnvDocItemAddChildren(children []*EnvDocItem) envDocItemBuilderOp {
-	return func(b *envDocItemsBuilder) {
-		b.children = append(b.children, children...)
-	}
-}
-
-func withEnvDocItemNames(names ...string) envDocItemBuilderOp {
-	return func(b *envDocItemsBuilder) {
-		b.names = names
-	}
-}
-
-var withEnvDocEmptyNames = withEnvDocItemNames("")
-
-func (b *envDocItemsBuilder) apply(op ...envDocItemBuilderOp) *envDocItemsBuilder {
-	for _, o := range op {
-		o(b)
-	}
-	return b
-}
-
-func (b *envDocItemsBuilder) items() []*EnvDocItem {
-	items := make([]*EnvDocItem, len(b.names))
-	for i, name := range b.names {
-		item := &EnvDocItem{
-			Doc:      b.doc,
-			Opts:     b.opts,
-			Children: b.children,
-		}
-		if name != "" {
-			item.Name = fmt.Sprintf("%s%s", b.envPrefix, name)
-		}
-		items[i] = item
-	}
-	return items
-}
-
-func (b *envDocItemsBuilder) GoString() string {
-	return fmt.Sprintf("envDocItemsBuilder{envPrefix: %q, names: %q, doc: %q, opts: %v, children: %v}",
-		b.envPrefix, b.names, b.doc, b.opts, b.children)
-}
-
-func debugBuilder(l *log.Logger, prefix string, b *envDocItemsBuilder) {
-	l.Printf("%s: %s", prefix, b.GoString())
-}
-
-func strConcat(s ...string) string {
-	var b strings.Builder
-	var size int
-	for _, v := range s {
-		size += len(v)
-	}
-	b.Grow(size)
-	for _, v := range s {
-		b.WriteString(v)
-	}
-	return b.String()
 }

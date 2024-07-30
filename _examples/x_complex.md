@@ -12,11 +12,10 @@ It is trying to cover all the possible cases.
  - `X_SECRET_KEY` (**required**) - Key is a secret key.
  - `X_SECRET_VAL` (**required**, non-empty) - SecretVal is a secret value.
  - `X_HOSTS` (separated by `:`, **required**) - Hosts is a list of hosts.
- - `X_WORDS` (comma-separated, from-file, default: `one,two,three`) - Words is just a list of words.
+ - `X_WORDS` (comma-separated, from-file, default: `one`) - Words is just a list of words.
  - `X_COMMENT` (**required**, default: `This is a comment.`) - Just a comment.
- - `X_` - Anon is an anonymous structure.
-   - `X_ANON_USER` (**required**) - User is a user name.
-   - `X_ANON_PASS` (**required**) - Pass is a password.
+ - `X_ANON_USER` (**required**) - User is a user name.
+ - `X_ANON_PASS` (**required**) - Pass is a password.
 
 ## NextConfig
 
@@ -27,4 +26,5 @@ It is trying to cover all the possible cases.
 FieldNames uses field names as env names.
 
  - `X_QUUX` - Quux is a field with a tag.
+ - `X_` (**required**) - Required is a required field.
 
