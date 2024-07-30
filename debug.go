@@ -4,7 +4,6 @@ package main
 
 import (
 	"fmt"
-	goast "go/ast"
 	"io"
 	"strings"
 
@@ -14,35 +13,6 @@ import (
 
 var DebugConfig struct {
 	Enabled bool
-}
-
-type debugVisitor int
-
-func (v debugVisitor) Visit(n goast.Node) goast.Visitor {
-	indent := strings.Repeat("  ", int(v))
-	// print only files, packages, types, struccts and fields
-	switch n := n.(type) {
-	case *goast.File:
-		fmt.Printf("%sFILE: %s\n", indent, n.Name.Name)
-	case *goast.Package:
-		fmt.Printf("%sPACKAGE: %s\n", indent, n.Name)
-	case *goast.TypeSpec:
-		fmt.Printf("%sTYPE: %s\n", indent, n.Name.Name)
-	case *goast.StructType:
-		fmt.Printf("%sSTRUCT\n", indent)
-	case *goast.Field:
-		var name string
-		if len(n.Names) > 0 {
-			name = n.Names[0].Name
-		} else {
-			name = "<embedded>"
-		}
-		fmt.Printf("%sFIELD: %s\n", indent, name)
-	default:
-		fmt.Printf("%sNODE: %T\n", indent, n)
-	}
-
-	return v + 1
 }
 
 func printTraverse(files []*ast.FileSpec, level int) {
