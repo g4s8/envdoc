@@ -118,3 +118,25 @@ func TestCamelToSnake(t *testing.T) {
 		}
 	}
 }
+
+func TestUnescapeGlob(t *testing.T) {
+	tests := map[string]string{
+		`"foo"`: `foo`,
+		`"foo`:  `"foo`,
+		`foo"`:  `foo"`,
+		`foo`:   `foo`,
+		`'foo'`: `foo`,
+		`'foo`:  `'foo`,
+		`foo'`:  `foo'`,
+		`*`:     `*`,
+		`*foo*`: `*foo*`,
+		`'*'`:   `*`,
+		``:      ``,
+	}
+
+	for input, expected := range tests {
+		if got := unescapeGlob(input); got != expected {
+			t.Errorf("unexpected result for %q: got %q, want %q", input, got, expected)
+		}
+	}
+}

@@ -52,3 +52,12 @@ func camelToSnake(s string) string {
 
 	return result.String()
 }
+
+// un-escape -types and -files globs: '*' -> *, "foo" -> foo
+// if first and last characters are quotes, remove them.
+func unescapeGlob(s string) string {
+	if len(s) >= 2 && ((s[0] == '"' && s[len(s)-1] == '"') || (s[0] == '\'' && s[len(s)-1] == '\'')) {
+		return s[1 : len(s)-1]
+	}
+	return s
+}
