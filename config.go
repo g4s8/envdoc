@@ -127,6 +127,11 @@ func (c *Config) parseEnv() error {
 	return nil
 }
 
+func (c *Config) normalize() {
+	c.TypeGlob = unescapeGlob(c.TypeGlob)
+	c.FileGlob = unescapeGlob(c.FileGlob)
+}
+
 func (c *Config) setDefaults() {
 	if c.FileGlob == "" {
 		c.FileGlob = c.ExecFile
@@ -172,5 +177,6 @@ func (c *Config) Load() error {
 		return fmt.Errorf("parse env: %w", err)
 	}
 	c.setDefaults()
+	c.normalize()
 	return nil
 }
