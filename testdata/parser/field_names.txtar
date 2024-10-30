@@ -1,0 +1,52 @@
+Test field names as env names
+
+-- src.go --
+package testdata
+
+// FieldNames uses field names as env names.
+type FieldNames struct {
+	// Foo is a single field.
+	Foo string
+	// Bar and Baz are two fields.
+	Bar, Baz string
+	// Quux is a field with a tag.
+	Quux string `env:"QUUX"`
+	// FooBar is a field with a default value.
+	FooBar string `envDefault:"quuux"`
+	// Required is a required field.
+	Required string `env:",required"`
+}
+
+-- testcase.yaml --
+
+testcase:
+  src_file: src.go
+  file_glob: "*.go"
+  type_glob: FieldNames
+  files:
+  - name: src.go
+    pkg: testdata
+    export: true
+    types:
+    - name: FieldNames
+      export: true
+      doc: FieldNames uses field names as env names.
+      fields:
+      - names: [Foo]
+        doc: Foo is a single field.
+        type_ref: {name: string, kind: Ident}
+      - names: [Bar, Baz]
+        doc: Bar and Baz are two fields.
+        type_ref: {name: string, kind: Ident}
+      - names: [Quux]
+        doc: Quux is a field with a tag.
+        tag: env:"QUUX"
+        type_ref: {name: string, kind: Ident}
+      - names: [FooBar]
+        doc: FooBar is a field with a default value.
+        tag: envDefault:"quuux"
+        type_ref: {name: string, kind: Ident}
+      - names: [Required]
+        doc: Required is a required field.
+        tag: env:",required"
+        type_ref: {name: string, kind: Ident}

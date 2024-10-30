@@ -1,0 +1,54 @@
+Simple test case
+
+-- src.go --
+package testdata
+
+type Foo struct {
+	// One is a one.
+	One string `env:"ONE"`
+	// Two is a two.
+	Two string `env:"TWO"`
+}
+
+// Bar is a bar.
+type Bar struct {
+	// Three is a three.
+	Three string `env:"THREE"`
+	// Four is a four.
+	Four string `env:"FOUR"`
+}
+
+-- testcase.yaml --
+
+testcase:
+  src_file: src.go
+  file_glob: "*.go"
+  type_glob: "*"
+  files:
+  - name: src.go
+    pkg: testdata
+    export: true
+    types:
+    - name: Foo
+      export: true
+      fields:
+      - names: [One]
+        doc: One is a one.
+        tag: env:"ONE"
+        type_ref: {name: string, kind: Ident}
+      - names: [Two]
+        doc: Two is a two.
+        tag: env:"TWO"
+        type_ref: {name: string, kind: Ident}
+    - name: Bar
+      export: true
+      doc: Bar is a bar.
+      fields:
+      - names: [Three]
+        doc: Three is a three.
+        tag: env:"THREE"
+        type_ref: {name: string, kind: Ident}
+      - names: [Four]
+        doc: Four is a four.
+        tag: env:"FOUR"
+        type_ref: {name: string, kind: Ident}

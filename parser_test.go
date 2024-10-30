@@ -1,105 +1,46 @@
 package main
 
 import (
-	"bufio"
 	"fmt"
-	"io"
 	"os"
 	"path"
+	"path/filepath"
 	"strings"
 	"testing"
 
 	"github.com/g4s8/envdoc/ast"
 	"github.com/g4s8/envdoc/debug"
+	"golang.org/x/tools/txtar"
 	"gopkg.in/yaml.v2"
 )
 
-func copyFile(src, dst string) error {
-	in, err := os.Open(src)
+func TestDataParser(t *testing.T) {
+	files, err := filepath.Glob("testdata/parser/*.txtar")
 	if err != nil {
-		return fmt.Errorf("open source file: %s", err)
+		t.Fatalf("failed to list testdata files: %s", err)
 	}
-	defer in.Close()
+	t.Logf("Found %d testdata files", len(files))
 
-	out, err := os.Create(dst)
-	if err != nil {
-		return fmt.Errorf("create destination file: %s", err)
-	}
-	defer out.Close()
+	for _, file := range files {
+		file := file
 
-	bufIn := bufio.NewReader(in)
-	bufOut := bufio.NewWriter(out)
+		t.Run(filepath.Base(file), func(t *testing.T) {
+			t.Parallel()
 
-	if _, err = io.Copy(bufOut, bufIn); err != nil {
-		return fmt.Errorf("copy file: %s", err)
-	}
-
-	if err = bufOut.Flush(); err != nil {
-		return fmt.Errorf("flush destination file: %s", err)
-	}
-	return nil
-}
-
-func copyDir(src, dst string) error {
-	srcInfo, err := os.Stat(src)
-	if err != nil {
-		return fmt.Errorf("stat source dir %q: %w", src, err)
-	}
-
-	if err = os.MkdirAll(dst, srcInfo.Mode()); err != nil {
-		return fmt.Errorf("create destination dir %q: %w", dst, err)
-	}
-
-	entries, err := os.ReadDir(src)
-	if err != nil {
-		return fmt.Errorf("read source dir %q: %w", src, err)
-	}
-
-	for _, entry := range entries {
-		srcPath := path.Join(src, entry.Name())
-		dstPath := path.Join(dst, entry.Name())
-		if entry.IsDir() {
-			if err := copyDir(srcPath, dstPath); err != nil {
-				return fmt.Errorf("copy dir %q: %w", srcPath, err)
+			ar, err := txtar.ParseFile(file)
+			if err != nil {
+				t.Fatalf("failed to parse txtar file: %s", err)
 			}
-			continue
-		}
-		if err := copyFile(srcPath, dstPath); err != nil {
-			return fmt.Errorf("copy file %q: %w", srcPath, err)
-		}
-	}
-	return nil
-}
 
-func setupParsserDir(t *testing.T, dir string) string {
-	// dir path contains the path to the directory where the test files are located
-	// just create a temp dir and copy all files from `dir` to the temp dir recursively
-	t.Helper()
+			dir := t.TempDir()
+			if err := extractTxtar(ar, dir); err != nil {
+				t.Fatalf("failed to extract txtar: %s", err)
+			}
 
-	// tmpDir := path.Join(t.TempDir(), "parser")
-	tmpDir := path.Join("/tmp/q", "parser")
-	if err := os.MkdirAll(tmpDir, 0o755); err != nil {
-		t.Fatalf("failed to create temp dir: %s", err)
+			tc := readTestCase(t, dir)
+			testParser(t, dir, tc)
+		})
 	}
-
-	if err := copyDir(path.Join("testdata", dir), tmpDir); err != nil {
-		t.Fatalf("failed to copy directory: %s", err)
-	}
-	return tmpDir
-}
-
-func setupParserFiles(t *testing.T, file string) (dir string) {
-	t.Helper()
-
-	dir = path.Join(t.TempDir(), "parser")
-	if err := os.MkdirAll(dir, 0o755); err != nil {
-		t.Fatalf("failed to create directory: %s", err)
-	}
-	if err := copyFile(path.Join("testdata", file),
-		path.Join(dir, file)); err != nil {
-		t.Fatalf("failed to copy file: %s", err)
-	}
-	return
 }
 
 type parserExpectedTypeRef struct {
@@ -208,7 +149,6 @@ func parserFilesToAST(t *testing.T, files []*parserExpectedFile) []*ast.FileSpec
 
 type parserTestCase struct {
 	SrcFile  string `yaml:"src_file"`
-	SrcDir   string `yaml:"src_dir"`
 	FileGlob string `yaml:"file_glob"`
 	TypeGlob string `yaml:"type_glob"`
 	Debug    bool   `yaml:"debug"`
@@ -216,58 +156,23 @@ type parserTestCase struct {
 	Expect []*parserExpectedFile `yaml:"files"`
 }
 
-func loadParserTestCases(t *testing.T) []parserTestCase {
+func testParser(t *testing.T, dir string, tc parserTestCase) {
 	t.Helper()
 
-	var parserTestCases struct {
-		Cases []parserTestCase `yaml:"test_cases"`
+	var opts []parserConfigOption
+	if tc.Debug || debug.Config.Enabled {
+		debug.SetTestLogger(t)
+		t.Log("Debug mode")
+		t.Logf("using dir: %s", dir)
+		opts = append(opts, withDebug(true))
 	}
-	f, err := os.Open("testdata/_cases.yaml")
+	p := NewParser(dir, tc.FileGlob, tc.TypeGlob, opts...)
+	files, err := p.Parse()
 	if err != nil {
-		t.Fatalf("failed to open test cases file: %s", err)
+		t.Fatalf("failed to parse files: %s", err)
 	}
-	defer f.Close()
-
-	buf := bufio.NewReader(f)
-	dec := yaml.NewDecoder(buf)
-	if err := dec.Decode(&parserTestCases); err != nil {
-		t.Fatalf("failed to decode test cases: %s", err)
-	}
-	return parserTestCases.Cases
-}
-
-func TestFileParser(t *testing.T) {
-	cases := loadParserTestCases(t)
-	for i, tc := range cases {
-		t.Run(fmt.Sprintf("case(%d)", i), parserTestRunner(tc))
-	}
-}
-
-func parserTestRunner(tc parserTestCase) func(*testing.T) {
-	return func(t *testing.T) {
-		var dir string
-		if tc.SrcFile != "" {
-			dir = setupParserFiles(t, tc.SrcFile)
-		} else if tc.SrcDir != "" {
-			dir = setupParsserDir(t, tc.SrcDir)
-		} else {
-			t.Fatal("either src_file or src_dir must be set")
-		}
-		var opts []parserConfigOption
-		if tc.Debug || debug.Config.Enabled {
-			debug.SetTestLogger(t)
-			t.Log("Debug mode")
-			t.Logf("using dir: %s", dir)
-			opts = append(opts, withDebug(true))
-		}
-		p := NewParser(dir, tc.FileGlob, tc.TypeGlob, opts...)
-		files, err := p.Parse()
-		if err != nil {
-			t.Fatalf("failed to parse files: %s", err)
-		}
-		astFiles := parserFilesToAST(t, tc.Expect)
-		checkFiles(t, "/files", astFiles, files)
-	}
+	astFiles := parserFilesToAST(t, tc.Expect)
+	checkFiles(t, "/files", astFiles, files)
 }
 
 func checkFiles(t *testing.T, prefix string, expect, res []*ast.FileSpec) {
@@ -396,4 +301,37 @@ func checkTypeRef(t *testing.T, prefix string, expect, res *ast.FieldTypeRef) {
 	if expect.Kind != res.Kind {
 		t.Errorf("%s: Expected type kind %s, got %s", prefix, expect.Kind, res.Kind)
 	}
+}
+
+//---
+
+func extractTxtar(ar *txtar.Archive, dir string) error {
+	for _, file := range ar.Files {
+		name := filepath.Join(dir, file.Name)
+		if err := os.MkdirAll(filepath.Dir(name), 0o777); err != nil {
+			return err
+		}
+		if err := os.WriteFile(name, file.Data, 0o666); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func readTestCase(t *testing.T, dir string) parserTestCase {
+	t.Helper()
+
+	testCaseFile, err := os.Open(path.Join(dir, "testcase.yaml"))
+	if err != nil {
+		t.Fatalf("failed to open testcase file: %s", err)
+	}
+	defer testCaseFile.Close()
+
+	var tmp struct {
+		TestCase parserTestCase `yaml:"testcase"`
+	}
+	if err := yaml.NewDecoder(testCaseFile).Decode(&tmp); err != nil {
+		t.Fatalf("failed to decode testcase: %s", err)
+	}
+	return tmp.TestCase
 }

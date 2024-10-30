@@ -1,0 +1,37 @@
+Anonymous field struct
+
+-- src.go --
+package main
+
+// Config is the configuration for the application.
+type Config struct {
+	// Repo is the configuration for the repository.
+	Repo struct {
+		// Conn is the connection string for the repository.
+		Conn string `env:"CONN,notEmpty"`
+	} `envPrefix:"REPO_"`
+}
+
+-- testcase.yaml --
+testcase:
+  src_file: src.go
+  file_glob: "*.go"
+  type_glob: "*"
+  files:
+  - name: src.go
+    pkg: main
+    export: true
+    types:
+    - name: Config
+      export: true
+      doc: Config is the configuration for the application.
+      fields:
+      - names: [Repo]
+        doc: Repo is the configuration for the repository.
+        tag: envPrefix:"REPO_"
+        type_ref: {kind: Struct}
+        fields:
+        - names: [Conn]
+          doc: Conn is the connection string for the repository.
+          tag: env:"CONN,notEmpty"
+          type_ref: {name: string, kind: Ident}

@@ -1,0 +1,36 @@
+Array fields
+
+-- src.go --
+package testdata
+
+// Arrays stub
+type Arrays struct {
+	// DotSeparated stub
+	DotSeparated []string `env:"DOT_SEPARATED" envSeparator:"."`
+	// CommaSeparated stub
+	CommaSeparated []string `env:"COMMA_SEPARATED"`
+}
+
+-- testcase.yaml --
+
+testcase:
+  src_file: src.go
+  file_glob: "*.go"
+  type_glob: "*"
+  files:
+  - name: src.go
+    pkg: testdata
+    export: true
+    types:
+    - name: Arrays
+      export: true
+      doc: Arrays stub
+      fields:
+      - names: [DotSeparated]
+        doc: DotSeparated stub
+        tag: env:"DOT_SEPARATED" envSeparator:"."
+        type_ref: {name: string, kind: Array}
+      - names: [CommaSeparated]
+        doc: CommaSeparated stub
+        tag: env:"COMMA_SEPARATED"
+        type_ref: {name: string, kind: Array}

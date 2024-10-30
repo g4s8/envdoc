@@ -1,0 +1,40 @@
+Multiple types.
+
+-- src.go --
+package testdata
+
+type Type1 struct {
+	// Foo stub
+	Foo int `env:"FOO"`
+}
+
+type Type2 struct {
+	// Baz stub
+	Baz int `env:"BAZ"`
+}
+
+-- testcase.yaml --
+
+testcase:
+  src_file: src.go
+  file_glob: "*.go"
+  type_glob: Type*
+  files:
+  - name: src.go
+    pkg: testdata
+    export: true
+    types:
+    - name: Type1
+      export: true
+      fields:
+      - names: [Foo]
+        doc: Foo stub
+        tag: env:"FOO"
+        type_ref: {name: int, kind: Ident}
+    - name: Type2
+      export: true
+      fields:
+      - names: [Baz]
+        doc: Baz stub
+        tag: env:"BAZ"
+        type_ref: {name: int, kind: Ident}

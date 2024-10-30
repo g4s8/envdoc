@@ -1,0 +1,111 @@
+Multiple files.
+
+-- cfg/config.go --
+package cfg
+
+import "github.com/smallstep/certificates/db"
+
+// Config for the application.
+type Config struct {
+	// Environment of the application.
+	Environment string `env:"ENVIRONMENT,notEmpty" envDefault:"development"`
+
+	ServerConfig `envPrefix:"SERVER_"`
+
+	// Database config.
+	Database db.Config `envPrefix:"DB_"`
+}
+
+-- cfg/server.go --
+package cfg
+
+type Config struct {
+	// Host of the server.
+	Host string `env:"HOST,notEmpty"`
+	// Port of the server.
+	Port int `env:"PORT" envDefault:"8080"`
+}
+
+-- db/config.go --
+package db
+
+// Config for the database.
+type Config struct {
+	// Host of the database.
+	Host string `env:"HOST,notEmpty"`
+	// Port of the database.
+	Port int `env:"PORT" envDefault:"5432"`
+	// Username of the database.
+	Username string `env:"USERNAME,notEmpty"`
+	// Password of the database.
+	Password string `env:"PASSWORD,notEmpty"`
+	// Name of the database.
+	Name string `env:"NAME,notEmpty"`
+}
+
+-- testcase.yaml --
+testcase:
+  file_glob: "./cfg/config.go"
+  type_glob: 'Config'
+  files:
+  - name: ./cfg/config.go
+    pkg: cfg
+    export: true
+    types:
+    - name: 'Config'
+      export: true
+      fields:
+      - names: [Environment]
+        doc: Environment of the application.
+        tag: env:"ENVIRONMENT,notEmpty" envDefault:"development"
+        type_ref: {name: string, kind: Ident}
+      - 
+        type_ref: {name: ServerConfig, kind: Ident}
+        tag: envPrefix:"SERVER_"
+      - names: [Database]
+        doc: Database config.
+        tag: envPrefix:"DB_"
+        type_ref: {name: Config, kind: Selector}
+  - name: ./cfg/server.go
+    pkg: cfg
+    export: false
+    types:
+    - name: Config
+      export: true
+      fields:
+      - names: [Host]
+        doc: Host of the server. 
+        tag: env:"HOST,notEmpty"
+        type_ref: {name: string, kind: Ident}
+      - names: [Port]
+        doc: Port of the server.
+        tag: env:"PORT" envDefault:"8080"
+        type_ref: {name: int, kind: Ident}
+  - name: ./db/config.go
+    pkg: db
+    export: false
+    types:
+    - name: Config
+      doc: Config for the database.
+      export: true
+      fields:
+      - names: [Host]
+        doc: Host of the database. 
+        tag: env:"HOST,notEmpty"
+        type_ref: {name: string, kind: Ident}
+      - names: [Port]
+        doc: Port of the database. 
+        tag: env:"PORT" envDefault:"5432"
+        type_ref: {name: int, kind: Ident}
+      - names: [Username]
+        doc: Username of the database.
+        tag: env:"USERNAME,notEmpty"
+        type_ref: {name: string, kind: Ident}
+      - names: [Password]
+        doc: Password of the database.
+        tag: env:"PASSWORD,notEmpty"
+        type_ref: {name: string, kind: Ident}
+      - names: [Name]
+        doc: Name of the database.
+        tag: env:"NAME,notEmpty"
+        type_ref: {name: string, kind: Ident}

@@ -1,0 +1,70 @@
+Multiple tags for fields.
+
+-- src.go --
+package testdata
+
+type Type1 struct {
+	// Secret is a secret value that is read from a file.
+	Secret string `env:"SECRET,file"`
+	// Password is a password that is read from a file.
+	Password string `env:"PASSWORD,file"    envDefault:"/tmp/password"   json:"password"`
+	// Certificate is a certificate that is read from a file.
+	Certificate string `env:"CERTIFICATE,file,expand" envDefault:"${CERTIFICATE_FILE}"`
+	// Key is a secret key.
+	SecretKey string `env:"SECRET_KEY,required" json:"secret_key"`
+	// SecretVal is a secret value.
+	SecretVal string `json:"secret_val" env:"SECRET_VAL,notEmpty"`
+	// NotEnv is not an environment variable.
+	NotEnv string `json:"not_env"`
+	// NoTag is not tagged.
+	NoTag string
+	// BrokenTag is a tag that is broken.
+	BrokenTag string `env:"BROKEN_TAG,required`
+}
+
+-- testcase.yaml --
+
+testcase:
+  src_file: src.go
+  file_glob: "*.go"
+  type_glob: Type1
+  files:
+  - name: src.go
+    pkg: testdata
+    export: true
+    types:
+    - name: Type1
+      export: true
+      fields:
+      - names: [Secret]
+        doc: Secret is a secret value that is read from a file.
+        tag: env:"SECRET,file"
+        type_ref: {name: string, kind: Ident}
+      - names: [Password]
+        doc: Password is a password that is read from a file.
+        tag: env:"PASSWORD,file"    envDefault:"/tmp/password"   json:"password"
+        type_ref: {name: string, kind: Ident}
+      - names: [Certificate]
+        doc: Certificate is a certificate that is read from a file.
+        tag: env:"CERTIFICATE,file,expand" envDefault:"${CERTIFICATE_FILE}"
+        type_ref: {name: string, kind: Ident}
+      - names: [SecretKey]
+        doc: Key is a secret key.
+        tag: env:"SECRET_KEY,required" json:"secret_key"
+        type_ref: {name: string, kind: Ident}
+      - names: [SecretVal]
+        doc: SecretVal is a secret value.
+        tag: json:"secret_val" env:"SECRET_VAL,notEmpty"
+        type_ref: {name: string, kind: Ident}
+      - names: [NotEnv]
+        doc: NotEnv is not an environment variable.
+        tag: json:"not_env"
+        type_ref: {name: string, kind: Ident}
+      - names: [NoTag]
+        doc: NoTag is not tagged.
+        type_ref: {name: string, kind: Ident}
+      - names: [BrokenTag]
+        doc: BrokenTag is a tag that is broken.
+        tag: 'env:"BROKEN_TAG,required'
+        type_ref: {name: string, kind: Ident}
+

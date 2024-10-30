@@ -10,12 +10,6 @@ func TestFileVisitor(t *testing.T) {
 	fh, fv, file := testFileVisitor(fset, pkg, "testdata/onetype.go", docs)
 	ast.Walk(fv, file)
 
-	if expect, actual := 1, len(fh.comments); expect != actual {
-		t.Fatalf("expected %d comments, got %d", expect, actual)
-	}
-	checkCommentsEq(t, &CommentSpec{
-		Text: "onetype",
-	}, fh.comments[0])
 	types := make([]*TypeSpec, 0)
 	for _, f := range fh.files {
 		types = append(types, f.Types...)
