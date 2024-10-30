@@ -37,6 +37,13 @@ type Config struct {
 	// FieldNames flag enables field names usage intead of `env` tag.
 	FieldNames bool
 
+	// TagName sets custom tag name, `env` by default.
+	TagName string
+	// TagDefault sets default env tag name, `envDefault` by default.
+	TagDefault string
+	// TagRequiredIfNoDef sets attributes as required if no default value is set.
+	RequiredIfNoDef bool
+
 	// ExecLine is the line of go:generate command
 	ExecLine int
 	// ExecFile is the file of go:generate command
@@ -59,6 +66,10 @@ func (c *Config) parseFlags(f *flag.FlagSet) error {
 	f.StringVar(&c.EnvPrefix, "env-prefix", "", "Environment variable prefix")
 	f.BoolVar(&c.FieldNames, "field-names", false, "Use field names if tag is not specified")
 	f.BoolVar(&c.Debug, "debug", false, "Enable debug output")
+	// customization
+	f.StringVar(&c.TagName, "tag-name", "env", "Custom tag name")
+	f.StringVar(&c.TagDefault, "tag-default", "envDefault", "Default tag name")
+	f.BoolVar(&c.RequiredIfNoDef, "required-if-no-def", false, "Set attributes as required if no default value is set")
 	// deprecated flags
 	var (
 		typeName string

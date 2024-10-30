@@ -6,16 +6,14 @@ import (
 )
 
 type Renderer struct {
-	format    OutFormat
-	envPrefix string
-	noStyles  bool
+	format   OutFormat
+	noStyles bool
 }
 
-func NewRenderer(format OutFormat, envPrefix string, noStyles bool) *Renderer {
+func NewRenderer(format OutFormat, noStyles bool) *Renderer {
 	return &Renderer{
-		format:    format,
-		envPrefix: envPrefix,
-		noStyles:  noStyles,
+		format:   format,
+		noStyles: noStyles,
 	}
 }
 
@@ -39,7 +37,7 @@ func (r *Renderer) Render(scopes []*EnvScope, out io.Writer) error {
 		return fmt.Errorf("unknown format: %s", r.format)
 	}
 
-	c := newRenderContext(scopes, cfg, r.envPrefix, r.noStyles)
+	c := newRenderContext(scopes, cfg, r.noStyles)
 	f := templateRenderer(tmpl)
 
 	if err := f(c, out); err != nil {
@@ -99,7 +97,7 @@ type renderContext struct {
 	Config   renderConfig
 }
 
-func newRenderContext(scopes []*EnvScope, cfg renderConfig, envPrefix string, noStyles bool) renderContext {
+func newRenderContext(scopes []*EnvScope, cfg renderConfig, noStyles bool) renderContext {
 	res := renderContext{
 		Sections: make([]renderSection, len(scopes)),
 		Styles:   !noStyles,
@@ -113,7 +111,7 @@ func newRenderContext(scopes []*EnvScope, cfg renderConfig, envPrefix string, no
 			Items: make([]renderItem, len(scope.Vars)),
 		}
 		for j, item := range scope.Vars {
-			item := newRenderItem(item, envPrefix)
+			item := newRenderItem(item)
 			item.Indent = 1
 			section.Items[j] = item
 		}
@@ -122,13 +120,13 @@ func newRenderContext(scopes []*EnvScope, cfg renderConfig, envPrefix string, no
 	return res
 }
 
-func newRenderItem(item *EnvDocItem, envPrefix string) renderItem {
+func newRenderItem(item *EnvDocItem) renderItem {
 	children := make([]renderItem, len(item.Children))
 	for i, child := range item.Children {
-		children[i] = newRenderItem(child, envPrefix)
+		children[i] = newRenderItem(child)
 	}
 	return renderItem{
-		EnvName:      fmt.Sprintf("%s%s", envPrefix, item.Name),
+		EnvName:      item.Name,
 		Doc:          item.Doc,
 		EnvDefault:   item.Opts.Default,
 		EnvSeparator: item.Opts.Separator,

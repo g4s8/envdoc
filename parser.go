@@ -107,7 +107,7 @@ func (p *Parser) Parse() ([]*ast.FileSpec, error) {
 }
 
 func parseDir(dir string, fset *token.FileSet, matcher func(fs.FileInfo) bool, col *ast.RootCollector) error {
-	pkgs, err := parser.ParseDir(fset, dir, nil, parser.ParseComments|parser.SkipObjectResolution)
+	pkgs, err := parser.ParseDir(fset, dir, matcher, parser.ParseComments|parser.SkipObjectResolution)
 	if err != nil {
 		return fmt.Errorf("failed to parse dir: %w", err)
 	}

@@ -35,6 +35,11 @@ FieldNames uses field names as env names.
  - `DEBUG` (default: `false`) - Debug mode enabled.
  - `PREFIX` - Prefix for something.
 
+## CustomTagsConfig
+
+Struct for tag customization.
+
+
 ## Config
 
  - `START` (**required**, non-empty) - Start date.
