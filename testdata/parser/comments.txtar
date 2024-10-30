@@ -1,0 +1,34 @@
+Go comments as documentation
+
+-- src.go --
+package testdata
+
+//go:generate STUB
+type Comments struct {
+	// Foo stub
+	Foo int `env:"FOO"`
+	Bar int `env:"BAR"` // Bar stub
+}
+
+-- testcase.yaml --
+
+testcase:
+  src_file: src.go
+  file_glob: "*.go"
+  type_glob: "*"
+  files:
+  - name: src.go
+    pkg: testdata
+    export: true
+    types:
+    - name: Comments
+      export: true
+      fields:
+      - names: [Foo]
+        doc: Foo stub
+        tag: env:"FOO"
+        type_ref: {name: int, kind: Ident}
+      - names: [Bar]
+        doc: Bar stub
+        tag: env:"BAR"
+        type_ref: {name: int, kind: Ident}

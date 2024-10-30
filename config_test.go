@@ -20,6 +20,9 @@ func TestConfig(t *testing.T) {
 			"-no-styles",
 			"-field-names",
 			"-debug",
+			"-tag-name", "xenv",
+			"-tag-default", "default",
+			"-required-if-no-def",
 		}
 		if err := c.parseFlags(fs); err != nil {
 			t.Fatalf("unexpected error: %v", err)
@@ -47,6 +50,15 @@ func TestConfig(t *testing.T) {
 		}
 		if !c.Debug {
 			t.Error("unexpected Debug: false")
+		}
+		if c.TagName != "xenv" {
+			t.Errorf("unexpected TagName: %q", c.TagName)
+		}
+		if c.TagDefault != "default" {
+			t.Errorf("unexpected TagDefault: %q", c.TagDefault)
+		}
+		if !c.RequiredIfNoDef {
+			t.Error("unexpected RequiredIfNoDef: false")
 		}
 	})
 	t.Run("normalize", func(t *testing.T) {

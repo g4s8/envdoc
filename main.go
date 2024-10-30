@@ -33,11 +33,17 @@ func main() {
 		res.fprint(os.Stdout)
 	}
 
-	conv := NewConverter(cfg.EnvPrefix, cfg.FieldNames)
+	conv := NewConverter(ConverterOpts{
+		EnvPrefix:       cfg.EnvPrefix,
+		TagName:         cfg.TagName,
+		TagDefault:      cfg.TagDefault,
+		RequiredIfNoDef: cfg.RequiredIfNoDef,
+		UseFieldNames:   cfg.FieldNames,
+	})
 	scopes := conv.ScopesFromFiles(res, files)
 	printScopesTree(scopes)
 
-	r := NewRenderer(cfg.OutFormat, cfg.EnvPrefix, cfg.NoStyles)
+	r := NewRenderer(cfg.OutFormat, cfg.NoStyles)
 	out, err := os.Create(cfg.OutFile)
 	if err != nil {
 		fatal("Failed to open output file: %v", err)

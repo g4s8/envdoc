@@ -1,0 +1,28 @@
+Unexported type.
+
+-- src.go --
+package testdata
+
+type appconfig struct {
+	// Port the application will listen on inside the container
+	Port int `env:"PORT" envDefault:"8080"`
+}
+
+-- testcase.yaml --
+
+testcase:
+  src_file: src.go
+  file_glob: "*.go"
+  type_glob: appconfig
+  files:
+  - name: src.go
+    pkg: testdata
+    export: true
+    types:
+    - name: appconfig
+      export: true
+      fields:
+      - names: [Port]
+        doc: Port the application will listen on inside the container
+        tag: env:"PORT" envDefault:"8080"
+        type_ref: {name: int, kind: Ident}

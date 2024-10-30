@@ -1,0 +1,31 @@
+
+-- src.go --
+package main
+
+type Config struct {
+	Repo struct {
+		Conn string `env:"CONN,notEmpty"`
+	} `envPrefix:"REPO_"`
+}
+
+-- testcase.yaml --
+
+testcase:
+  src_file: src.go
+  file_glob: "*.go"
+  type_glob: Config
+  files:
+  - name: src.go
+    pkg: main
+    export: true
+    types:
+    - name: Config
+      export: true
+      fields:
+      - names: [Repo]
+        type_ref: {kind: Struct}
+        tag: envPrefix:"REPO_"
+        fields:
+        - names: [Conn]
+          tag: env:"CONN,notEmpty"
+          type_ref: {name: string, kind: Ident}

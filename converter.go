@@ -9,15 +9,21 @@ import (
 	"github.com/g4s8/envdoc/debug"
 )
 
-type Converter struct {
-	envPrefix     string
-	useFieldNames bool
+type ConverterOpts struct {
+	EnvPrefix       string
+	TagName         string
+	TagDefault      string
+	RequiredIfNoDef bool
+	UseFieldNames   bool
 }
 
-func NewConverter(envPrefix string, useFieldNames bool) *Converter {
+type Converter struct {
+	opts ConverterOpts
+}
+
+func NewConverter(opts ConverterOpts) *Converter {
 	return &Converter{
-		// envPrefix:     envPrefix,
-		useFieldNames: useFieldNames,
+		opts: opts,
 	}
 }
 
@@ -44,7 +50,7 @@ func (c *Converter) ScopeFromType(res *TypeResolver, t *ast.TypeSpec) *EnvScope 
 		Name: t.Name,
 		Doc:  t.Doc,
 	}
-	scope.Vars = c.DocItemsFromFields(res, c.envPrefix, t.Fields)
+	scope.Vars = c.DocItemsFromFields(res, c.opts.EnvPrefix, t.Fields)
 	debug.Logf("# CONV: found scope %q\n", scope.Name)
 	return scope
 }
@@ -64,54 +70,10 @@ func (c *Converter) DocItemsFromFields(res *TypeResolver, prefix string, fields 
 }
 
 func (c *Converter) DocItemsFromField(resolver *TypeResolver, prefix string, f *ast.FieldSpec) []*EnvDocItem {
-	tag := ParseFieldTag(f.Tag)
-	var names []string
-	if envName, ok := tag.GetFirst("env"); ok {
-		names = []string{envName}
-	} else if c.useFieldNames && len(f.Names) > 0 {
-		names = make([]string, len(f.Names))
-		for i, name := range f.Names {
-			names[i] = camelToSnake(name)
-		}
-	}
-	for i, name := range names {
-		// if name == "" {
-		// 	continue
-		// }
-		names[i] = prefix + name
-	}
-
-	var opts EnvVarOptions
-	if tagValues := tag.GetAll("env"); len(tagValues) > 1 {
-		for _, tagValue := range tagValues[1:] {
-			switch tagValue {
-			case "required":
-				opts.Required = true
-			case "expand":
-				opts.Expand = true
-			case "notEmpty":
-				opts.Required = true
-				opts.NonEmpty = true
-			case "file":
-				opts.FromFile = true
-			}
-		}
-	}
-
-	if envDefault, ok := tag.GetFirst("envDefault"); ok {
-		opts.Default = envDefault
-	}
-
-	if envSeparator, ok := tag.GetFirst("envSeparator"); ok {
-		opts.Separator = envSeparator
-	} else if f.TypeRef.Kind == ast.FieldTypeArray {
-		opts.Separator = ","
-	}
-
-	var envPrefixed bool
-	if envPrefix, ok := tag.GetFirst("envPrefix"); ok {
-		prefix = prefix + envPrefix
-		envPrefixed = true
+	dec := NewFieldSpecDecoder(prefix, c.opts.TagName, c.opts.TagDefault, c.opts.RequiredIfNoDef, c.opts.UseFieldNames)
+	info, newPrefix := dec.Decode(f)
+	if newPrefix != "" {
+		prefix = newPrefix
 	}
 
 	var children []*EnvDocItem
@@ -120,7 +82,7 @@ func (c *Converter) DocItemsFromField(resolver *TypeResolver, prefix string, f *
 		children = c.DocItemsFromFields(resolver, prefix, f.Fields)
 		debug.Logf("\t# CONV: struct %q (%d childrens)\n", f.TypeRef.String(), len(children))
 	case ast.FieldTypeSelector, ast.FieldTypeIdent, ast.FieldTypeArray, ast.FieldTypePtr:
-		if !envPrefixed {
+		if newPrefix == "" {
 			break
 		}
 		tpe := resolver.Resolve(&f.TypeRef)
@@ -132,8 +94,16 @@ func (c *Converter) DocItemsFromField(resolver *TypeResolver, prefix string, f *
 		debug.Logf("\t# CONV: selector %q (%d childrens)\n", f.TypeRef.String(), len(children))
 	}
 
-	res := make([]*EnvDocItem, len(names), len(names)+1)
-	for i, name := range names {
+	res := make([]*EnvDocItem, len(info.Names), len(info.Names)+1)
+	opts := EnvVarOptions{
+		Required:  info.Required,
+		Expand:    info.Expand,
+		NonEmpty:  info.NonEmpty,
+		FromFile:  info.FromFile,
+		Default:   info.Default,
+		Separator: info.Separator,
+	}
+	for i, name := range info.Names {
 		res[i] = &EnvDocItem{
 			Name:     name,
 			Doc:      f.Doc,
@@ -143,7 +113,7 @@ func (c *Converter) DocItemsFromField(resolver *TypeResolver, prefix string, f *
 		debug.Logf("\t# CONV: docItem %q (%d childrens)\n", name, len(children))
 	}
 
-	if len(names) == 0 && len(children) > 0 {
+	if len(info.Names) == 0 && len(children) > 0 {
 		return children
 	}
 	return res

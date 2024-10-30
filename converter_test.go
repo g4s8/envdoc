@@ -7,8 +7,16 @@ import (
 	"github.com/g4s8/envdoc/ast"
 )
 
+var opts = ConverterOpts{
+	TagName:    "env",
+	TagDefault: "envDefault",
+}
+
 func TestConvertDocItems(t *testing.T) {
-	c := NewConverter("", true)
+	opts := opts
+	opts.UseFieldNames = true
+
+	c := NewConverter(opts)
 	fieldValues := []*ast.FieldSpec{
 		{
 			Names: []string{"Field1"},
@@ -215,6 +223,13 @@ func TestConvertDocItems(t *testing.T) {
 	}
 	if len(expect) != len(res) {
 		t.Errorf("Expected %d items, got %d", len(expect), len(res))
+		for i, item := range expect {
+			t.Logf("Expect[%d] %q", i, item.Name)
+		}
+		for i, item := range res {
+			t.Logf("Actual[%d] %q", i, item.Name)
+		}
+		t.FailNow()
 	}
 	for i, item := range expect {
 		checkDocItem(t, fmt.Sprintf("%d", i), item, res[i])
@@ -278,7 +293,7 @@ func TestConverterScopes(t *testing.T) {
 			},
 		},
 	}
-	c := NewConverter("", false)
+	c := NewConverter(opts)
 	resolver := NewTypeResolver()
 	scopes := c.ScopesFromFiles(resolver, files)
 	expect := []*EnvScope{
@@ -315,7 +330,7 @@ func TestConverterFailedToResolve(t *testing.T) {
 		},
 		Tag: `envPrefix:"BAR_"`,
 	}
-	c := NewConverter("", false)
+	c := NewConverter(opts)
 	resolver := NewTypeResolver()
 	_ = c.DocItemsFromField(resolver, "", field)
 }

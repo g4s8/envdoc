@@ -1,0 +1,40 @@
+Field with embedded structs
+
+-- src.go --
+package testdata
+
+import "time"
+
+type Config struct {
+	// Start date.
+	Start Date `env:"START,notEmpty"`
+}
+
+// Date is a time.Time wrapper that uses the time.DateOnly layout.
+type Date struct {
+	time.Time
+}
+
+-- testcase.yaml --
+
+testcase:
+  src_file: src.go
+  file_glob: "*.go"
+  type_glob: Config
+  files:
+  - name: src.go
+    pkg: testdata
+    export: true
+    types:
+    - name: Config
+      export: true
+      fields:
+      - names: [Start]
+        doc: Start date.
+        tag: env:"START,notEmpty"
+        type_ref: {name: Date, kind: Ident}
+    - name: Date
+      export: false
+      doc: Date is a time.Time wrapper that uses the time.DateOnly layout.
+      fields:
+      - type_ref: {name: Time, package: time, kind: Selector}

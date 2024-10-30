@@ -50,6 +50,9 @@ type Config struct {
  * `-format` (`enum(markdown, plaintext, html, dotenv)` string, *optional*) - Output format for documentation.  Default is `markdown`.
  * `-no-styles` (`bool`, *optional*) - If true, CSS styles will not be included for `html` format.
  * `-env-prefix` (`string`, *optional*) - Sets additional global prefix for all environment variables.
+ * `-tag-name` (string, *optional*, default: `env`) - Use custom tag name instead of `env`.
+ * `-tag-default` (string, *optional*, default: `envDefault`) - Use "default" tag name instead of `envDefault`.
+ * `-required-if-no-def` (bool, *optional*, default: `false`) - Set attributes as required if no default value is set.
  * `-field-names` (`bool`, *optional*) - Use field names as env names if `env:` tag is not specified.
  * `-debug` (`bool`, *optional*) - Enable debug output.
 
