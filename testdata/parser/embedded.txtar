@@ -5,7 +5,14 @@ package testdata
 
 import "time"
 
+type ServerConfig struct {
+	// Host of the server.
+        Host string `env:"HOST"`
+}
+
 type Config struct {
+	ServerConfig
+
 	// Start date.
 	Start Date `env:"START,notEmpty"`
 }
@@ -26,9 +33,18 @@ testcase:
     pkg: testdata
     export: true
     types:
+    - name: ServerConfig
+      export: false
+      fields:
+      - names: [Host]
+        doc: Host of the server.
+        tag: env:"HOST"
+        type_ref: {name: string, kind: Ident}
     - name: Config
       export: true
       fields:
+      - names: []
+        type_ref: {name: ServerConfig, kind: Ident}
       - names: [Start]
         doc: Start date.
         tag: env:"START,notEmpty"

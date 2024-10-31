@@ -64,8 +64,21 @@ func findCommentLine(c *ast.Comment, fset *token.FileSet, file *ast.File) int {
 }
 
 func getFieldSpec(n *ast.Field, pkg string) *FieldSpec {
+	names := extractFieldNames(n)
+	allPrivate := true
+	for _, name := range names {
+		if strings.ToLower(name[:1]) != name[:1] {
+			allPrivate = false
+			break
+		}
+	}
+	if len(names) > 0 && allPrivate {
+		// skip private fields
+		return nil
+	}
+
 	var fs FieldSpec
-	fs.Names = extractFieldNames(n)
+	fs.Names = names
 	if !getFieldTypeRef(n.Type, &fs.TypeRef) {
 		// unsupported field type
 		return nil
