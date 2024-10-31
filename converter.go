@@ -58,9 +58,17 @@ func (c *Converter) ScopeFromType(res *TypeResolver, t *ast.TypeSpec) *EnvScope 
 func (c *Converter) DocItemsFromFields(res *TypeResolver, prefix string, fields []*ast.FieldSpec) []*EnvDocItem {
 	var items []*EnvDocItem
 	for _, f := range fields {
-		debug.Logf("\t# CONV: field [%s]\n", strings.Join(f.Names, ","))
+		debug.Logf("\t# CONV: field [%s] type=%s flen=%d\n",
+			strings.Join(f.Names, ","), f.TypeRef, len(f.Fields))
 		if len(f.Names) == 0 {
 			// embedded field
+			if len(f.Fields) == 0 {
+				// resolve embedded types
+				tpe := res.Resolve(&f.TypeRef)
+				if tpe != nil {
+					f.Fields = tpe.Fields
+				}
+			}
 			items = append(items, c.DocItemsFromFields(res, prefix, f.Fields)...)
 			continue
 		}
@@ -82,10 +90,11 @@ func (c *Converter) DocItemsFromField(resolver *TypeResolver, prefix string, f *
 		children = c.DocItemsFromFields(resolver, prefix, f.Fields)
 		debug.Logf("\t# CONV: struct %q (%d childrens)\n", f.TypeRef.String(), len(children))
 	case ast.FieldTypeSelector, ast.FieldTypeIdent, ast.FieldTypeArray, ast.FieldTypePtr:
-		if newPrefix == "" {
+		if f.TypeRef.IsBuiltIn() {
 			break
 		}
 		tpe := resolver.Resolve(&f.TypeRef)
+		debug.Logf("\t# CONV: resolve %q -> %v\n", f.TypeRef.String(), tpe)
 		if tpe == nil {
 			fmt.Fprintf(os.Stderr, "Failed to resolve type %q\n", f.TypeRef.String())
 			break

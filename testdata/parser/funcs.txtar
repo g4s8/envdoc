@@ -8,7 +8,7 @@ package testdata
 //go:generate envdoc -output test.md --all
 type aconfig struct {
 	// this is some value
-	somevalue string `env:"SOME_VALUE" envDefault:"somevalue"`
+	Somevalue string `env:"SOME_VALUE" envDefault:"somevalue"`
 }
 
 // when this function is present, go generate panics with "expected type node root child, got nodeField ()".
@@ -34,7 +34,7 @@ testcase:
     - name: aconfig
       export: true
       fields:
-      - names: [somevalue]
+      - names: [Somevalue]
         doc: this is some value
         tag: env:"SOME_VALUE" envDefault:"somevalue"
         type_ref: {name: string, kind: Ident}

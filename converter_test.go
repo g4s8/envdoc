@@ -111,7 +111,6 @@ func TestConvertDocItems(t *testing.T) {
 					Tag: `env:"FIELD4,notEmpty,expand"`,
 				},
 			},
-			Tag: `envPrefix:"PREFIX_"`,
 			TypeRef: ast.FieldTypeRef{
 				Kind: ast.FieldTypeStruct,
 			},
