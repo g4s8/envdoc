@@ -78,7 +78,7 @@ func (c *Converter) DocItemsFromFields(res *TypeResolver, prefix string, fields 
 }
 
 func (c *Converter) DocItemsFromField(resolver *TypeResolver, prefix string, f *ast.FieldSpec) []*EnvDocItem {
-	dec := NewFieldSpecDecoder(prefix, c.opts.TagName, c.opts.TagDefault, c.opts.RequiredIfNoDef, c.opts.UseFieldNames)
+	dec := ast.NewFieldSpecDecoder(prefix, c.opts.TagName, c.opts.TagDefault, c.opts.RequiredIfNoDef, c.opts.UseFieldNames)
 	info, newPrefix := dec.Decode(f)
 	if newPrefix != "" {
 		prefix = newPrefix

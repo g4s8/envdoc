@@ -1,4 +1,4 @@
-package main
+package utils
 
 import (
 	"io/fs"
@@ -55,7 +55,7 @@ var globTestTargets = map[string]bool{
 }
 
 func TestGlobMatcher(t *testing.T) {
-	m, err := newGlobMatcher("*.go")
+	m, err := NewGlobMatcher("*.go")
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -63,7 +63,7 @@ func TestGlobMatcher(t *testing.T) {
 	t.Run("match", globTesteer(m, globTestTargets))
 
 	t.Run("error", func(t *testing.T) {
-		_, err := newGlobMatcher("[")
+		_, err := NewGlobMatcher("[")
 		if err == nil {
 			t.Fatalf("expected error but got nil")
 		}
@@ -71,7 +71,7 @@ func TestGlobMatcher(t *testing.T) {
 }
 
 func TestGlobFileMatcher(t *testing.T) {
-	m, err := newGlobFileMatcher("*.go")
+	m, err := NewGlobFileMatcher("*.go")
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -83,7 +83,7 @@ func TestGlobFileMatcher(t *testing.T) {
 
 	t.Run("match", globTesteer(fileWrapper, globTestTargets))
 	t.Run("error", func(t *testing.T) {
-		_, err := newGlobFileMatcher("[")
+		_, err := NewGlobFileMatcher("[")
 		if err == nil {
 			t.Fatalf("expected error but got nil")
 		}
@@ -113,7 +113,7 @@ func TestCamelToSnake(t *testing.T) {
 	}
 
 	for input, expected := range tests {
-		if got := camelToSnake(input); got != expected {
+		if got := CamelToSnake(input); got != expected {
 			t.Errorf("unexpected result for %q: got %q, want %q", input, got, expected)
 		}
 	}
@@ -135,7 +135,7 @@ func TestUnescapeGlob(t *testing.T) {
 	}
 
 	for input, expected := range tests {
-		if got := unescapeGlob(input); got != expected {
+		if got := UnescapeGlob(input); got != expected {
 			t.Errorf("unexpected result for %q: got %q, want %q", input, got, expected)
 		}
 	}
