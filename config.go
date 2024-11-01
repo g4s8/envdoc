@@ -8,6 +8,8 @@ import (
 	"os"
 	"strconv"
 	"strings"
+
+	"github.com/g4s8/envdoc/utils"
 )
 
 type OutFormat string
@@ -139,8 +141,8 @@ func (c *Config) parseEnv() error {
 }
 
 func (c *Config) normalize() {
-	c.TypeGlob = unescapeGlob(c.TypeGlob)
-	c.FileGlob = unescapeGlob(c.FileGlob)
+	c.TypeGlob = utils.UnescapeGlob(c.TypeGlob)
+	c.FileGlob = utils.UnescapeGlob(c.FileGlob)
 }
 
 func (c *Config) setDefaults() {

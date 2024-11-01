@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/g4s8/envdoc/ast"
 	"github.com/g4s8/envdoc/debug"
 )
 
@@ -20,30 +21,19 @@ func main() {
 		cfg.fprint(os.Stdout)
 	}
 
-	p := NewParser(cfg.Dir, cfg.FileGlob, cfg.TypeGlob,
-		withDebug(cfg.Debug),
-		withExecConfig(cfg.ExecFile, cfg.ExecLine))
-	files, err := p.Parse()
-	if err != nil {
-		fatal("Failed to parse: %v", err)
-	}
-
-	res := ResolveAllTypes(files)
-	if cfg.Debug {
-		res.fprint(os.Stdout)
-	}
-
-	conv := NewConverter(ConverterOpts{
+	parser := ast.NewParser(cfg.FileGlob, cfg.TypeGlob,
+		ast.WithDebug(cfg.Debug),
+		ast.WithExecConfig(cfg.ExecFile, cfg.ExecLine))
+	converter := NewConverter(ConverterOpts{
 		EnvPrefix:       cfg.EnvPrefix,
 		TagName:         cfg.TagName,
 		TagDefault:      cfg.TagDefault,
 		RequiredIfNoDef: cfg.RequiredIfNoDef,
 		UseFieldNames:   cfg.FieldNames,
 	})
-	scopes := conv.ScopesFromFiles(res, files)
-	printScopesTree(scopes)
+	renderer := NewRenderer(cfg.OutFormat, cfg.NoStyles)
+	gen := NewGenerator(parser, converter, renderer)
 
-	r := NewRenderer(cfg.OutFormat, cfg.NoStyles)
 	out, err := os.Create(cfg.OutFile)
 	if err != nil {
 		fatal("Failed to open output file: %v", err)
@@ -54,8 +44,9 @@ func main() {
 			fatal("Failed to close output file: %v", err)
 		}
 	}()
-	if err := r.Render(scopes, buf); err != nil {
-		fatal("Failed to render: %v", err)
+
+	if err := gen.Generate(cfg.Dir, buf); err != nil {
+		fatal("Failed to generate: %v", err)
 	}
 	if err := buf.Flush(); err != nil {
 		fatal("Failed to flush output: %v", err)

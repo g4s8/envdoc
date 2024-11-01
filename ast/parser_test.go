@@ -1,4 +1,4 @@
-package main
+package ast
 
 import (
 	"fmt"
@@ -8,7 +8,6 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/g4s8/envdoc/ast"
 	"github.com/g4s8/envdoc/debug"
 	"golang.org/x/tools/txtar"
 	"gopkg.in/yaml.v2"
@@ -20,6 +19,9 @@ func TestDataParser(t *testing.T) {
 		t.Fatalf("failed to list testdata files: %s", err)
 	}
 	t.Logf("Found %d testdata files", len(files))
+	if len(files) == 0 {
+		t.Fatal("no testdata files found")
+	}
 
 	for _, file := range files {
 		file := file
@@ -49,18 +51,18 @@ type parserExpectedTypeRef struct {
 	Package string `yaml:"pkg"`
 }
 
-func (ref *parserExpectedTypeRef) toAST(t *testing.T) ast.FieldTypeRef {
+func (ref *parserExpectedTypeRef) toAST(t *testing.T) FieldTypeRef {
 	t.Helper()
 
 	if ref == nil {
-		return ast.FieldTypeRef{}
+		return FieldTypeRef{}
 	}
 
-	var kind ast.FieldTypeRefKind
+	var kind FieldTypeRefKind
 	if !kind.ScanStr(ref.Kind) {
 		t.Fatalf("invalid type kind: %s", ref.Kind)
 	}
-	return ast.FieldTypeRef{
+	return FieldTypeRef{
 		Name: ref.Name,
 		Kind: kind,
 		Pkg:  ref.Package,
@@ -75,16 +77,16 @@ type parserExpectedField struct {
 	Fields  []*parserExpectedField `yaml:"fields"`
 }
 
-func (field *parserExpectedField) toAST(t *testing.T) *ast.FieldSpec {
+func (field *parserExpectedField) toAST(t *testing.T) *FieldSpec {
 	t.Helper()
 
 	names := make([]string, len(field.Names))
 	copy(names, field.Names)
-	fields := make([]*ast.FieldSpec, len(field.Fields))
+	fields := make([]*FieldSpec, len(field.Fields))
 	for i, f := range field.Fields {
 		fields[i] = f.toAST(t)
 	}
-	return &ast.FieldSpec{
+	return &FieldSpec{
 		Names:   names,
 		Doc:     field.Doc,
 		Tag:     field.Tag,
@@ -100,14 +102,14 @@ type parserExpectedType struct {
 	Fields   []*parserExpectedField `yaml:"fields"`
 }
 
-func (typ *parserExpectedType) toAST(t *testing.T) *ast.TypeSpec {
+func (typ *parserExpectedType) toAST(t *testing.T) *TypeSpec {
 	t.Helper()
 
-	fields := make([]*ast.FieldSpec, len(typ.Fields))
+	fields := make([]*FieldSpec, len(typ.Fields))
 	for i, f := range typ.Fields {
 		fields[i] = f.toAST(t)
 	}
-	return &ast.TypeSpec{
+	return &TypeSpec{
 		Name:   typ.Name,
 		Export: typ.Exported,
 		Doc:    typ.Doc,
@@ -122,14 +124,14 @@ type parserExpectedFile struct {
 	Types    []*parserExpectedType `yaml:"types"`
 }
 
-func (file *parserExpectedFile) toAST(t *testing.T) *ast.FileSpec {
+func (file *parserExpectedFile) toAST(t *testing.T) *FileSpec {
 	t.Helper()
 
-	types := make([]*ast.TypeSpec, len(file.Types))
+	types := make([]*TypeSpec, len(file.Types))
 	for i, typ := range file.Types {
 		types[i] = typ.toAST(t)
 	}
-	return &ast.FileSpec{
+	return &FileSpec{
 		Name:   file.Name,
 		Pkg:    file.Package,
 		Export: file.Exported,
@@ -137,10 +139,10 @@ func (file *parserExpectedFile) toAST(t *testing.T) *ast.FileSpec {
 	}
 }
 
-func parserFilesToAST(t *testing.T, files []*parserExpectedFile) []*ast.FileSpec {
+func parserFilesToAST(t *testing.T, files []*parserExpectedFile) []*FileSpec {
 	t.Helper()
 
-	res := make([]*ast.FileSpec, len(files))
+	res := make([]*FileSpec, len(files))
 	for i, f := range files {
 		res[i] = f.toAST(t)
 	}
@@ -164,10 +166,10 @@ func testParser(t *testing.T, dir string, tc parserTestCase) {
 		debug.SetTestLogger(t)
 		t.Log("Debug mode")
 		t.Logf("using dir: %s", dir)
-		opts = append(opts, withDebug(true))
+		opts = append(opts, WithDebug(true))
 	}
-	p := NewParser(dir, tc.FileGlob, tc.TypeGlob, opts...)
-	files, err := p.Parse()
+	p := NewParser(tc.FileGlob, tc.TypeGlob, opts...)
+	files, err := p.Parse(dir)
 	if err != nil {
 		t.Fatalf("failed to parse files: %s", err)
 	}
@@ -175,7 +177,7 @@ func testParser(t *testing.T, dir string, tc parserTestCase) {
 	checkFiles(t, "/files", astFiles, files)
 }
 
-func checkFiles(t *testing.T, prefix string, expect, res []*ast.FileSpec) {
+func checkFiles(t *testing.T, prefix string, expect, res []*FileSpec) {
 	t.Helper()
 
 	if len(expect) != len(res) {
@@ -193,7 +195,7 @@ func checkFiles(t *testing.T, prefix string, expect, res []*ast.FileSpec) {
 	}
 }
 
-func checkFile(t *testing.T, prefix string, expect, res *ast.FileSpec) {
+func checkFile(t *testing.T, prefix string, expect, res *FileSpec) {
 	t.Helper()
 
 	if !strings.HasSuffix(res.Name, expect.Name) {
@@ -208,7 +210,7 @@ func checkFile(t *testing.T, prefix string, expect, res *ast.FileSpec) {
 	checkTypes(t, prefix+"/types", expect.Types, res.Types)
 }
 
-func checkTypes(t *testing.T, prefix string, expect, res []*ast.TypeSpec) {
+func checkTypes(t *testing.T, prefix string, expect, res []*TypeSpec) {
 	t.Helper()
 
 	if len(expect) != len(res) {
@@ -226,7 +228,7 @@ func checkTypes(t *testing.T, prefix string, expect, res []*ast.TypeSpec) {
 	}
 }
 
-func checkType(t *testing.T, prefix string, expect, res *ast.TypeSpec) {
+func checkType(t *testing.T, prefix string, expect, res *TypeSpec) {
 	t.Helper()
 
 	if expect.Name != res.Name {
@@ -241,7 +243,7 @@ func checkType(t *testing.T, prefix string, expect, res *ast.TypeSpec) {
 	checkFields(t, prefix+"/fields", expect.Fields, res.Fields)
 }
 
-func checkFields(t *testing.T, prefix string, expect, res []*ast.FieldSpec) {
+func checkFields(t *testing.T, prefix string, expect, res []*FieldSpec) {
 	t.Helper()
 
 	if len(expect) != len(res) {
@@ -263,7 +265,7 @@ func checkFields(t *testing.T, prefix string, expect, res []*ast.FieldSpec) {
 	}
 }
 
-func checkField(t *testing.T, prefix string, expect, res *ast.FieldSpec) {
+func checkField(t *testing.T, prefix string, expect, res *FieldSpec) {
 	t.Helper()
 
 	if len(expect.Names) != len(res.Names) {
@@ -292,7 +294,7 @@ func checkField(t *testing.T, prefix string, expect, res *ast.FieldSpec) {
 	checkFields(t, prefix+"/fields", expect.Fields, res.Fields)
 }
 
-func checkTypeRef(t *testing.T, prefix string, expect, res *ast.FieldTypeRef) {
+func checkTypeRef(t *testing.T, prefix string, expect, res *FieldTypeRef) {
 	t.Helper()
 
 	if expect.Name != res.Name {

@@ -1,4 +1,4 @@
-package main
+package ast
 
 import (
 	"fmt"
@@ -7,18 +7,18 @@ import (
 	"io/fs"
 	"path/filepath"
 
-	"github.com/g4s8/envdoc/ast"
+	"github.com/g4s8/envdoc/utils"
 )
 
 type parserConfigOption func(*Parser)
 
-func withDebug(debug bool) parserConfigOption {
+func WithDebug(debug bool) parserConfigOption {
 	return func(p *Parser) {
 		p.debug = debug
 	}
 }
 
-func withExecConfig(execFile string, execLine int) parserConfigOption {
+func WithExecConfig(execFile string, execLine int) parserConfigOption {
 	return func(p *Parser) {
 		p.gogenFile = execFile
 		p.gogenLine = execLine
@@ -26,7 +26,6 @@ func withExecConfig(execFile string, execLine int) parserConfigOption {
 }
 
 type Parser struct {
-	dir       string
 	fileGlob  string
 	typeGlob  string
 	gogenLine int
@@ -34,9 +33,8 @@ type Parser struct {
 	debug     bool
 }
 
-func NewParser(dir, fileGlob, typeGlob string, opts ...parserConfigOption) *Parser {
+func NewParser(fileGlob, typeGlob string, opts ...parserConfigOption) *Parser {
 	p := &Parser{
-		dir:      dir,
 		fileGlob: fileGlob,
 		typeGlob: typeGlob,
 	}
@@ -48,42 +46,42 @@ func NewParser(dir, fileGlob, typeGlob string, opts ...parserConfigOption) *Pars
 	return p
 }
 
-func (p *Parser) Parse() ([]*ast.FileSpec, error) {
+func (p *Parser) Parse(dir string) ([]*FileSpec, error) {
 	fset := token.NewFileSet()
 	var matcher func(fs.FileInfo) bool
 	if p.fileGlob != "" {
-		m, err := newGlobFileMatcher(p.fileGlob)
+		m, err := utils.NewGlobFileMatcher(p.fileGlob)
 		if err != nil {
 			return nil, err
 		}
 		matcher = m
 	}
 
-	var colOpts []ast.RootCollectorOption
+	var colOpts []RootCollectorOption
 	if p.typeGlob == "" {
-		colOpts = append(colOpts, ast.WithGoGenDecl(p.gogenLine, p.gogenFile))
+		colOpts = append(colOpts, WithGoGenDecl(p.gogenLine, p.gogenFile))
 	} else {
-		m, err := newGlobMatcher(p.typeGlob)
+		m, err := utils.NewGlobMatcher(p.typeGlob)
 		if err != nil {
 			return nil, fmt.Errorf("create type glob matcher: %w", err)
 		}
-		colOpts = append(colOpts, ast.WithTypeGlob(m))
+		colOpts = append(colOpts, WithTypeGlob(m))
 	}
 	if p.fileGlob != "" {
-		m, err := newGlobMatcher(p.fileGlob)
+		m, err := utils.NewGlobMatcher(p.fileGlob)
 		if err != nil {
 			return nil, fmt.Errorf("create file glob matcher: %w", err)
 		}
-		colOpts = append(colOpts, ast.WithFileGlob(m))
+		colOpts = append(colOpts, WithFileGlob(m))
 	}
 
-	col := ast.NewRootCollector(p.dir, colOpts...)
+	col := NewRootCollector(dir, colOpts...)
 
 	if p.debug {
-		fmt.Printf("Parsing dir %q (f=%q t=%q)\n", p.dir, p.fileGlob, p.typeGlob)
+		fmt.Printf("Parsing dir %q (f=%q t=%q)\n", dir, p.fileGlob, p.typeGlob)
 	}
 	// walk through the directory and each subdirectory and call parseDir for each of them
-	if err := filepath.Walk(p.dir, func(path string, info fs.FileInfo, err error) error {
+	if err := filepath.Walk(dir, func(path string, info fs.FileInfo, err error) error {
 		if err != nil {
 			return fmt.Errorf("failed to walk through dir: %w", err)
 		}
@@ -99,21 +97,21 @@ func (p *Parser) Parse() ([]*ast.FileSpec, error) {
 	}
 
 	if p.debug {
-		fmt.Printf("Resolved types:\n")
+		fmt.Printf("Parsed types:\n")
 		printTraverse(col.Files(), 0)
 	}
 
 	return col.Files(), nil
 }
 
-func parseDir(dir string, fset *token.FileSet, matcher func(fs.FileInfo) bool, col *ast.RootCollector) error {
+func parseDir(dir string, fset *token.FileSet, matcher func(fs.FileInfo) bool, col *RootCollector) error {
 	pkgs, err := parser.ParseDir(fset, dir, nil, parser.ParseComments|parser.SkipObjectResolution)
 	if err != nil {
 		return fmt.Errorf("failed to parse dir: %w", err)
 	}
 
 	for _, pkg := range pkgs {
-		ast.Walk(pkg, fset, col)
+		Walk(pkg, fset, col)
 	}
 	return nil
 }
