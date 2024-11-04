@@ -1,0 +1,14 @@
+linters:
+  enable:
+  - revive
+  - staticcheck
+  - errcheck
+  - unused
+  - errorlint
+  - gofumpt
+  - gocyclo
+  - cyclop
+
+exclude: >
+  ^(?:.*\/usr\/lib\/go\/src\/.*|.*\/vendor\/.*|.*\/testdata\/.*|.*\/_examples\/.*)$
+

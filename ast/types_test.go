@@ -10,7 +10,7 @@ type fileHandler struct {
 	typeH *typeHandler
 }
 
-func (h *fileHandler) setComment(c *CommentSpec) {
+func (h *fileHandler) setComment(_ *CommentSpec) {
 }
 
 func (h *fileHandler) onType(t *TypeSpec) typeVisitorHandler {

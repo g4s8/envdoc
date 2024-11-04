@@ -9,16 +9,8 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/g4s8/envdoc/types"
 	"github.com/g4s8/envdoc/utils"
-)
-
-type OutFormat string
-
-const (
-	OutFormatMarkdown OutFormat = "markdown"
-	OutFormatHTML     OutFormat = "html"
-	OutFormatTxt      OutFormat = "plaintext"
-	OutFormatEnv      OutFormat = "dotenv"
 )
 
 type Config struct {
@@ -31,7 +23,7 @@ type Config struct {
 	// OutFile to write the output to
 	OutFile string
 	// OutFormat specify the output format
-	OutFormat OutFormat
+	OutFormat types.OutFormat
 	// EnvPrefix to prefix the env vars with
 	EnvPrefix string
 	// NoStyles to disable styles for HTML format

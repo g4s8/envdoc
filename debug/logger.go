@@ -48,9 +48,9 @@ func (l *testLogger) Log(args ...interface{}) {
 
 type nopLogger struct{}
 
-func (l *nopLogger) Logf(format string, args ...interface{}) {}
+func (l *nopLogger) Logf(_ string, _ ...interface{}) {}
 
-func (l *nopLogger) Log(args ...interface{}) {}
+func (l *nopLogger) Log(_ ...interface{}) {}
 
 var NopLogger = &nopLogger{}
 

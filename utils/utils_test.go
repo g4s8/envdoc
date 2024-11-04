@@ -109,7 +109,7 @@ func TestCamelToSnake(t *testing.T) {
 		"ABBRFoo":           "ABBR_FOO",
 		"FOO_BAR":           "FOO_BAR",
 		"ЮниКод":            "ЮНИ_КОД",
-		"ՅունիԿոդ":          "ՅՈՒՆԻ_ԿՈԴ", 
+		"ՅունիԿոդ":          "ՅՈՒՆԻ_ԿՈԴ",
 	}
 
 	for input, expected := range tests {

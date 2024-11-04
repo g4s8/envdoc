@@ -7,6 +7,7 @@ import (
 
 	"github.com/g4s8/envdoc/ast"
 	"github.com/g4s8/envdoc/debug"
+	"github.com/g4s8/envdoc/types"
 )
 
 type ConverterOpts struct {
@@ -27,8 +28,8 @@ func NewConverter(opts ConverterOpts) *Converter {
 	}
 }
 
-func (c *Converter) ScopesFromFiles(res *TypeResolver, files []*ast.FileSpec) []*EnvScope {
-	var scopes []*EnvScope
+func (c *Converter) ScopesFromFiles(res *TypeResolver, files []*ast.FileSpec) []*types.EnvScope {
+	var scopes []*types.EnvScope
 	for _, f := range files {
 		if !f.Export {
 			debug.Logf("# CONV: skip file %q\n", f.Name)
@@ -45,8 +46,8 @@ func (c *Converter) ScopesFromFiles(res *TypeResolver, files []*ast.FileSpec) []
 	return scopes
 }
 
-func (c *Converter) ScopeFromType(res *TypeResolver, t *ast.TypeSpec) *EnvScope {
-	scope := &EnvScope{
+func (c *Converter) ScopeFromType(res *TypeResolver, t *ast.TypeSpec) *types.EnvScope {
+	scope := &types.EnvScope{
 		Name: t.Name,
 		Doc:  t.Doc,
 	}
@@ -55,8 +56,8 @@ func (c *Converter) ScopeFromType(res *TypeResolver, t *ast.TypeSpec) *EnvScope 
 	return scope
 }
 
-func (c *Converter) DocItemsFromFields(res *TypeResolver, prefix string, fields []*ast.FieldSpec) []*EnvDocItem {
-	var items []*EnvDocItem
+func (c *Converter) DocItemsFromFields(res *TypeResolver, prefix string, fields []*ast.FieldSpec) []*types.EnvDocItem {
+	var items []*types.EnvDocItem
 	for _, f := range fields {
 		debug.Logf("\t# CONV: field [%s] type=%s flen=%d\n",
 			strings.Join(f.Names, ","), f.TypeRef, len(f.Fields))
@@ -77,14 +78,14 @@ func (c *Converter) DocItemsFromFields(res *TypeResolver, prefix string, fields 
 	return items
 }
 
-func (c *Converter) DocItemsFromField(resolver *TypeResolver, prefix string, f *ast.FieldSpec) []*EnvDocItem {
+func (c *Converter) DocItemsFromField(resolver *TypeResolver, prefix string, f *ast.FieldSpec) []*types.EnvDocItem {
 	dec := ast.NewFieldSpecDecoder(prefix, c.opts.TagName, c.opts.TagDefault, c.opts.RequiredIfNoDef, c.opts.UseFieldNames)
 	info, newPrefix := dec.Decode(f)
 	if newPrefix != "" {
 		prefix = newPrefix
 	}
 
-	var children []*EnvDocItem
+	var children []*types.EnvDocItem
 	switch f.TypeRef.Kind {
 	case ast.FieldTypeStruct:
 		children = c.DocItemsFromFields(resolver, prefix, f.Fields)
@@ -103,8 +104,8 @@ func (c *Converter) DocItemsFromField(resolver *TypeResolver, prefix string, f *
 		debug.Logf("\t# CONV: selector %q (%d childrens)\n", f.TypeRef.String(), len(children))
 	}
 
-	res := make([]*EnvDocItem, len(info.Names), len(info.Names)+1)
-	opts := EnvVarOptions{
+	res := make([]*types.EnvDocItem, len(info.Names), len(info.Names)+1)
+	opts := types.EnvVarOptions{
 		Required:  info.Required,
 		Expand:    info.Expand,
 		NonEmpty:  info.NonEmpty,
@@ -113,7 +114,7 @@ func (c *Converter) DocItemsFromField(resolver *TypeResolver, prefix string, f *
 		Separator: info.Separator,
 	}
 	for i, name := range info.Names {
-		res[i] = &EnvDocItem{
+		res[i] = &types.EnvDocItem{
 			Name:     name,
 			Doc:      f.Doc,
 			Opts:     opts,
