@@ -43,8 +43,7 @@ jobs:
           CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
       - name: Vet
         run: go vet
-      # TODO: ignore examples
-      # - name: golangci-lint
-      #   uses: golangci/golangci-lint-action@v3
-      #   with:
-      #     version: v1.59.1
+      - name: golangci-lint
+        uses: golangci/golangci-lint-action@v3
+        with:
+          version: v1.61.0

@@ -33,9 +33,7 @@ type FieldInfo struct {
 	Separator string
 }
 
-func (d *FieldSpecDecoder) Decode(f *FieldSpec) (res FieldInfo, prefix string) {
-	tag := tags.ParseFieldTag(f.Tag)
-
+func (d *FieldSpecDecoder) decodeFieldNames(f *FieldSpec, tag *tags.FieldTag, out *FieldInfo) {
 	var names []string
 	if envName, ok := tag.GetFirst(d.tagName); ok {
 		names = []string{envName}
@@ -48,35 +46,50 @@ func (d *FieldSpecDecoder) Decode(f *FieldSpec) (res FieldInfo, prefix string) {
 	for i, name := range names {
 		names[i] = d.envPrefix + name
 	}
+	out.Names = names
+}
 
-	res.Names = names
+func (d *FieldSpecDecoder) decodeTagValues(_ *FieldSpec, tag *tags.FieldTag, out *FieldInfo) {
 	if tagValues := tag.GetAll(d.tagName); len(tagValues) > 1 {
 		for _, tagValue := range tagValues[1:] {
 			switch tagValue {
 			case "required":
-				res.Required = true
+				out.Required = true
 			case "expand":
-				res.Expand = true
+				out.Expand = true
 			case "notEmpty":
-				res.Required = true
-				res.NonEmpty = true
+				out.Required = true
+				out.NonEmpty = true
 			case "file":
-				res.FromFile = true
+				out.FromFile = true
 			}
 		}
 	}
+}
 
+func (d *FieldSpecDecoder) decodeEnvDefault(_ *FieldSpec, tag *tags.FieldTag, out *FieldInfo) {
 	if envDefault, ok := tag.GetFirst(d.tagDefault); ok {
-		res.Default = envDefault
+		out.Default = envDefault
 	} else if !ok && d.requiredIfNoDef {
-		res.Required = true
+		out.Required = true
 	}
+}
 
+func (d *FieldSpecDecoder) decodeEnvSeparator(f *FieldSpec, tag *tags.FieldTag, out *FieldInfo) {
 	if envSeparator, ok := tag.GetFirst("envSeparator"); ok {
-		res.Separator = envSeparator
+		out.Separator = envSeparator
 	} else if f.TypeRef.Kind == FieldTypeArray {
-		res.Separator = ","
+		out.Separator = ","
 	}
+}
+
+func (d *FieldSpecDecoder) Decode(f *FieldSpec) (res FieldInfo, prefix string) {
+	tag := tags.ParseFieldTag(f.Tag)
+
+	d.decodeFieldNames(f, &tag, &res)
+	d.decodeTagValues(f, &tag, &res)
+	d.decodeEnvDefault(f, &tag, &res)
+	d.decodeEnvSeparator(f, &tag, &res)
 
 	if envPrefix, ok := tag.GetFirst("envPrefix"); ok {
 		prefix = d.envPrefix + envPrefix

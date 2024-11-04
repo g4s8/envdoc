@@ -13,6 +13,7 @@ type T interface {
 	Fatalf(format string, args ...interface{})
 }
 
+//nolint:staticcheck
 func loadTestFileSet(t T) (*token.FileSet, *ast.Package, *doc.Package) {
 	t.Helper()
 	// load go files from ./testdata dir
@@ -96,7 +97,7 @@ func (h *testFileHandler) onFile(f *FileSpec) interface {
 	return &testTypeHandler{f: f}
 }
 
-// func loadTestFileSet(t T) (*token.FileSet, *ast.Package, *doc.Package) {
+//nolint:staticcheck
 func testFileVisitor(fset *token.FileSet, pkg *ast.Package, fileName string,
 	docs *doc.Package,
 ) (*testFileHandler, *fileVisitor, *ast.File) {

@@ -96,6 +96,7 @@ func getFieldSpec(n *ast.Field, pkg string) *FieldSpec {
 	return &fs
 }
 
+//nolint:cyclop
 func debugNode(src string, n ast.Node) {
 	if !debug.Config.Enabled {
 		return
@@ -107,6 +108,7 @@ func debugNode(src string, n ast.Node) {
 	switch t := n.(type) {
 	case *ast.File:
 		debug.Logf("# AST(%s): File pkg=%q\n", src, t.Name.Name)
+	//nolint:staticcheck
 	case *ast.Package:
 		debug.Logf("# AST(%s): Package %s\n", src, t.Name)
 	case *ast.TypeSpec:
