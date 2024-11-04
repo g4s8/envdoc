@@ -47,6 +47,7 @@ type Config struct {
 	Debug bool
 }
 
+//nolint:cyclop
 func (c *Config) parseFlags(f *flag.FlagSet) error {
 	// input flags
 	f.StringVar(&c.Dir, "dir", "", "Dir to search for files, default is the file dir with go:generate command")

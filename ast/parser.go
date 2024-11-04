@@ -48,14 +48,6 @@ func NewParser(fileGlob, typeGlob string, opts ...ParserConfigOption) *Parser {
 
 func (p *Parser) Parse(dir string) ([]*FileSpec, error) {
 	fset := token.NewFileSet()
-	var matcher func(fs.FileInfo) bool
-	if p.fileGlob != "" {
-		m, err := utils.NewGlobFileMatcher(p.fileGlob)
-		if err != nil {
-			return nil, err
-		}
-		matcher = m
-	}
 
 	var colOpts []RootCollectorOption
 	if p.typeGlob == "" {
@@ -81,18 +73,7 @@ func (p *Parser) Parse(dir string) ([]*FileSpec, error) {
 		fmt.Printf("Parsing dir %q (f=%q t=%q)\n", dir, p.fileGlob, p.typeGlob)
 	}
 	// walk through the directory and each subdirectory and call parseDir for each of them
-	if err := filepath.Walk(dir, func(path string, info fs.FileInfo, err error) error {
-		if err != nil {
-			return fmt.Errorf("failed to walk through dir: %w", err)
-		}
-		if !info.IsDir() {
-			return nil
-		}
-		if err := parseDir(path, fset, matcher, col); err != nil {
-			return fmt.Errorf("failed to parse dir %q: %w", path, err)
-		}
-		return nil
-	}); err != nil {
+	if err := filepath.Walk(dir, parseWalker(fset, col)); err != nil {
 		return nil, fmt.Errorf("failed to walk through dir: %w", err)
 	}
 
@@ -104,7 +85,22 @@ func (p *Parser) Parse(dir string) ([]*FileSpec, error) {
 	return col.Files(), nil
 }
 
-func parseDir(dir string, fset *token.FileSet, _ func(fs.FileInfo) bool, col *RootCollector) error {
+func parseWalker(fset *token.FileSet, col *RootCollector) filepath.WalkFunc {
+	return func(path string, info fs.FileInfo, err error) error {
+		if err != nil {
+			return fmt.Errorf("failed to walk through dir: %w", err)
+		}
+		if !info.IsDir() {
+			return nil
+		}
+		if err := parseDir(path, fset, col); err != nil {
+			return fmt.Errorf("failed to parse dir %q: %w", path, err)
+		}
+		return nil
+	}
+}
+
+func parseDir(dir string, fset *token.FileSet, col *RootCollector) error {
 	pkgs, err := parser.ParseDir(fset, dir, nil, parser.ParseComments|parser.SkipObjectResolution)
 	if err != nil {
 		return fmt.Errorf("failed to parse dir: %w", err)

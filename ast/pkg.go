@@ -24,6 +24,7 @@ func newPkgVisitor(fset *token.FileSet, h FileHandler) *pkgVisitor {
 func (p *pkgVisitor) Visit(n ast.Node) ast.Visitor {
 	debugNode("pkg", n)
 	switch t := n.(type) {
+	//nolint:staticcheck
 	case *ast.Package:
 		p.pkg = t.Name
 		p.docs = doc.New(t, "./", doc.PreserveAST|doc.AllDecls)
