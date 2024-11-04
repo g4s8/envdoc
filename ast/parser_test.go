@@ -161,7 +161,7 @@ type parserTestCase struct {
 func testParser(t *testing.T, dir string, tc parserTestCase) {
 	t.Helper()
 
-	var opts []parserConfigOption
+	var opts []ParserConfigOption
 	if tc.Debug || debug.Config.Enabled {
 		debug.SetTestLogger(t)
 		t.Log("Debug mode")

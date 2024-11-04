@@ -9,6 +9,7 @@ import (
 
 	"github.com/g4s8/envdoc/ast"
 	"github.com/g4s8/envdoc/debug"
+	"github.com/g4s8/envdoc/render"
 )
 
 func main() {
@@ -31,7 +32,7 @@ func main() {
 		RequiredIfNoDef: cfg.RequiredIfNoDef,
 		UseFieldNames:   cfg.FieldNames,
 	})
-	renderer := NewRenderer(cfg.OutFormat, cfg.NoStyles)
+	renderer := render.NewRenderer(cfg.OutFormat, cfg.NoStyles)
 	gen := NewGenerator(parser, converter, renderer)
 
 	out, err := os.Create(cfg.OutFile)

@@ -6,15 +6,20 @@ import (
 	"os"
 
 	"github.com/g4s8/envdoc/ast"
+	"github.com/g4s8/envdoc/types"
 )
+
+type Renderer interface {
+	Render(scopes []*types.EnvScope, out io.Writer) error
+}
 
 type Generator struct {
 	parser    *ast.Parser
 	converter *Converter
-	renderer  *Renderer
+	renderer  Renderer
 }
 
-func NewGenerator(parser *ast.Parser, converter *Converter, renderer *Renderer) *Generator {
+func NewGenerator(parser *ast.Parser, converter *Converter, renderer Renderer) *Generator {
 	return &Generator{
 		parser:    parser,
 		converter: converter,

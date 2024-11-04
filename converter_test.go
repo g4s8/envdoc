@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	"github.com/g4s8/envdoc/ast"
+	"github.com/g4s8/envdoc/types"
 )
 
 var opts = ConverterOpts{
@@ -145,11 +146,11 @@ func TestConvertDocItems(t *testing.T) {
 	})
 
 	res := c.DocItemsFromFields(resolver, "", fieldValues)
-	expect := []*EnvDocItem{
+	expect := []*types.EnvDocItem{
 		{
 			Name: "FIELD1",
 			Doc:  "Field1 doc",
-			Opts: EnvVarOptions{
+			Opts: types.EnvVarOptions{
 				Required: true,
 				FromFile: true,
 			},
@@ -165,27 +166,27 @@ func TestConvertDocItems(t *testing.T) {
 		{
 			Name: "FIELD_DEF",
 			Doc:  "Field with default",
-			Opts: EnvVarOptions{
+			Opts: types.EnvVarOptions{
 				Default: "envdef",
 			},
 		},
 		{
 			Name: "FIELD_ARR",
 			Doc:  "Field array",
-			Opts: EnvVarOptions{
+			Opts: types.EnvVarOptions{
 				Separator: ",",
 			},
 		},
 		{
 			Name: "FIELD_ARR_SEP",
 			Doc:  "Field array with separator",
-			Opts: EnvVarOptions{
+			Opts: types.EnvVarOptions{
 				Separator: ":",
 			},
 		},
 		{
 			Name: "FOO_FIELD",
-			Children: []*EnvDocItem{
+			Children: []*types.EnvDocItem{
 				{
 					Name: "FOO_F1",
 					Doc:  "Foo one field",
@@ -194,7 +195,7 @@ func TestConvertDocItems(t *testing.T) {
 		},
 		{
 			Name: "BAR_FIELD",
-			Children: []*EnvDocItem{
+			Children: []*types.EnvDocItem{
 				{
 					Name: "BAR_B1",
 					Doc:  "Bar one field",
@@ -203,7 +204,7 @@ func TestConvertDocItems(t *testing.T) {
 		},
 		{
 			Name: "STRUCT_FIELD",
-			Children: []*EnvDocItem{
+			Children: []*types.EnvDocItem{
 				{
 					Name: "STRUCT_FIELD1",
 					Doc:  "Field1 doc",
@@ -213,7 +214,7 @@ func TestConvertDocItems(t *testing.T) {
 		{
 			Name: "FIELD4",
 			Doc:  "Field4 doc",
-			Opts: EnvVarOptions{
+			Opts: types.EnvVarOptions{
 				Required: true,
 				NonEmpty: true,
 				Expand:   true,
@@ -295,15 +296,15 @@ func TestConverterScopes(t *testing.T) {
 	c := NewConverter(opts)
 	resolver := NewTypeResolver()
 	scopes := c.ScopesFromFiles(resolver, files)
-	expect := []*EnvScope{
+	expect := []*types.EnvScope{
 		{
 			Name: "Config",
 			Doc:  "Config doc",
-			Vars: []*EnvDocItem{
+			Vars: []*types.EnvDocItem{
 				{
 					Name: "FIELD1",
 					Doc:  "Field1 doc",
-					Opts: EnvVarOptions{
+					Opts: types.EnvVarOptions{
 						Required: true,
 						FromFile: true,
 					},
@@ -331,10 +332,13 @@ func TestConverterFailedToResolve(t *testing.T) {
 	}
 	c := NewConverter(opts)
 	resolver := NewTypeResolver()
-	_ = c.DocItemsFromField(resolver, "", field)
+	item := c.DocItemsFromField(resolver, "", field)
+	if len(item) != 0 {
+		t.Fatalf("Expected 0 items, got %d", len(item))
+	}
 }
 
-func checkScope(t *testing.T, scope string, expect, actual *EnvScope) {
+func checkScope(t *testing.T, scope string, expect, actual *types.EnvScope) {
 	t.Helper()
 
 	if expect.Name != actual.Name {
@@ -351,7 +355,7 @@ func checkScope(t *testing.T, scope string, expect, actual *EnvScope) {
 	}
 }
 
-func checkDocItem(t *testing.T, scope string, expect, actual *EnvDocItem) {
+func checkDocItem(t *testing.T, scope string, expect, actual *types.EnvDocItem) {
 	t.Helper()
 	if expect.Name != actual.Name {
 		t.Errorf("Expected name %s, got %s", expect.Name, actual.Name)

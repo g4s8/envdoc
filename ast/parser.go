@@ -10,15 +10,15 @@ import (
 	"github.com/g4s8/envdoc/utils"
 )
 
-type parserConfigOption func(*Parser)
+type ParserConfigOption func(*Parser)
 
-func WithDebug(debug bool) parserConfigOption {
+func WithDebug(debug bool) ParserConfigOption {
 	return func(p *Parser) {
 		p.debug = debug
 	}
 }
 
-func WithExecConfig(execFile string, execLine int) parserConfigOption {
+func WithExecConfig(execFile string, execLine int) ParserConfigOption {
 	return func(p *Parser) {
 		p.gogenFile = execFile
 		p.gogenLine = execLine
@@ -33,7 +33,7 @@ type Parser struct {
 	debug     bool
 }
 
-func NewParser(fileGlob, typeGlob string, opts ...parserConfigOption) *Parser {
+func NewParser(fileGlob, typeGlob string, opts ...ParserConfigOption) *Parser {
 	p := &Parser{
 		fileGlob: fileGlob,
 		typeGlob: typeGlob,
@@ -104,7 +104,7 @@ func (p *Parser) Parse(dir string) ([]*FileSpec, error) {
 	return col.Files(), nil
 }
 
-func parseDir(dir string, fset *token.FileSet, matcher func(fs.FileInfo) bool, col *RootCollector) error {
+func parseDir(dir string, fset *token.FileSet, _ func(fs.FileInfo) bool, col *RootCollector) error {
 	pkgs, err := parser.ParseDir(fset, dir, nil, parser.ParseComments|parser.SkipObjectResolution)
 	if err != nil {
 		return fmt.Errorf("failed to parse dir: %w", err)

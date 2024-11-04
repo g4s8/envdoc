@@ -1,4 +1,14 @@
-package main
+package types
+
+// OutFormat is an output format for the documentation.
+type OutFormat string
+
+const (
+	OutFormatMarkdown OutFormat = "markdown"
+	OutFormatHTML     OutFormat = "html"
+	OutFormatTxt      OutFormat = "plaintext"
+	OutFormatEnv      OutFormat = "dotenv"
+)
 
 // EnvDocItem is a documentation item for one environment variable.
 type EnvDocItem struct {

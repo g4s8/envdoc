@@ -4,6 +4,8 @@ import (
 	"flag"
 	"os"
 	"testing"
+
+	"github.com/g4s8/envdoc/testutils"
 )
 
 func TestConfig(t *testing.T) {
@@ -27,39 +29,17 @@ func TestConfig(t *testing.T) {
 		if err := c.parseFlags(fs); err != nil {
 			t.Fatalf("unexpected error: %v", err)
 		}
-		if c.TypeGlob != "foo,bar" {
-			t.Errorf("unexpected TypeGlob: %q", c.TypeGlob)
-		}
-		if c.FileGlob != "*" {
-			t.Errorf("unexpected FileGlob: %q", c.FileGlob)
-		}
-		if c.OutFile != "out.txt" {
-			t.Errorf("unexpected OutFile: %q", c.OutFile)
-		}
-		if c.OutFormat != "plaintext" {
-			t.Errorf("unexpected OutFormat: %q", c.OutFormat)
-		}
-		if c.EnvPrefix != "FOO" {
-			t.Errorf("unexpected EnvPrefix: %q", c.EnvPrefix)
-		}
-		if !c.NoStyles {
-			t.Error("unexpected NoStyles: false")
-		}
-		if !c.FieldNames {
-			t.Error("unexpected FieldNames: false")
-		}
-		if !c.Debug {
-			t.Error("unexpected Debug: false")
-		}
-		if c.TagName != "xenv" {
-			t.Errorf("unexpected TagName: %q", c.TagName)
-		}
-		if c.TagDefault != "default" {
-			t.Errorf("unexpected TagDefault: %q", c.TagDefault)
-		}
-		if !c.RequiredIfNoDef {
-			t.Error("unexpected RequiredIfNoDef: false")
-		}
+		testutils.AssertError(t, c.TypeGlob == "foo,bar", "unexpected TypeGlob: %q", c.TypeGlob)
+		testutils.AssertError(t, c.FileGlob == "*", "unexpected FileGlob: %q", c.FileGlob)
+		testutils.AssertError(t, c.OutFile == "out.txt", "unexpected OutFile: %q", c.OutFile)
+		testutils.AssertError(t, c.OutFormat == "plaintext", "unexpected OutFormat: %q", c.OutFormat)
+		testutils.AssertError(t, c.EnvPrefix == "FOO", "unexpected EnvPrefix: %q", c.EnvPrefix)
+		testutils.AssertError(t, c.NoStyles, "unexpected NoStyles: false")
+		testutils.AssertError(t, c.FieldNames, "unexpected FieldNames: false")
+		testutils.AssertError(t, c.Debug, "unexpected Debug: false")
+		testutils.AssertError(t, c.TagName == "xenv", "unexpected TagName: %q", c.TagName)
+		testutils.AssertError(t, c.TagDefault == "default", "unexpected TagDefault: %q", c.TagDefault)
+		testutils.AssertError(t, c.RequiredIfNoDef, "unexpected RequiredIfNoDef: false")
 	})
 	t.Run("normalize", func(t *testing.T) {
 		var c Config
