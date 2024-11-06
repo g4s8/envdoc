@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	"github.com/g4s8/envdoc/ast"
+	"github.com/g4s8/envdoc/resolver"
 	"github.com/g4s8/envdoc/types"
 )
 
@@ -117,7 +118,7 @@ func TestConvertDocItems(t *testing.T) {
 			},
 		},
 	}
-	resolver := NewTypeResolver()
+	resolver := resolver.NewTypeResolver()
 	resolver.AddTypes("", []*ast.TypeSpec{
 		{
 			Name: "Foo",
@@ -294,7 +295,7 @@ func TestConverterScopes(t *testing.T) {
 		},
 	}
 	c := NewConverter(opts)
-	resolver := NewTypeResolver()
+	resolver := resolver.NewTypeResolver()
 	scopes := c.ScopesFromFiles(resolver, files)
 	expect := []*types.EnvScope{
 		{
@@ -331,7 +332,7 @@ func TestConverterFailedToResolve(t *testing.T) {
 		Tag: `envPrefix:"BAR_"`,
 	}
 	c := NewConverter(opts)
-	resolver := NewTypeResolver()
+	resolver := resolver.NewTypeResolver()
 	item := c.DocItemsFromField(resolver, "", field)
 	if len(item) != 0 {
 		t.Fatalf("Expected 0 items, got %d", len(item))

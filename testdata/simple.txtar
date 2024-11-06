@@ -1,0 +1,35 @@
+Success: simple test case
+
+-- src.go --
+package main
+
+// Config is an example configuration structure.
+// It is used to generate documentation for the configuration
+// using the commands below.
+type Config struct {
+	// Hosts name of hosts to listen on.
+	Hosts []string `env:"HOST,required", envSeparator:";"`
+	// Port to listen on.
+	Port int `env:"PORT,notEmpty"`
+
+	// Debug mode enabled.
+	Debug bool `env:"DEBUG" envDefault:"false"`
+
+	// Prefix for something.
+	Prefix string `env:"PREFIX"`
+}
+
+-- expect.txt --
+Environment Variables
+
+## Config
+
+Config is an example configuration structure.
+It is used to generate documentation for the configuration
+using the commands below.
+
+ * `HOST` (separated by `;`, required) - Hosts name of hosts to listen on.
+ * `PORT` (required, non-empty) - Port to listen on.
+ * `DEBUG` (default: `false`) - Debug mode enabled.
+ * `PREFIX` - Prefix for something.
+

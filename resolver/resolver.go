@@ -1,6 +1,9 @@
-package main
+package resolver
 
 import (
+	"fmt"
+	"io"
+
 	"github.com/g4s8/envdoc/ast"
 )
 
@@ -36,4 +39,12 @@ func ResolveAllTypes(files []*ast.FileSpec) *TypeResolver {
 		r.AddTypes(pkg, f.Types)
 	}
 	return r
+}
+
+func (r *TypeResolver) Debug(out io.Writer) {
+	fmt.Fprintln(out, "Resolved types:")
+	for k, v := range r.types {
+		fmt.Fprintf(out, "  %s.%s: %q (export=%t)\n",
+			k.pkg, k.name, v.Name, v.Export)
+	}
 }

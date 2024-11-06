@@ -6,6 +6,7 @@ import (
 	"os"
 
 	"github.com/g4s8/envdoc/ast"
+	"github.com/g4s8/envdoc/resolver"
 	"github.com/g4s8/envdoc/types"
 )
 
@@ -33,9 +34,9 @@ func (g *Generator) Generate(dir string, out io.Writer) error {
 		return fmt.Errorf("parse dir: %w", err)
 	}
 
-	res := ResolveAllTypes(files)
+	res := resolver.ResolveAllTypes(files)
 	if DebugConfig.Enabled {
-		res.fprint(os.Stdout)
+		res.Debug(os.Stdout)
 	}
 
 	scopes := g.converter.ScopesFromFiles(res, files)
