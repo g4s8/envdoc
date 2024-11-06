@@ -10,6 +10,10 @@ import (
 	"github.com/g4s8/envdoc/types"
 )
 
+type Resolver interface {
+	Resolve(ref *ast.FieldTypeRef) *ast.TypeSpec
+}
+
 type ConverterOpts struct {
 	EnvPrefix       string
 	TagName         string
@@ -28,7 +32,7 @@ func NewConverter(opts ConverterOpts) *Converter {
 	}
 }
 
-func (c *Converter) ScopesFromFiles(res *TypeResolver, files []*ast.FileSpec) []*types.EnvScope {
+func (c *Converter) ScopesFromFiles(res Resolver, files []*ast.FileSpec) []*types.EnvScope {
 	var scopes []*types.EnvScope
 	for _, f := range files {
 		if !f.Export {
@@ -46,7 +50,7 @@ func (c *Converter) ScopesFromFiles(res *TypeResolver, files []*ast.FileSpec) []
 	return scopes
 }
 
-func (c *Converter) ScopeFromType(res *TypeResolver, t *ast.TypeSpec) *types.EnvScope {
+func (c *Converter) ScopeFromType(res Resolver, t *ast.TypeSpec) *types.EnvScope {
 	scope := &types.EnvScope{
 		Name: t.Name,
 		Doc:  t.Doc,
@@ -56,7 +60,7 @@ func (c *Converter) ScopeFromType(res *TypeResolver, t *ast.TypeSpec) *types.Env
 	return scope
 }
 
-func (c *Converter) DocItemsFromFields(res *TypeResolver, prefix string, fields []*ast.FieldSpec) []*types.EnvDocItem {
+func (c *Converter) DocItemsFromFields(res Resolver, prefix string, fields []*ast.FieldSpec) []*types.EnvDocItem {
 	var items []*types.EnvDocItem
 	for _, f := range fields {
 		debug.Logf("\t# CONV: field [%s] type=%s flen=%d\n",
@@ -78,7 +82,7 @@ func (c *Converter) DocItemsFromFields(res *TypeResolver, prefix string, fields 
 	return items
 }
 
-func (c *Converter) DocItemsFromField(resolver *TypeResolver, prefix string, f *ast.FieldSpec) []*types.EnvDocItem {
+func (c *Converter) DocItemsFromField(resolver Resolver, prefix string, f *ast.FieldSpec) []*types.EnvDocItem {
 	dec := ast.NewFieldSpecDecoder(prefix, c.opts.TagName, c.opts.TagDefault, c.opts.RequiredIfNoDef, c.opts.UseFieldNames)
 	info, newPrefix := dec.Decode(f)
 	if newPrefix != "" {

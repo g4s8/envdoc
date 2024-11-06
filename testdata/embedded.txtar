@@ -1,0 +1,36 @@
+Success: embedded fields.
+TypeName: Config
+
+-- src.go --
+package main
+
+import "time"
+
+type Embedded struct {
+        // Foo field.
+	Foo string `env:"FOO"`
+}
+
+type TypeDef string
+
+type Bar struct {
+	TypeDef
+}
+
+// Config doc.
+type Config struct {
+        Embedded
+	// Bar field.
+        Bar Bar `env:"BAR"`
+}
+
+-- expect.txt --
+Environment Variables
+
+## Config
+
+Config doc.
+
+ * `FOO` - Foo field.
+ * `BAR` - Bar field.
+
