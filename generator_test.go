@@ -43,8 +43,10 @@ func TestGenerator(t *testing.T) {
 
 			p := ast.NewParser("*", spec.TypeName)
 			conv := NewConverter(ConverterOpts{
-				TagName:    "env",
-				TagDefault: "envDefault",
+				EnvPrefix:     spec.EnvPrefix,
+				TagName:       "env",
+				TagDefault:    "envDefault",
+				UseFieldNames: spec.FieldNames,
 			})
 			rend := render.NewRenderer(types.OutFormatTxt, false)
 			gen := NewGenerator(p, conv, rend)
@@ -101,9 +103,11 @@ func runGenerator(t *testing.T, gen interface{ Generate(string, io.Writer) error
 }
 
 type GenTestSpec struct {
-	Success  bool
-	TypeName string
-	Comment  string
+	Success    bool
+	TypeName   string
+	EnvPrefix  string
+	FieldNames bool
+	Comment    string
 }
 
 func parseTestSpec(t *testing.T, data string) GenTestSpec {
@@ -131,6 +135,14 @@ func parseTestSpec(t *testing.T, data string) GenTestSpec {
 
 		if strings.HasPrefix(line, "TypeName:") {
 			res.TypeName = strings.TrimSpace(strings.TrimPrefix(line, "TypeName:"))
+			continue
+		}
+		if strings.HasPrefix(line, "EnvPrefix:") {
+			res.EnvPrefix = strings.TrimSpace(strings.TrimPrefix(line, "EnvPrefix:"))
+			continue
+		}
+		if strings.HasPrefix(line, "FieldNames:") {
+			res.FieldNames = strings.TrimSpace(strings.TrimPrefix(line, "FieldNames:")) == "true"
 			continue
 		}
 	}
