@@ -3,9 +3,9 @@ package main
 import (
 	"fmt"
 	"io"
-	"os"
 
 	"github.com/g4s8/envdoc/ast"
+	"github.com/g4s8/envdoc/debug"
 	"github.com/g4s8/envdoc/resolver"
 	"github.com/g4s8/envdoc/types"
 )
@@ -35,14 +35,10 @@ func (g *Generator) Generate(dir string, out io.Writer) error {
 	}
 
 	res := resolver.ResolveAllTypes(files)
-	if DebugConfig.Enabled {
-		res.Debug(os.Stdout)
-	}
+	debug.PrintDebug(res)
 
 	scopes := g.converter.ScopesFromFiles(res, files)
-	if DebugConfig.Enabled {
-		printScopesTree(scopes)
-	}
+	printScopesTree(scopes)
 
 	if err := g.renderer.Render(scopes, out); err != nil {
 		return fmt.Errorf("render: %w", err)
