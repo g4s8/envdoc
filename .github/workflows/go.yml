@@ -35,7 +35,7 @@ jobs:
           fi
       - name: Coverage report
         run: |
-          go test -v -covermode=count -coverprofile=coverage.out
+          go test -v -covermode=count -coverprofile=coverage.out -tags coverage ./...
           go tool cover -func=coverage.out
       - name: Upload coverage reports to Codecov
         uses: codecov/codecov-action@v3
