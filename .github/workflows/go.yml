@@ -21,7 +21,7 @@ jobs:
       - name: Build
         run: go build -v ./...
       - name: Test
-        run: go test -v
+        run: go test -v ./...
       - name: Check examples
         run: |
           ./_examples/clean.sh

@@ -33,7 +33,8 @@ func (l *linter) run(pass *analysis.Pass) (interface{}, error) {
 			if !checkFieldDoc(field) {
 				names := fieldNames(field)
 				pass.Reportf(field.Pos(),
-					"field `%s` with `env` tag should have a documentation comment", names)
+					"field `%s` with `%s` tag should have a documentation comment",
+					names, l.envName)
 			}
 
 			return true
