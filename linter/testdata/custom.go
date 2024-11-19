@@ -8,4 +8,6 @@ type Config struct {
 	Port int `foo:"PORT"`
 
 	Undocumented string `foo:"UNDOCUMENTED"`
+
+	NoComments string `foo:"NOCOMMENTS"` // comment is not a doc
 }

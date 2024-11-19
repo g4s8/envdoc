@@ -14,6 +14,13 @@ func WithEnvName(name string) Option {
 	}
 }
 
+// WithNoComments disables check for documentation comments.
+func WithNoComments() Option {
+	return func(l *linter) {
+		l.noComments = true
+	}
+}
+
 // NewAnlyzer creates a new linter analyzer.
 func NewAnlyzer(parseFlags bool, opts ...Option) *analysis.Analyzer {
 	l := &linter{

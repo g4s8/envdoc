@@ -30,9 +30,10 @@ func TestLinter(t *testing.T) {
 		{
 			name: "custom",
 			file: "testdata/custom.go",
-			opts: []Option{WithEnvName("foo")},
+			opts: []Option{WithEnvName("foo"), WithNoComments()},
 			expectOut: []string{
 				"testdata/custom.go:10: field `Undocumented` with `foo` tag should have a documentation comment",
+				"testdata/custom.go:12: field `NoComments` with `foo` tag should have a documentation comment",
 				"",
 			},
 		},

@@ -9,7 +9,8 @@ import (
 )
 
 type linter struct {
-	envName string
+	envName    string
+	noComments bool
 }
 
 func (l *linter) run(pass *analysis.Pass) (interface{}, error) {
@@ -30,7 +31,7 @@ func (l *linter) run(pass *analysis.Pass) (interface{}, error) {
 				return true
 			}
 
-			if !checkFieldDoc(field) {
+			if !checkFieldDoc(field, l.noComments) {
 				names := fieldNames(field)
 				pass.Reportf(field.Pos(),
 					"field `%s` with `%s` tag should have a documentation comment",
@@ -51,12 +52,14 @@ func fieldNames(f *ast.Field) string {
 	return strings.Join(names, ", ")
 }
 
-func checkFieldDoc(f *ast.Field) bool {
+func checkFieldDoc(f *ast.Field, noComments bool) bool {
 	if f.Doc != nil && strings.TrimSpace(f.Doc.Text()) != "" {
 		return true
 	}
 
-	if f.Comment != nil && strings.TrimSpace(f.Comment.Text()) != "" {
+	if noComments {
+		return false
+	} else if f.Comment != nil && strings.TrimSpace(f.Comment.Text()) != "" {
 		return true
 	}
 
