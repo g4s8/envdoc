@@ -4,6 +4,7 @@ envdoc is a tool for generating documentation for environment variables in Go st
 It takes comments associated with `env` tags in Go structs and creates a Markdown, plaintext or HTML
 file with detailed documentation.
 
+For `docenv` linter see [docenv/README.md](./docenv/README.md).
 
 <br/>
 
