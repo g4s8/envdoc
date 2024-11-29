@@ -101,7 +101,12 @@ func (c *Converter) DocItemsFromField(resolver Resolver, prefix string, f *ast.F
 		tpe := resolver.Resolve(&f.TypeRef)
 		debug.Logf("\t# CONV: resolve %q -> %v\n", f.TypeRef.String(), tpe)
 		if tpe == nil {
-			fmt.Fprintf(os.Stderr, "Failed to resolve type %q\n", f.TypeRef.String())
+			if newPrefix != "" {
+				// Target type is env-prefixed, it means it's a reference
+				// to another struct type. We can't process it here, because
+				// we can't resolve the target type and its fields.
+				fmt.Fprintf(os.Stderr, "WARNING: failed to resolve type %q\n", f.TypeRef.String())
+			}
 			break
 		}
 		children = c.DocItemsFromFields(resolver, prefix, tpe.Fields)
