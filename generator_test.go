@@ -5,7 +5,6 @@ import (
 	"bytes"
 	"io"
 	"os"
-	"path"
 	"path/filepath"
 	"strings"
 	"testing"
@@ -53,7 +52,7 @@ func TestGenerator(t *testing.T) {
 			var out bytes.Buffer
 			runGenerator(t, gen, spec, dir, &out)
 
-			expectFile, err := os.Open(path.Join(dir, "expect.txt"))
+			expectFile, err := os.Open(filepath.Join(dir, "expect.txt"))
 			if err != nil {
 				t.Fatalf("failed to open expect.txt: %s", err)
 			}
