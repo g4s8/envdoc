@@ -1,0 +1,10 @@
+Test txtar
+
+-- one.txt --
+one
+
+-- two.txt --
+two
+
+-- subdir/three.txt --
+three

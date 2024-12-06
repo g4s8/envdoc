@@ -35,7 +35,11 @@ func (h *typeHandler) onField(f *FieldSpec) FieldHandler {
 
 func TestTypesVisitor(t *testing.T) {
 	fset, pkg, docs := loadTestFileSet(t)
-	file := pkg.Files["testdata/fields.go"]
+	file := getPkgFile(pkg, "testdata/fields.go")
+	if file == nil {
+		t.Fatal("package 'testdata' not found")
+	}
+
 	h := &fileHandler{}
 	v := newFileVisitor(fset, file, docs, h)
 

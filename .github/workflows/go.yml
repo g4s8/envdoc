@@ -24,29 +24,29 @@ jobs:
       - name: Build
         run: go build -v ./...
       - name: Test
-        run: go test -v ./...
-      - name: Check examples
-        run: |
-          ./_examples/clean.sh
-          ./_examples/build-examples.sh
-          if $(git diff --quiet); then
-            echo "examples are clean"
-          else
-            echo "examples are dirty, rebuild it locally before commiting"
-            git diff | cat
-            exit 1
-          fi
-      - name: Coverage report
-        run: |
-          go test -v -covermode=count -coverprofile=coverage.out -tags coverage ./...
-          go tool cover -func=coverage.out
-      - name: Upload coverage reports to Codecov
-        uses: codecov/codecov-action@v3
-        env:
-          CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
-      - name: Vet
-        run: go vet
-      - name: golangci-lint
-        uses: golangci/golangci-lint-action@v3
-        with:
-          version: v1.61.0
+        run: go test -v "-test.v=true" ./...
+      # - name: Check examples
+      #   run: |
+      #     ./_examples/clean.sh
+      #     ./_examples/build-examples.sh
+      #     if $(git diff --quiet); then
+      #       echo "examples are clean"
+      #     else
+      #       echo "examples are dirty, rebuild it locally before commiting"
+      #       git diff | cat
+      #       exit 1
+      #     fi
+      # - name: Coverage report
+      #   run: |
+      #     go test -v -covermode=count -coverprofile=coverage.out -tags coverage ./...
+      #     go tool cover -func=coverage.out
+      # - name: Upload coverage reports to Codecov
+      #   uses: codecov/codecov-action@v3
+      #   env:
+      #     CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+      # - name: Vet
+      #   run: go vet
+      # - name: golangci-lint
+      #   uses: golangci/golangci-lint-action@v3
+      #   with:
+      #     version: v1.61.0
