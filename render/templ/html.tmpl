@@ -6,7 +6,11 @@
     {{- if $.EnvName -}}
       <code>{{ $.EnvName }}</code>
       {{- template "item.options" (list $ $cfg " (%s)") }}
-      {{- $.Doc | printf " - %s" -}}
+      {{- if $.EnvDescription -}}
+        {{- $.EnvDescription | printf " - %s" -}}
+      {{- else -}}
+        {{- $.Doc | printf " - %s" -}}
+      {{- end }}
     {{- else -}}
       {{- $.Doc | printf "%s" -}}
     {{- end}}

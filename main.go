@@ -29,6 +29,10 @@ func main() {
 		EnvPrefix:       cfg.EnvPrefix,
 		TagName:         cfg.TagName,
 		TagDefault:      cfg.TagDefault,
+		TagPrefix:       cfg.TagPrefix,
+		TagSeparator:    cfg.TagSeparator,
+		TagDescription:  cfg.TagDescription,
+		TagRequired:     cfg.TagRequired,
 		RequiredIfNoDef: cfg.RequiredIfNoDef,
 		UseFieldNames:   cfg.FieldNames,
 	})
@@ -46,7 +50,7 @@ func main() {
 		}
 	}()
 
-	if err := gen.Generate(cfg.Dir, buf); err != nil {
+	if err := gen.Generate(cfg.Dirs, buf); err != nil {
 		fatal("Failed to generate: %v", err)
 	}
 	if err := buf.Flush(); err != nil {

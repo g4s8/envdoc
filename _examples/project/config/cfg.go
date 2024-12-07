@@ -5,7 +5,7 @@ import (
 	"example.com/server"
 )
 
-//go:generate go run ../../../ -dir ../ -files ./config/cfg.go -types * -output ../config.md -format markdown
+//go:generate go run ../../../ -dir ../ -files ./config/cfg.go -types * -output ../doc.md -format markdown
 type Config struct {
 	// AppName is the name of the application.
 	AppName string `env:"APP_NAME" envDefault:"myapp"`

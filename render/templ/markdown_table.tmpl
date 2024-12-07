@@ -1,0 +1,23 @@
+{{- define "item" }}
+  {{- $ := index . 0 }}
+  {{- $cfg := index . 1 }}
+  {{- if $.EnvName }}
+    {{- "|"}} {{ $.EnvName | printf "%s" }} | {{ $.Type | printf "`%s`" }} | {{- if $.EnvDescription }} {{ $.EnvDescription | printf "%s" }} {{- else }} {{ $.Doc | printf "%s" }} {{- end }} | {{ template "item.options" (list $ $cfg "(%s)") }} |
+  {{- end -}}
+{{ end -}}
+
+{{- $cfg := $.Config -}}
+# {{ .Title }}
+{{ range .Sections -}}
+{{ if .Name }}
+## {{ .Name }}
+{{ end }}
+{{- if .Doc }}
+{{ .Doc }}
+{{ end }}
+| env variable | type | description | options |
+|--------------|------|-------------|---------|
+{{ range $item := .Items }}
+{{- template "item" (list $item $cfg.Item 1) }}
+{{ end -}}
+{{ end }}

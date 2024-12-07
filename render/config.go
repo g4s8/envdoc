@@ -29,6 +29,18 @@ var configs = map[types.OutFormat]renderConfig{
 		},
 		tmpl: newTmplText("markdown.tmpl"),
 	},
+	types.OutFormatMarkdownTable: {
+		Item: renderItemConfig{
+			SeparatorFormat:  "separated by `%s`",
+			SeparatorDefault: "comma-separated",
+			OptRequired:      "**required**",
+			OptExpand:        "expand",
+			OptFromFile:      "from-file",
+			OptNonEmpty:      "non-empty",
+			EnvDefaultFormat: "default: `%s`",
+		},
+		tmpl: newTmplText("markdown_table.tmpl"),
+	},
 	types.OutFormatHTML: {
 		Item: renderItemConfig{
 			SeparatorFormat:  `separated by "<code>%s</code>"`,

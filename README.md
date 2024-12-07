@@ -41,21 +41,28 @@ type Config struct {
 ## Usage
 
 ```go
-//go:generate envdoc -output <output_file_name>
+//go:generate envdoc -output <output_file_name> dir_1 dir_n
 ```
 
  * `-dir` (path string, *optional*) - Specify the directory to search for files. Default is the file dir with `go:generate` command.
  * `-files` (glob string, *optional*) - File glob pattern to specify file names to process. Default is the single file with `go:generate`.
  * `-types` (glob string, *optional*) - Type glob pattern for type names to process. If not specified, the next type after `go:generate` is used.
  * `-output` (path string, **required**) - Output file name for generated documentation.
- * `-format` (`enum(markdown, plaintext, html, dotenv)` string, *optional*) - Output format for documentation.  Default is `markdown`.
+ * `-format` (`enum(markdown, markdown-table, plaintext, html, dotenv)` string, *optional*) - Output format for documentation.  Default is `markdown`.
  * `-no-styles` (`bool`, *optional*) - If true, CSS styles will not be included for `html` format.
  * `-env-prefix` (`string`, *optional*) - Sets additional global prefix for all environment variables.
  * `-tag-name` (string, *optional*, default: `env`) - Use custom tag name instead of `env`.
  * `-tag-default` (string, *optional*, default: `envDefault`) - Use "default" tag name instead of `envDefault`.
+ * `-tag-prefix` (string, *optional*, default: `envPrefix`) - Use "prefix" tag name instead of `envPrefix`.
+ * `-tag-separator` (string, *optional*, default: `envSeparator`) - Use "separator" tag name instead of `envSeparator`.
+ * `-tag-description` (string, *optional*) - Use "description" tag name instead of doc comments.
+ * `-tag-required` (string, *optional*) - Use "required" tag name.
  * `-required-if-no-def` (bool, *optional*, default: `false`) - Set attributes as required if no default value is set.
  * `-field-names` (`bool`, *optional*) - Use field names as env names if `env:` tag is not specified.
  * `-debug` (`bool`, *optional*) - Enable debug output.
+
+Positional args:
+* `dir_n` (path string list, *optional*) - Specify the directories to search for files. Default is the file dir with `go:generate` command.
 
 These params are deprecated and will be removed in the next major release:
  * `-type` - Specify one type to process.
@@ -98,6 +105,7 @@ This tool is compatible with
 - full compatibility: [caarlos0/env](https://github.com/caarlos0/env)
 - partial compatibility: [sethvargo/go-envconfig](https://github.com/sethvargo/go-envconfig)
 - partial compatibility: [joeshaw/envdecode](https://github.com/joeshaw/envdecode)
+- partial compatibility: [ilyakaznacheev/cleanenv](https://github.com/ilyakaznacheev/cleanenv)
 
 *Let me know about any new lib to check compatibility.*
 

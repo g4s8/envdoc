@@ -1,6 +1,9 @@
 package ast
 
 import (
+	"strconv"
+
+	"github.com/g4s8/envdoc/debug"
 	"github.com/g4s8/envdoc/tags"
 	"github.com/g4s8/envdoc/utils"
 )
@@ -9,28 +12,37 @@ type FieldSpecDecoder struct {
 	envPrefix       string
 	tagName         string
 	tagDefault      string
+	tagPrefix       string
+	tagSeparator    string
+	tagDescription  string
+	tagRequired     string
 	requiredIfNoDef bool
 	useFieldNames   bool
 }
 
-func NewFieldSpecDecoder(envPrefix string, tagName string, tagDefault string, requiredIfNoDef bool, useFieldNames bool) *FieldSpecDecoder {
+func NewFieldSpecDecoder(envPrefix, tagName, tagDefault, tagPrefix, tagSeparator, tagDescription, tagRequired string, requiredIfNoDef, useFieldNames bool) *FieldSpecDecoder {
 	return &FieldSpecDecoder{
 		envPrefix:       envPrefix,
 		tagName:         tagName,
 		tagDefault:      tagDefault,
+		tagPrefix:       tagPrefix,
+		tagSeparator:    tagSeparator,
+		tagDescription:  tagDescription,
+		tagRequired:     tagRequired,
 		requiredIfNoDef: requiredIfNoDef,
 		useFieldNames:   useFieldNames,
 	}
 }
 
 type FieldInfo struct {
-	Names     []string
-	Required  bool
-	Expand    bool
-	NonEmpty  bool
-	FromFile  bool
-	Default   string
-	Separator string
+	Names       []string
+	Required    bool
+	Expand      bool
+	NonEmpty    bool
+	FromFile    bool
+	Default     string
+	Separator   string
+	Description string
 }
 
 func (d *FieldSpecDecoder) decodeFieldNames(f *FieldSpec, tag *tags.FieldTag, out *FieldInfo) {
@@ -70,13 +82,38 @@ func (d *FieldSpecDecoder) decodeTagValues(_ *FieldSpec, tag *tags.FieldTag, out
 func (d *FieldSpecDecoder) decodeEnvDefault(_ *FieldSpec, tag *tags.FieldTag, out *FieldInfo) {
 	if envDefault, ok := tag.GetFirst(d.tagDefault); ok {
 		out.Default = envDefault
-	} else if !ok && d.requiredIfNoDef {
+	} else if d.requiredIfNoDef {
 		out.Required = true
 	}
 }
 
+func (d *FieldSpecDecoder) decodeTagDescription(_ *FieldSpec, tag *tags.FieldTag, out *FieldInfo) {
+	if d.tagDescription == "" {
+		return
+	}
+
+	if tagDescription, ok := tag.GetFirst(d.tagDescription); ok {
+		out.Description = tagDescription
+	}
+}
+
+func (d *FieldSpecDecoder) decodeTagRequired(_ *FieldSpec, tag *tags.FieldTag, out *FieldInfo) {
+	if d.tagRequired == "" {
+		return
+	}
+
+	if tagRequired, ok := tag.GetFirst(d.tagRequired); ok {
+		boolValue, err := strconv.ParseBool(tagRequired)
+		if err != nil {
+			debug.Logf("# AST: skip required tag[%v] by error: %v\n", tagRequired, err)
+			return
+		}
+		out.Required = boolValue
+	}
+}
+
 func (d *FieldSpecDecoder) decodeEnvSeparator(f *FieldSpec, tag *tags.FieldTag, out *FieldInfo) {
-	if envSeparator, ok := tag.GetFirst("envSeparator"); ok {
+	if envSeparator, ok := tag.GetFirst(d.tagSeparator); ok {
 		out.Separator = envSeparator
 	} else if f.TypeRef.Kind == FieldTypeArray {
 		out.Separator = ","
@@ -90,8 +127,10 @@ func (d *FieldSpecDecoder) Decode(f *FieldSpec) (res FieldInfo, prefix string) {
 	d.decodeTagValues(f, &tag, &res)
 	d.decodeEnvDefault(f, &tag, &res)
 	d.decodeEnvSeparator(f, &tag, &res)
+	d.decodeTagDescription(f, &tag, &res)
+	d.decodeTagRequired(f, &tag, &res)
 
-	if envPrefix, ok := tag.GetFirst("envPrefix"); ok {
+	if envPrefix, ok := tag.GetFirst(d.tagPrefix); ok {
 		prefix = d.envPrefix + envPrefix
 	}
 

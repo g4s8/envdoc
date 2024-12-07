@@ -1,4 +1,6 @@
 /.gitstrap.yml
 /envdoc
+/.idea
 coverage.out
 test.cover
+*/**/go.work*

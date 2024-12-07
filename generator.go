@@ -28,10 +28,14 @@ func NewGenerator(parser *ast.Parser, converter *Converter, renderer Renderer) *
 	}
 }
 
-func (g *Generator) Generate(dir string, out io.Writer) error {
-	files, err := g.parser.Parse(dir)
-	if err != nil {
-		return fmt.Errorf("parse dir: %w", err)
+func (g *Generator) Generate(dirs []string, out io.Writer) error {
+	var files []*ast.FileSpec
+	for _, dir := range dirs {
+		fileSpec, err := g.parser.Parse(dir)
+		if err != nil {
+			return fmt.Errorf("parse dir[%s]: %w", dir, err)
+		}
+		files = append(files, fileSpec...)
 	}
 
 	res := resolver.ResolveAllTypes(files)

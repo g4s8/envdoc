@@ -10,8 +10,10 @@ import (
 )
 
 var opts = ConverterOpts{
-	TagName:    "env",
-	TagDefault: "envDefault",
+	TagName:      "env",
+	TagDefault:   "envDefault",
+	TagPrefix:    "envPrefix",
+	TagSeparator: "envSeparator",
 }
 
 func TestConvertDocItems(t *testing.T) {

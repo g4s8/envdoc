@@ -6,6 +6,7 @@ package main
 //
 //go:generate go run ../../ -output doc.txt -format plaintext
 //go:generate go run ../../ -output doc.md -format markdown
+//go:generate go run ../../ -output doc-table.md -format markdown-table
 //go:generate go run ../../ -output doc.html -format html
 //go:generate go run ../../ -output doc.env -format dotenv
 type Config struct {

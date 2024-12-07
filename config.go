@@ -16,6 +16,8 @@ import (
 type Config struct {
 	// Dir to search for files
 	Dir string
+	// Dirs to search for files
+	Dirs []string
 	// FileGlob to filter by file name
 	FileGlob string
 	// TypeGlob to filter by type name
@@ -35,7 +37,15 @@ type Config struct {
 	TagName string
 	// TagDefault sets default env tag name, `envDefault` by default.
 	TagDefault string
-	// TagRequiredIfNoDef sets attributes as required if no default value is set.
+	// TagPrefix sets custom tag prefix, `envPrefix` by default.
+	TagPrefix string
+	// TagSeparator sets custom tag prefix, `envSeparator` by default.
+	TagSeparator string
+	// TagDescription sets doc tag.
+	TagDescription string
+	// TagRequired sets required tag.
+	TagRequired string
+	// RequiredIfNoDef sets attributes as required if no default value is set.
 	RequiredIfNoDef bool
 
 	// ExecLine is the line of go:generate command
@@ -64,6 +74,10 @@ func (c *Config) parseFlags(f *flag.FlagSet) error {
 	// customization
 	f.StringVar(&c.TagName, "tag-name", "env", "Custom tag name")
 	f.StringVar(&c.TagDefault, "tag-default", "envDefault", "Default tag name")
+	f.StringVar(&c.TagPrefix, "tag-prefix", "envPrefix", "Prefix tag name")
+	f.StringVar(&c.TagSeparator, "tag-separator", "envSeparator", "Separator tag name")
+	f.StringVar(&c.TagDescription, "tag-description", "", "Description tag name")
+	f.StringVar(&c.TagRequired, "tag-required", "", "Required tag name")
 	f.BoolVar(&c.RequiredIfNoDef, "required-if-no-def", false, "Set attributes as required if no default value is set")
 	// deprecated flags
 	var (
@@ -77,6 +91,9 @@ func (c *Config) parseFlags(f *flag.FlagSet) error {
 	if err := f.Parse(os.Args[1:]); err != nil {
 		return fmt.Errorf("parse flags: %w", err)
 	}
+
+	// additional dirs
+	c.Dirs = f.Args()
 
 	// deprecated flags `all`, `type` and new flag `types` can't be used together
 	if all && typeName != "" {
@@ -142,14 +159,17 @@ func (c *Config) setDefaults() {
 	if c.FileGlob == "" {
 		c.FileGlob = c.ExecFile
 	}
+
 	if c.Dir == "" {
 		c.Dir = "."
 	}
+
+	c.Dirs = append(c.Dirs, c.Dir)
 }
 
 func (c *Config) fprint(out io.Writer) {
 	fmt.Fprintln(out, "Config:")
-	fmt.Fprintf(out, "  Dir: %q\n", c.Dir)
+	fmt.Fprintf(out, "  Dirs: %q\n", c.Dirs)
 	if c.FileGlob != "" {
 		fmt.Fprintf(out, "  FileGlob: %q\n", c.FileGlob)
 	}

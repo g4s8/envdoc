@@ -14,7 +14,7 @@ func TestFieldSpecDecoder(t *testing.T) {
 			Tag:     `env:"FOO,required"`,
 			TypeRef: FieldTypeRef{Name: "string", Kind: FieldTypeIdent},
 		}
-		d := NewFieldSpecDecoder("", "env", "", false, false)
+		d := NewFieldSpecDecoder("", "env", "", "envPrefix", "envSeparator", "", "", false, false)
 		res, prefix := d.Decode(fs)
 		assertEqFieldInfo(t, FieldInfo{
 			Names:    []string{"FOO"},
@@ -28,7 +28,7 @@ func TestFieldSpecDecoder(t *testing.T) {
 			Doc:     "foo doc",
 			TypeRef: FieldTypeRef{Name: "string", Kind: FieldTypeIdent},
 		}
-		d := NewFieldSpecDecoder("", "env", "", false, true)
+		d := NewFieldSpecDecoder("", "env", "", "envPrefix", "envSeparator", "", "", false, true)
 		res, prefix := d.Decode(fs)
 		assertEqFieldInfo(t, FieldInfo{
 			Names: []string{"FOO", "BAR"},
@@ -42,7 +42,7 @@ func TestFieldSpecDecoder(t *testing.T) {
 			Tag:     `env:"FOO" default:"bar"`,
 			TypeRef: FieldTypeRef{Name: "string", Kind: FieldTypeIdent},
 		}
-		d := NewFieldSpecDecoder("", "env", "default", false, false)
+		d := NewFieldSpecDecoder("", "env", "default", "envPrefix", "envSeparator", "", "", false, false)
 		res, prefix := d.Decode(fs)
 		assertEqFieldInfo(t, FieldInfo{
 			Names:   []string{"FOO"},
@@ -57,7 +57,7 @@ func TestFieldSpecDecoder(t *testing.T) {
 			Tag:     `env:"FOO"`,
 			TypeRef: FieldTypeRef{Name: "string", Kind: FieldTypeIdent},
 		}
-		d := NewFieldSpecDecoder("PREFIX_", "env", "", false, false)
+		d := NewFieldSpecDecoder("PREFIX_", "env", "", "envPrefix", "envSeparator", "", "", false, false)
 		res, prefix := d.Decode(fs)
 		assertEqFieldInfo(t, FieldInfo{
 			Names: []string{"PREFIX_FOO"},
@@ -71,7 +71,7 @@ func TestFieldSpecDecoder(t *testing.T) {
 			Tag:     `env:"FOO"`,
 			TypeRef: FieldTypeRef{Name: "string", Kind: FieldTypeArray},
 		}
-		d := NewFieldSpecDecoder("", "env", "", false, false)
+		d := NewFieldSpecDecoder("", "env", "", "envPrefix", "envSeparator", "", "", false, false)
 		res, prefix := d.Decode(fs)
 		assertEqFieldInfo(t, FieldInfo{
 			Names:     []string{"FOO"},
@@ -86,7 +86,7 @@ func TestFieldSpecDecoder(t *testing.T) {
 			Tag:     `env:"FOO" envSeparator:";"`,
 			TypeRef: FieldTypeRef{Name: "string", Kind: FieldTypeArray},
 		}
-		d := NewFieldSpecDecoder("", "env", "", false, false)
+		d := NewFieldSpecDecoder("", "env", "", "envPrefix", "envSeparator", "", "", false, false)
 		res, prefix := d.Decode(fs)
 		assertEqFieldInfo(t, FieldInfo{
 			Names:     []string{"FOO"},
@@ -101,7 +101,7 @@ func TestFieldSpecDecoder(t *testing.T) {
 			Tag:     `env:"FOO"`,
 			TypeRef: FieldTypeRef{Name: "string", Kind: FieldTypeIdent},
 		}
-		d := NewFieldSpecDecoder("", "env", "", true, false)
+		d := NewFieldSpecDecoder("", "env", "", "envPrefix", "envSeparator", "", "", true, false)
 		res, prefix := d.Decode(fs)
 		assertEqFieldInfo(t, FieldInfo{
 			Names:    []string{"FOO"},
@@ -116,7 +116,7 @@ func TestFieldSpecDecoder(t *testing.T) {
 			Tag:     `env:"FOO,expand"`,
 			TypeRef: FieldTypeRef{Name: "string", Kind: FieldTypeIdent},
 		}
-		d := NewFieldSpecDecoder("", "env", "", false, false)
+		d := NewFieldSpecDecoder("", "env", "", "envPrefix", "envSeparator", "", "", false, false)
 		res, prefix := d.Decode(fs)
 		assertEqFieldInfo(t, FieldInfo{
 			Names:  []string{"FOO"},
@@ -131,7 +131,7 @@ func TestFieldSpecDecoder(t *testing.T) {
 			Tag:     `env:"FOO,notEmpty"`,
 			TypeRef: FieldTypeRef{Name: "string", Kind: FieldTypeIdent},
 		}
-		d := NewFieldSpecDecoder("", "env", "", false, false)
+		d := NewFieldSpecDecoder("", "env", "", "envPrefix", "envSeparator", "", "", false, false)
 		res, prefix := d.Decode(fs)
 		assertEqFieldInfo(t, FieldInfo{
 			Names:    []string{"FOO"},
@@ -147,7 +147,7 @@ func TestFieldSpecDecoder(t *testing.T) {
 			Tag:     `env:"FOO,file"`,
 			TypeRef: FieldTypeRef{Name: "string", Kind: FieldTypeIdent},
 		}
-		d := NewFieldSpecDecoder("", "env", "", false, false)
+		d := NewFieldSpecDecoder("", "env", "", "envPrefix", "envSeparator", "", "", false, false)
 		res, prefix := d.Decode(fs)
 		assertEqFieldInfo(t, FieldInfo{
 			Names:    []string{"FOO"},
@@ -162,7 +162,7 @@ func TestFieldSpecDecoder(t *testing.T) {
 			Tag:     `env:"FOO" envPrefix:"BAR_"`,
 			TypeRef: FieldTypeRef{Name: "string", Kind: FieldTypeIdent},
 		}
-		d := NewFieldSpecDecoder("X_", "env", "", false, false)
+		d := NewFieldSpecDecoder("X_", "env", "", "envPrefix", "envSeparator", "", "", false, false)
 		_, prefix := d.Decode(fs)
 		testutils.AssertError(t, prefix == "X_BAR_", "unexpected prefix: %s", prefix)
 	})

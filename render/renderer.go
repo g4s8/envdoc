@@ -41,10 +41,12 @@ type renderSection struct {
 }
 
 type renderItem struct {
-	EnvName      string
-	Doc          string
-	EnvDefault   string
-	EnvSeparator string
+	EnvName        string
+	Doc            string
+	Type           string
+	EnvDefault     string
+	EnvDescription string
+	EnvSeparator   string
 
 	Required bool
 	Expand   bool
@@ -101,15 +103,17 @@ func newRenderItem(item *types.EnvDocItem) renderItem {
 		children[i] = newRenderItem(child)
 	}
 	return renderItem{
-		EnvName:      item.Name,
-		Doc:          item.Doc,
-		EnvDefault:   item.Opts.Default,
-		EnvSeparator: item.Opts.Separator,
-		Required:     item.Opts.Required,
-		Expand:       item.Opts.Expand,
-		NonEmpty:     item.Opts.NonEmpty,
-		FromFile:     item.Opts.FromFile,
-		children:     children,
+		EnvName:        item.Name,
+		Doc:            item.Doc,
+		Type:           item.Type,
+		EnvDefault:     item.Opts.Default,
+		EnvDescription: item.Opts.Description,
+		EnvSeparator:   item.Opts.Separator,
+		Required:       item.Opts.Required,
+		Expand:         item.Opts.Expand,
+		NonEmpty:       item.Opts.NonEmpty,
+		FromFile:       item.Opts.FromFile,
+		children:       children,
 	}
 }
 

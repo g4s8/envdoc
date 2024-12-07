@@ -18,6 +18,10 @@ type ConverterOpts struct {
 	EnvPrefix       string
 	TagName         string
 	TagDefault      string
+	TagPrefix       string
+	TagSeparator    string
+	TagDescription  string
+	TagRequired     string
 	RequiredIfNoDef bool
 	UseFieldNames   bool
 }
@@ -83,7 +87,17 @@ func (c *Converter) DocItemsFromFields(res Resolver, prefix string, fields []*as
 }
 
 func (c *Converter) DocItemsFromField(resolver Resolver, prefix string, f *ast.FieldSpec) []*types.EnvDocItem {
-	dec := ast.NewFieldSpecDecoder(prefix, c.opts.TagName, c.opts.TagDefault, c.opts.RequiredIfNoDef, c.opts.UseFieldNames)
+	dec := ast.NewFieldSpecDecoder(
+		prefix,
+		c.opts.TagName,
+		c.opts.TagDefault,
+		c.opts.TagPrefix,
+		c.opts.TagSeparator,
+		c.opts.TagDescription,
+		c.opts.TagRequired,
+		c.opts.RequiredIfNoDef,
+		c.opts.UseFieldNames,
+	)
 	info, newPrefix := dec.Decode(f)
 	if newPrefix != "" {
 		prefix = newPrefix
@@ -115,18 +129,21 @@ func (c *Converter) DocItemsFromField(resolver Resolver, prefix string, f *ast.F
 
 	res := make([]*types.EnvDocItem, len(info.Names), len(info.Names)+1)
 	opts := types.EnvVarOptions{
-		Required:  info.Required,
-		Expand:    info.Expand,
-		NonEmpty:  info.NonEmpty,
-		FromFile:  info.FromFile,
-		Default:   info.Default,
-		Separator: info.Separator,
+		Required:    info.Required,
+		Expand:      info.Expand,
+		NonEmpty:    info.NonEmpty,
+		FromFile:    info.FromFile,
+		Default:     info.Default,
+		Separator:   info.Separator,
+		Description: info.Description,
 	}
+
 	for i, name := range info.Names {
 		res[i] = &types.EnvDocItem{
 			Name:     name,
 			Doc:      f.Doc,
 			Opts:     opts,
+			Type:     f.TypeRef.String(),
 			Children: children,
 		}
 		debug.Logf("\t# CONV: docItem %q (%d childrens)\n", name, len(children))

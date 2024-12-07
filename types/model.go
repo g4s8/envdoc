@@ -4,10 +4,11 @@ package types
 type OutFormat string
 
 const (
-	OutFormatMarkdown OutFormat = "markdown"
-	OutFormatHTML     OutFormat = "html"
-	OutFormatTxt      OutFormat = "plaintext"
-	OutFormatEnv      OutFormat = "dotenv"
+	OutFormatMarkdown      OutFormat = "markdown"
+	OutFormatMarkdownTable OutFormat = "markdown-table"
+	OutFormatHTML          OutFormat = "html"
+	OutFormatTxt           OutFormat = "plaintext"
+	OutFormatEnv           OutFormat = "dotenv"
 )
 
 // EnvDocItem is a documentation item for one environment variable.
@@ -18,6 +19,8 @@ type EnvDocItem struct {
 	Doc string
 	// Opts is a set of options for environment variable parsing.
 	Opts EnvVarOptions
+	// Type is a type of environment variable.
+	Type string
 	// Children is a list of child environment variables.
 	Children []*EnvDocItem
 }
@@ -45,4 +48,6 @@ type EnvVarOptions struct {
 	FromFile bool
 	// Default is a default value for the environment variable.
 	Default string
+	// Description is a description value for the environment variable.
+	Description string
 }

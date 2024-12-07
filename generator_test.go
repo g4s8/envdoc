@@ -10,10 +10,11 @@ import (
 	"strings"
 	"testing"
 
+	"golang.org/x/tools/txtar"
+
 	"github.com/g4s8/envdoc/ast"
 	"github.com/g4s8/envdoc/render"
 	"github.com/g4s8/envdoc/types"
-	"golang.org/x/tools/txtar"
 )
 
 func TestGenerator(t *testing.T) {
@@ -46,6 +47,8 @@ func TestGenerator(t *testing.T) {
 				EnvPrefix:     spec.EnvPrefix,
 				TagName:       "env",
 				TagDefault:    "envDefault",
+				TagPrefix:     "envPrefix",
+				TagSeparator:  "envSeparator",
 				UseFieldNames: spec.FieldNames,
 			})
 			rend := render.NewRenderer(types.OutFormatTxt, false)
@@ -87,10 +90,13 @@ func extractTxtar(t *testing.T, ar *txtar.Archive) string {
 	return dir
 }
 
-func runGenerator(t *testing.T, gen interface{ Generate(string, io.Writer) error }, spec GenTestSpec, dir string, out *bytes.Buffer) {
+func runGenerator(t *testing.T, gen interface {
+	Generate([]string, io.Writer) error
+}, spec GenTestSpec, dir string, out *bytes.Buffer,
+) {
 	t.Helper()
 
-	if err := gen.Generate(dir, out); err != nil {
+	if err := gen.Generate([]string{dir}, out); err != nil {
 		if spec.Success {
 			t.Fatalf("failed to generate: %s", err)
 		}
