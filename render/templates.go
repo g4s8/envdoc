@@ -2,6 +2,7 @@ package render
 
 import (
 	"embed"
+	"encoding/json"
 	"path"
 	"strings"
 
@@ -30,6 +31,10 @@ var tplFuncs = map[string]any{
 			sum += v
 		}
 		return sum
+	},
+	"marshal": func(v any) string {
+		a, _ := json.Marshal(v)
+		return string(a)
 	},
 }
 
