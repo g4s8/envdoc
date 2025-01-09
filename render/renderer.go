@@ -43,13 +43,13 @@ type renderSection struct {
 type renderItem struct {
 	EnvName      string `json:"env_name"`
 	Doc          string `json:"doc"`
-	EnvDefault   string `json:"env_default"`
-	EnvSeparator string `json:"env_separator"`
+	EnvDefault   string `json:"env_default,omitempty"`
+	EnvSeparator string `json:"env_separator,omitempty"`
 
-	Required bool `json:"required"`
-	Expand   bool `json:"expand"`
-	NonEmpty bool `json:"non_empty"`
-	FromFile bool `json:"from_file"`
+	Required bool `json:"required,omitempty"`
+	Expand   bool `json:"expand,omitempty"`
+	NonEmpty bool `json:"non_empty,omitempty"`
+	FromFile bool `json:"from_file,omitempty"`
 
 	children []renderItem
 	Indent   int `json:"-"`

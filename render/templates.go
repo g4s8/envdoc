@@ -32,8 +32,8 @@ var tplFuncs = map[string]any{
 		}
 		return sum
 	},
-	"marshal": func(v any) (string, error) {
-		a, err := json.Marshal(v)
+	"marshalIndent": func(v any) (string, error) {
+		a, err := json.MarshalIndent(v, "", "  ")
 		return string(a), err
 	},
 }
