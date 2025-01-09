@@ -1,0 +1,23 @@
+[
+  {
+    "env_name": "HOST",
+    "doc": "Hosts name of hosts to listen on.",
+    "env_separator": ";",
+    "required": true
+  },
+  {
+    "env_name": "PORT",
+    "doc": "Port to listen on.",
+    "required": true,
+    "non_empty": true
+  },
+  {
+    "env_name": "DEBUG",
+    "doc": "Debug mode enabled.",
+    "env_default": "false"
+  },
+  {
+    "env_name": "PREFIX",
+    "doc": "Prefix for something."
+  }
+]

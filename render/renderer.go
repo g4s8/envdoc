@@ -41,18 +41,18 @@ type renderSection struct {
 }
 
 type renderItem struct {
-	EnvName      string
-	Doc          string
-	EnvDefault   string
-	EnvSeparator string
+	EnvName      string `json:"env_name"`
+	Doc          string `json:"doc"`
+	EnvDefault   string `json:"env_default,omitempty"`
+	EnvSeparator string `json:"env_separator,omitempty"`
 
-	Required bool
-	Expand   bool
-	NonEmpty bool
-	FromFile bool
+	Required bool `json:"required,omitempty"`
+	Expand   bool `json:"expand,omitempty"`
+	NonEmpty bool `json:"non_empty,omitempty"`
+	FromFile bool `json:"from_file,omitempty"`
 
 	children []renderItem
-	Indent   int
+	Indent   int `json:"-"`
 }
 
 func (i renderItem) Children(indentInc int) []renderItem {

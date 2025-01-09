@@ -48,7 +48,7 @@ type Config struct {
  * `-files` (glob string, *optional*) - File glob pattern to specify file names to process. Default is the single file with `go:generate`.
  * `-types` (glob string, *optional*) - Type glob pattern for type names to process. If not specified, the next type after `go:generate` is used.
  * `-output` (path string, **required**) - Output file name for generated documentation.
- * `-format` (`enum(markdown, plaintext, html, dotenv)` string, *optional*) - Output format for documentation.  Default is `markdown`.
+ * `-format` (`enum(markdown, plaintext, html, dotenv, json)` string, *optional*) - Output format for documentation.  Default is `markdown`.
  * `-no-styles` (`bool`, *optional*) - If true, CSS styles will not be included for `html` format.
  * `-env-prefix` (`string`, *optional*) - Sets additional global prefix for all environment variables.
  * `-tag-name` (string, *optional*, default: `env`) - Use custom tag name instead of `env`.

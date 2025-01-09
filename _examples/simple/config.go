@@ -8,6 +8,7 @@ package main
 //go:generate go run ../../ -output doc.md -format markdown
 //go:generate go run ../../ -output doc.html -format html
 //go:generate go run ../../ -output doc.env -format dotenv
+//go:generate go run ../../ -output doc.json -format json
 type Config struct {
 	// Hosts name of hosts to listen on.
 	Hosts []string `env:"HOST,required", envSeparator:";"`

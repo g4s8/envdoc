@@ -8,6 +8,7 @@ const (
 	OutFormatHTML     OutFormat = "html"
 	OutFormatTxt      OutFormat = "plaintext"
 	OutFormatEnv      OutFormat = "dotenv"
+	OutFormatJSON     OutFormat = "json"
 )
 
 // EnvDocItem is a documentation item for one environment variable.

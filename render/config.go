@@ -65,4 +65,8 @@ var configs = map[types.OutFormat]renderConfig{
 		},
 		tmpl: newTmplText("dotenv.tmpl"),
 	},
+	types.OutFormatJSON: {
+		Item: renderItemConfig{},
+		tmpl: newTmplText("json.tmpl"),
+	},
 }
