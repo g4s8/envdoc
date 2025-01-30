@@ -6,7 +6,10 @@ name: CI
     branches: ["master"]
 jobs:
   check:
-    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-go@v3
@@ -21,7 +24,7 @@ jobs:
       - name: Build
         run: go build -v ./...
       - name: Test
-        run: go test -v ./...
+        run: go test -v "-test.v=true" ./...
       - name: Check examples
         run: |
           ./_examples/clean.sh

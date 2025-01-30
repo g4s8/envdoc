@@ -5,6 +5,7 @@ import (
 	"go/doc"
 	"go/parser"
 	"go/token"
+	"testing"
 )
 
 type T interface {
@@ -98,10 +99,16 @@ func (h *testFileHandler) onFile(f *FileSpec) interface {
 }
 
 //nolint:staticcheck
-func testFileVisitor(fset *token.FileSet, pkg *ast.Package, fileName string,
+func testFileVisitor(t *testing.T,
+	fset *token.FileSet, pkg *ast.Package, fileName string,
 	docs *doc.Package,
 ) (*testFileHandler, *fileVisitor, *ast.File) {
+	t.Helper()
+
 	fileAst := pkg.Files[fileName]
+	if fileAst == nil {
+		t.Fatalf("file %q not found", fileName)
+	}
 	fileTkn := fset.File(fileAst.Pos())
 	fileSpec := &FileSpec{
 		Name: fileTkn.Name(),
