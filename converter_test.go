@@ -18,7 +18,7 @@ func TestConvertDocItems(t *testing.T) {
 	opts := opts
 	opts.UseFieldNames = true
 
-	c := NewConverter(opts)
+	c := NewConverter(types.TargetTypeCaarlos0, opts)
 	fieldValues := []*ast.FieldSpec{
 		{
 			Names: []string{"Field1"},
@@ -294,7 +294,7 @@ func TestConverterScopes(t *testing.T) {
 			},
 		},
 	}
-	c := NewConverter(opts)
+	c := NewConverter(types.TargetTypeCaarlos0, opts)
 	resolver := resolver.NewTypeResolver()
 	scopes := c.ScopesFromFiles(resolver, files)
 	expect := []*types.EnvScope{
@@ -331,7 +331,7 @@ func TestConverterFailedToResolve(t *testing.T) {
 		},
 		Tag: `envPrefix:"BAR_"`,
 	}
-	c := NewConverter(opts)
+	c := NewConverter(types.TargetTypeCaarlos0, opts)
 	resolver := resolver.NewTypeResolver()
 	item := c.DocItemsFromField(resolver, "", field)
 	if len(item) != 0 {

@@ -25,7 +25,7 @@ func main() {
 	parser := ast.NewParser(cfg.FileGlob, cfg.TypeGlob,
 		ast.WithDebug(cfg.Debug),
 		ast.WithExecConfig(cfg.ExecFile, cfg.ExecLine))
-	converter := NewConverter(ConverterOpts{
+	converter := NewConverter(cfg.Target, ConverterOpts{
 		EnvPrefix:       cfg.EnvPrefix,
 		TagName:         cfg.TagName,
 		TagDefault:      cfg.TagDefault,
