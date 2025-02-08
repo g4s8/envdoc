@@ -30,6 +30,8 @@ type Config struct {
 	NoStyles bool
 	// FieldNames flag enables field names usage intead of `env` tag.
 	FieldNames bool
+	// Target is the target type
+	Target types.TargetType
 
 	// TagName sets custom tag name, `env` by default.
 	TagName string
@@ -53,6 +55,8 @@ func (c *Config) parseFlags(f *flag.FlagSet) error {
 	f.StringVar(&c.Dir, "dir", "", "Dir to search for files, default is the file dir with go:generate command")
 	f.StringVar(&c.FileGlob, "files", "", "FileGlob to filter by file name")
 	f.StringVar(&c.TypeGlob, "types", "", "Type glob to filter by type name")
+	var target string
+	f.StringVar(&target, "target", "caarlos0", "Target type, default `caarlos0`")
 	// output flags
 	f.StringVar(&c.OutFile, "output", "", "Output file path")
 	f.StringVar((*string)(&c.OutFormat), "format", "markdown", "Output format, default `markdown`")
@@ -88,6 +92,12 @@ func (c *Config) parseFlags(f *flag.FlagSet) error {
 	if typeName != "" && c.TypeGlob != "" {
 		return errors.New("flags -type and -types can't be used together")
 	}
+
+	targetType, err := types.ParseTargetType(target)
+	if err != nil {
+		return fmt.Errorf("parse target type: %w", err)
+	}
+	c.Target = targetType
 
 	// check for deprecated flags
 	var deprecatedWarning strings.Builder

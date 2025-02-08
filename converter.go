@@ -23,12 +23,14 @@ type ConverterOpts struct {
 }
 
 type Converter struct {
-	opts ConverterOpts
+	target types.TargetType
+	opts   ConverterOpts
 }
 
-func NewConverter(opts ConverterOpts) *Converter {
+func NewConverter(target types.TargetType, opts ConverterOpts) *Converter {
 	return &Converter{
-		opts: opts,
+		target: target,
+		opts:   opts,
 	}
 }
 
@@ -83,7 +85,13 @@ func (c *Converter) DocItemsFromFields(res Resolver, prefix string, fields []*as
 }
 
 func (c *Converter) DocItemsFromField(resolver Resolver, prefix string, f *ast.FieldSpec) []*types.EnvDocItem {
-	dec := ast.NewFieldSpecDecoder(prefix, c.opts.TagName, c.opts.TagDefault, c.opts.RequiredIfNoDef, c.opts.UseFieldNames)
+	dec := NewFieldDecoder(c.target, FieldDecoderOpts{
+		EnvPrefix:       prefix,
+		TagName:         c.opts.TagName,
+		TagDefault:      c.opts.TagDefault,
+		RequiredIfNoDef: c.opts.RequiredIfNoDef,
+		UseFieldNames:   c.opts.UseFieldNames,
+	})
 	info, newPrefix := dec.Decode(f)
 	if newPrefix != "" {
 		prefix = newPrefix

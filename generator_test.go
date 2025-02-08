@@ -42,7 +42,7 @@ func TestGenerator(t *testing.T) {
 			dir := extractTxtar(t, ar)
 
 			p := ast.NewParser("*", spec.TypeName)
-			conv := NewConverter(ConverterOpts{
+			conv := NewConverter(types.TargetTypeCaarlos0, ConverterOpts{
 				EnvPrefix:     spec.EnvPrefix,
 				TagName:       "env",
 				TagDefault:    "envDefault",

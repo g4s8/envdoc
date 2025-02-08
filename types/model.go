@@ -1,5 +1,7 @@
 package types
 
+import "fmt"
+
 // OutFormat is an output format for the documentation.
 type OutFormat string
 
@@ -46,4 +48,25 @@ type EnvVarOptions struct {
 	FromFile bool
 	// Default is a default value for the environment variable.
 	Default string
+}
+
+// TargetType is an env library target.
+//
+//go:generate stringer -type=TargetType
+type TargetType int
+
+const (
+	TargetTypeCaarlos0 TargetType = iota
+	TargetTypeCleanenv
+)
+
+func ParseTargetType(s string) (TargetType, error) {
+	switch s {
+	case "caarlos0":
+		return TargetTypeCaarlos0, nil
+	case "cleanenv":
+		return TargetTypeCleanenv, nil
+	default:
+		return 0, fmt.Errorf("unknown target type: %s", s)
+	}
 }

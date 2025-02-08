@@ -47,6 +47,7 @@ type Config struct {
  * `-dir` (path string, *optional*) - Specify the directory to search for files. Default is the file dir with `go:generate` command.
  * `-files` (glob string, *optional*) - File glob pattern to specify file names to process. Default is the single file with `go:generate`.
  * `-types` (glob string, *optional*) - Type glob pattern for type names to process. If not specified, the next type after `go:generate` is used.
+ * `-target` (`enum(caarlos0, cleanenv)` string, optional, default `caarlos0`) - Set env library target.
  * `-output` (path string, **required**) - Output file name for generated documentation.
  * `-format` (`enum(markdown, plaintext, html, dotenv, json)` string, *optional*) - Output format for documentation.  Default is `markdown`.
  * `-no-styles` (`bool`, *optional*) - If true, CSS styles will not be included for `html` format.
@@ -96,6 +97,7 @@ See [_examples](./_examples/) dir for more details.
 
 This tool is compatible with
 - full compatibility: [caarlos0/env](https://github.com/caarlos0/env)
+- full compatibility: [ilyakaznacheev/cleanenv](https://github.com/ilyakaznacheev/cleanenv)
 - partial compatibility: [sethvargo/go-envconfig](https://github.com/sethvargo/go-envconfig)
 - partial compatibility: [joeshaw/envdecode](https://github.com/joeshaw/envdecode)
 
