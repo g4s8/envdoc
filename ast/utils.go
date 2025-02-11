@@ -140,3 +140,13 @@ func resolveTypeDocs(docs *doc.Package, t *ast.TypeSpec) string {
 	}
 	return docStr
 }
+
+func getPkgFile(pkg *ast.Package, name string) *ast.File {
+	for n, f := range pkg.Files {
+		//  "./\\cfg\\config.go" to "./cfg/config.go" for windows
+		if strings.ReplaceAll(n, "/\\", "/") == name {
+			return f
+		}
+	}
+	return nil
+}

@@ -3,7 +3,6 @@ package ast
 import (
 	"fmt"
 	"os"
-	"path"
 	"path/filepath"
 	"strings"
 	"testing"
@@ -14,7 +13,7 @@ import (
 )
 
 func TestDataParser(t *testing.T) {
-	files, err := filepath.Glob("testdata/parser/*.txtar")
+	files, err := filepath.Glob(filepath.FromSlash("testdata/parser/*.txtar"))
 	if err != nil {
 		t.Fatalf("failed to list testdata files: %s", err)
 	}
@@ -27,17 +26,17 @@ func TestDataParser(t *testing.T) {
 		file := file
 
 		t.Run(filepath.Base(file), func(t *testing.T) {
-			t.Parallel()
+			// TODO: enable parallel tests after fixing #43
+			// t.Parallel()
 
+			t.Logf("Parse txtar file: %q", file)
 			ar, err := txtar.ParseFile(file)
 			if err != nil {
 				t.Fatalf("failed to parse txtar file: %s", err)
 			}
 
 			dir := t.TempDir()
-			if err := extractTxtar(ar, dir); err != nil {
-				t.Fatalf("failed to extract txtar: %s", err)
-			}
+			extractTxtar(t, ar, dir)
 
 			tc := readTestCase(t, dir)
 			testParser(t, dir, tc)
@@ -305,25 +304,26 @@ func checkTypeRef(t *testing.T, prefix string, expect, res *FieldTypeRef) {
 	}
 }
 
-//---
+func extractTxtar(t *testing.T, ar *txtar.Archive, dir string) {
+	t.Helper()
 
-func extractTxtar(ar *txtar.Archive, dir string) error {
+	t.Logf("Extracting txtar to %q", dir)
 	for _, file := range ar.Files {
 		name := filepath.Join(dir, file.Name)
+		t.Logf("Extracting %q to %q", file.Name, name)
 		if err := os.MkdirAll(filepath.Dir(name), 0o777); err != nil {
-			return err
+			t.Fatalf("failed to create dir: %s", err)
 		}
 		if err := os.WriteFile(name, file.Data, 0o666); err != nil {
-			return err
+			t.Fatalf("failed to write file: %s", err)
 		}
 	}
-	return nil
 }
 
 func readTestCase(t *testing.T, dir string) parserTestCase {
 	t.Helper()
 
-	testCaseFile, err := os.Open(path.Join(dir, "testcase.yaml"))
+	testCaseFile, err := os.Open(filepath.Join(dir, "testcase.yaml"))
 	if err != nil {
 		t.Fatalf("failed to open testcase file: %s", err)
 	}
