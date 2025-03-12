@@ -1,8 +1,6 @@
 module github.com/g4s8/envdoc
 
-go 1.22.0
-
-toolchain go1.23.0
+go 1.24.1
 
 require (
 	github.com/gobwas/glob v0.2.3

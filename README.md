@@ -16,9 +16,32 @@ For `docenv` linter see [docenv/README.md](./docenv/README.md).
 
 ## Installation
 
+### Go >= 1.24
+
+Add `envdoc` tool and install it:
+```bash
+go get -tool github.com/g4s8/envdoc@latest
+go install tool
+```
+
+Add `go:generate`:
+```go
+//go:generate envdoc -output config.md
+type Config struct {
+    // ...
+}
+```
+
+Generate:
+```bash
+go generate ./...
+```
+
+### Before Go 1.24
+
 Run it with `go run` in source file:
 ```go
-//go:generate go run github.com/g4s8/envdoc@latest -output environments.md -type Config
+//go:generate go run github.com/g4s8/envdoc@latest -output environments.md
 type Config struct {
     // ...
 }
