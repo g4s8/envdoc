@@ -24,8 +24,6 @@ func TestDataParser(t *testing.T) {
 	}
 
 	for _, file := range files {
-		file := file
-
 		t.Run(filepath.Base(file), func(t *testing.T) {
 			t.Parallel()
 
@@ -95,6 +93,22 @@ func (field *parserExpectedField) toAST(t *testing.T) *FieldSpec {
 	}
 }
 
+type parsedExpectedImport struct {
+	Name string `yaml:"name"`
+	Path string `yaml:"path"`
+}
+
+func (imp *parsedExpectedImport) toAST(t *testing.T) *ImportSpec {
+	t.Helper()
+	if imp == nil {
+		return nil
+	}
+	return &ImportSpec{
+		Name: imp.Name,
+		Path: imp.Path,
+	}
+}
+
 type parserExpectedType struct {
 	Name     string                 `yaml:"name"`
 	Exported bool                   `yaml:"export"`
@@ -118,24 +132,31 @@ func (typ *parserExpectedType) toAST(t *testing.T) *TypeSpec {
 }
 
 type parserExpectedFile struct {
-	Name     string                `yaml:"name"`
-	Package  string                `yaml:"pkg"`
-	Exported bool                  `yaml:"export"`
-	Types    []*parserExpectedType `yaml:"types"`
+	Name     string                  `yaml:"name"`
+	Package  string                  `yaml:"pkg"`
+	Exported bool                    `yaml:"export"`
+	Imports  []*parsedExpectedImport `yaml:"imports"`
+	Types    []*parserExpectedType   `yaml:"types"`
 }
 
 func (file *parserExpectedFile) toAST(t *testing.T) *FileSpec {
 	t.Helper()
+
+	imports := make([]*ImportSpec, len(file.Imports))
+	for i, imp := range file.Imports {
+		imports[i] = imp.toAST(t)
+	}
 
 	types := make([]*TypeSpec, len(file.Types))
 	for i, typ := range file.Types {
 		types[i] = typ.toAST(t)
 	}
 	return &FileSpec{
-		Name:   file.Name,
-		Pkg:    file.Package,
-		Export: file.Exported,
-		Types:  types,
+		Name:    file.Name,
+		Pkg:     file.Package,
+		Export:  file.Exported,
+		Imports: imports,
+		Types:   types,
 	}
 }
 
@@ -207,7 +228,32 @@ func checkFile(t *testing.T, prefix string, expect, res *FileSpec) {
 	if expect.Export != res.Export {
 		t.Errorf("%s: Expected export %t, got %t", prefix, expect.Export, res.Export)
 	}
+	chechImports(t, prefix+"/imports", expect.Imports, res.Imports)
 	checkTypes(t, prefix+"/types", expect.Types, res.Types)
+}
+
+func chechImports(t *testing.T, prefix string, expect, res []*ImportSpec) {
+	t.Helper()
+
+	if len(expect) != len(res) {
+		t.Errorf("%s: Expected %d imports, got %d", prefix, len(expect), len(res))
+		for i, imp := range expect {
+			t.Logf("Expected[%d]: %s", i, imp)
+		}
+		for i, imp := range res {
+			t.Logf("Got[%d]: %s", i, imp)
+		}
+		return
+	}
+	for i, imp := range expect {
+		prefix := fmt.Sprintf("%s/%d", prefix, i)
+		if expect[i].Name != res[i].Name {
+			t.Errorf("%s: Expected import name %s, got %s", prefix, imp.Name, res[i].Name)
+		}
+		if expect[i].Path != res[i].Path {
+			t.Errorf("%s: Expected import path %s, got %s", prefix, imp.Path, res[i].Path)
+		}
+	}
 }
 
 func checkTypes(t *testing.T, prefix string, expect, res []*TypeSpec) {

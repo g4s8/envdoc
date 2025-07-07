@@ -75,6 +75,10 @@ type testTypeHandler struct {
 	f *FileSpec
 }
 
+func (h *testTypeHandler) addImport(i *ImportSpec) {
+	h.f.Imports = append(h.f.Imports, i)
+}
+
 func (h *testTypeHandler) onType(t *TypeSpec) typeVisitorHandler {
 	h.f.Types = append(h.f.Types, t)
 	return &testFieldHandler{t: t}
@@ -92,6 +96,7 @@ type testFileHandler struct {
 func (h *testFileHandler) onFile(f *FileSpec) interface {
 	TypeHandler
 	CommentHandler
+	ImportHandler
 } {
 	h.files = append(h.files, f)
 	return &testTypeHandler{f: f}

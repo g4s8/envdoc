@@ -3,7 +3,7 @@ Multiple files.
 -- cfg/config.go --
 package cfg
 
-import "github.com/smallstep/certificates/db"
+import dbconfig "github.com/foo/bar/db"
 
 // Config for the application.
 type Config struct {
@@ -13,7 +13,7 @@ type Config struct {
 	ServerConfig `envPrefix:"SERVER_"`
 
 	// Database config.
-	Database db.Config `envPrefix:"DB_"`
+	Database dbonfig.Config `envPrefix:"DB_"`
 }
 
 -- cfg/server.go --
@@ -51,6 +51,9 @@ testcase:
   - name: ./cfg/config.go
     pkg: cfg
     export: true
+    imports:
+    - name: "dbconfig"
+      path: "github.com/foo/bar/db"
     types:
     - name: 'Config'
       export: true

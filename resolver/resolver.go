@@ -5,11 +5,16 @@ import (
 	"io"
 
 	"github.com/g4s8/envdoc/ast"
+	"github.com/g4s8/envdoc/debug"
 )
 
 type typeQualifier struct {
 	pkg  string
 	name string
+}
+
+func (q typeQualifier) String() string {
+	return fmt.Sprintf("%s.%s", q.pkg, q.name)
 }
 
 type TypeResolver struct {
@@ -28,8 +33,21 @@ func (r *TypeResolver) AddTypes(pkg string, types []*ast.TypeSpec) {
 	}
 }
 
-func (r *TypeResolver) Resolve(ref *ast.FieldTypeRef) *ast.TypeSpec {
-	return r.types[typeQualifier{pkg: ref.Pkg, name: ref.Name}]
+func (r *TypeResolver) Resolve(f *ast.FileSpec, ref *ast.FieldTypeRef) *ast.TypeSpec {
+	pkg := ref.Pkg
+	if pkg != "" {
+		for _, alias := range f.Imports {
+			if alias.Name == pkg {
+				pkg = alias.PathName()
+				break
+			}
+		}
+	}
+	tq := typeQualifier{pkg: pkg, name: ref.Name}
+	ts := r.types[tq]
+	debug.Logf("# RES: ref=%q tq=%q ts=%q",
+		ref, tq, ts)
+	return ts
 }
 
 func ResolveAllTypes(files []*ast.FileSpec) *TypeResolver {

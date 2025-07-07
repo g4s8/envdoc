@@ -90,6 +90,7 @@ func (c *RootCollector) Files() []*FileSpec {
 func (c *RootCollector) onFile(f *FileSpec) interface {
 	TypeHandler
 	CommentHandler
+	ImportHandler
 } {
 	// convert file name to relative path using baseDir
 	// if baseDir is empty or `.` then the file name is used as is.
@@ -107,6 +108,11 @@ func (c *RootCollector) onFile(f *FileSpec) interface {
 	debug.Logf("# COL: file %q, export=%t\n", f.Name, f.Export)
 	c.files = append(c.files, f)
 	return c
+}
+
+func (c *RootCollector) addImport(spec *ImportSpec) {
+	currentFile := c.currentFile()
+	currentFile.Imports = append(currentFile.Imports, spec)
 }
 
 func (c *RootCollector) currentFile() *FileSpec {
