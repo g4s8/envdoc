@@ -32,6 +32,8 @@ testcase:
   - name: src.go
     pkg: testdata
     export: true
+    imports:
+    - path: "time"
     types:
     - name: ServerConfig
       export: false

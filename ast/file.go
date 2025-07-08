@@ -5,11 +5,14 @@ import (
 	"go/doc"
 	"go/token"
 	"strings"
+
+	"github.com/g4s8/envdoc/debug"
 )
 
 type fileVisitorHandler = interface {
 	TypeHandler
 	CommentHandler
+	ImportHandler
 }
 
 type fileVisitor struct {
@@ -31,6 +34,17 @@ func newFileVisitor(fset *token.FileSet, file *ast.File, docs *doc.Package, h fi
 func (v *fileVisitor) Visit(n ast.Node) ast.Visitor {
 	debugNode("file", n)
 	switch t := n.(type) {
+	case *ast.ImportSpec:
+		var spec ImportSpec
+		if n := t.Name; n != nil {
+			spec.Name = n.Name
+		}
+		path := strings.TrimPrefix(t.Path.Value, "\"")
+		path = strings.TrimSuffix(path, "\"")
+		spec.Path = path
+		debug.Logf("# V: import %q, name=%q\n", spec.Path, spec.Name)
+		v.h.addImport(&spec)
+		return nil
 	case *ast.Comment:
 		line := findCommentLine(t, v.fset, v.file)
 		text := strings.TrimPrefix(t.Text, "//")

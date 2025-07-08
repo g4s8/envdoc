@@ -6,11 +6,16 @@ import (
 )
 
 type fileHandler struct {
-	types []*TypeSpec
-	typeH *typeHandler
+	types   []*TypeSpec
+	imports []*ImportSpec
+	typeH   *typeHandler
 }
 
 func (h *fileHandler) setComment(_ *CommentSpec) {
+}
+
+func (h *fileHandler) addImport(i *ImportSpec) {
+	h.imports = append(h.imports, i)
 }
 
 func (h *fileHandler) onType(t *TypeSpec) typeVisitorHandler {

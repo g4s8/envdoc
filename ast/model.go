@@ -16,10 +16,11 @@ const (
 
 type (
 	FileSpec struct {
-		Name   string
-		Pkg    string
-		Types  []*TypeSpec
-		Export bool // tru if file should be exported
+		Name    string
+		Pkg     string
+		Imports []*ImportSpec
+		Types   []*TypeSpec
+		Export  bool // tru if file should be exported
 	}
 
 	TypeSpec struct {
@@ -51,6 +52,11 @@ type (
 		Text string
 		Line int
 	}
+
+	ImportSpec struct {
+		Name string // aka alias
+		Path string
+	}
 )
 
 type (
@@ -77,7 +83,12 @@ type (
 		onFile(*FileSpec) interface {
 			TypeHandler
 			CommentHandler
+			ImportHandler
 		}
+	}
+
+	ImportHandler interface {
+		addImport(*ImportSpec)
 	}
 )
 
@@ -137,4 +148,16 @@ func (ts *TypeSpec) String() string {
 
 func (fs *FieldSpec) String() string {
 	return strings.Join(fs.Names, ", ")
+}
+
+func (i *ImportSpec) PathName() string {
+	// convert path `github.com/g4s8/envdoc/ast` to `ast`
+	if i.Path == "" {
+		return i.Path
+	}
+	parts := strings.Split(i.Path, "/")
+	if len(parts) == 0 {
+		return i.Path
+	}
+	return parts[len(parts)-1]
 }

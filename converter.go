@@ -11,7 +11,7 @@ import (
 )
 
 type Resolver interface {
-	Resolve(ref *ast.FieldTypeRef) *ast.TypeSpec
+	Resolve(f *ast.FileSpec, ref *ast.FieldTypeRef) *ast.TypeSpec
 }
 
 type ConverterOpts struct {
@@ -46,23 +46,23 @@ func (c *Converter) ScopesFromFiles(res Resolver, files []*ast.FileSpec) []*type
 				debug.Logf("# CONV: skip type %q\n", t.Name)
 				continue
 			}
-			scopes = append(scopes, c.ScopeFromType(res, t))
+			scopes = append(scopes, c.ScopeFromType(res, f, t))
 		}
 	}
 	return scopes
 }
 
-func (c *Converter) ScopeFromType(res Resolver, t *ast.TypeSpec) *types.EnvScope {
+func (c *Converter) ScopeFromType(res Resolver, file *ast.FileSpec, t *ast.TypeSpec) *types.EnvScope {
 	scope := &types.EnvScope{
 		Name: t.Name,
 		Doc:  t.Doc,
 	}
-	scope.Vars = c.DocItemsFromFields(res, c.opts.EnvPrefix, t.Fields)
+	scope.Vars = c.DocItemsFromFields(res, file, c.opts.EnvPrefix, t.Fields)
 	debug.Logf("# CONV: found scope %q\n", scope.Name)
 	return scope
 }
 
-func (c *Converter) DocItemsFromFields(res Resolver, prefix string, fields []*ast.FieldSpec) []*types.EnvDocItem {
+func (c *Converter) DocItemsFromFields(res Resolver, file *ast.FileSpec, prefix string, fields []*ast.FieldSpec) []*types.EnvDocItem {
 	var items []*types.EnvDocItem
 	for _, f := range fields {
 		debug.Logf("\t# CONV: field [%s] type=%s flen=%d\n",
@@ -71,20 +71,20 @@ func (c *Converter) DocItemsFromFields(res Resolver, prefix string, fields []*as
 			// embedded field
 			if len(f.Fields) == 0 {
 				// resolve embedded types
-				tpe := res.Resolve(&f.TypeRef)
+				tpe := res.Resolve(file, &f.TypeRef)
 				if tpe != nil {
 					f.Fields = tpe.Fields
 				}
 			}
-			items = append(items, c.DocItemsFromFields(res, prefix, f.Fields)...)
+			items = append(items, c.DocItemsFromFields(res, file, prefix, f.Fields)...)
 			continue
 		}
-		items = append(items, c.DocItemsFromField(res, prefix, f)...)
+		items = append(items, c.DocItemsFromField(res, file, prefix, f)...)
 	}
 	return items
 }
 
-func (c *Converter) DocItemsFromField(resolver Resolver, prefix string, f *ast.FieldSpec) []*types.EnvDocItem {
+func (c *Converter) DocItemsFromField(resolver Resolver, file *ast.FileSpec, prefix string, f *ast.FieldSpec) []*types.EnvDocItem {
 	dec := NewFieldDecoder(c.target, FieldDecoderOpts{
 		EnvPrefix:       prefix,
 		TagName:         c.opts.TagName,
@@ -100,13 +100,13 @@ func (c *Converter) DocItemsFromField(resolver Resolver, prefix string, f *ast.F
 	var children []*types.EnvDocItem
 	switch f.TypeRef.Kind {
 	case ast.FieldTypeStruct:
-		children = c.DocItemsFromFields(resolver, prefix, f.Fields)
+		children = c.DocItemsFromFields(resolver, file, prefix, f.Fields)
 		debug.Logf("\t# CONV: struct %q (%d childrens)\n", f.TypeRef.String(), len(children))
 	case ast.FieldTypeSelector, ast.FieldTypeIdent, ast.FieldTypeArray, ast.FieldTypePtr:
 		if f.TypeRef.IsBuiltIn() {
 			break
 		}
-		tpe := resolver.Resolve(&f.TypeRef)
+		tpe := resolver.Resolve(file, &f.TypeRef)
 		debug.Logf("\t# CONV: resolve %q -> %v\n", f.TypeRef.String(), tpe)
 		if tpe == nil {
 			if newPrefix != "" {
@@ -117,7 +117,7 @@ func (c *Converter) DocItemsFromField(resolver Resolver, prefix string, f *ast.F
 			}
 			break
 		}
-		children = c.DocItemsFromFields(resolver, prefix, tpe.Fields)
+		children = c.DocItemsFromFields(resolver, file, prefix, tpe.Fields)
 		debug.Logf("\t# CONV: selector %q (%d childrens)\n", f.TypeRef.String(), len(children))
 	}
 

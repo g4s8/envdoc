@@ -108,6 +108,8 @@ func debugNode(src string, n ast.Node) {
 	switch t := n.(type) {
 	case *ast.File:
 		debug.Logf("# AST(%s): File pkg=%q\n", src, t.Name.Name)
+	case *ast.ImportSpec:
+		debug.Logf("# AST(%s): Import %s %s\n", src, t.Name, t.Path.Value)
 	//nolint:staticcheck
 	case *ast.Package:
 		debug.Logf("# AST(%s): Package %s\n", src, t.Name)
