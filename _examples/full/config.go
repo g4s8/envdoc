@@ -24,6 +24,9 @@ type ComplexConfig struct {
 
 	Comment string `env:"COMMENT,required" envDefault:"This is a comment."` // Just a comment.
 
+	// AllowMethods is a list of allowed methods.
+	AllowMethods string `env:"ALLOW_METHODS" envDefault:"GET, POST, PUT, PATCH, DELETE, OPTIONS"`
+
 	// Anon is an anonymous structure.
 	Anon struct {
 		// User is a user name.

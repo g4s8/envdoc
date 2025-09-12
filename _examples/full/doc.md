@@ -12,8 +12,9 @@ It is trying to cover all the possible cases.
  - `SECRET_KEY` (**required**) - Key is a secret key.
  - `SECRET_VAL` (**required**, non-empty) - SecretVal is a secret value.
  - `HOSTS` (separated by `:`, **required**) - Hosts is a list of hosts.
- - `WORDS` (comma-separated, from-file, default: `one`) - Words is just a list of words.
+ - `WORDS` (comma-separated, from-file, default: `one,two,three`) - Words is just a list of words.
  - `COMMENT` (**required**, default: `This is a comment.`) - Just a comment.
+ - `ALLOW_METHODS` (default: `GET, POST, PUT, PATCH, DELETE, OPTIONS`) - AllowMethods is a list of allowed methods.
  - `ANON_USER` (**required**) - User is a user name.
  - `ANON_PASS` (**required**) - Pass is a password.
 
