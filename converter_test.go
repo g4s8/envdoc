@@ -44,7 +44,7 @@ func TestConvertDocItems(t *testing.T) {
 				Kind: ast.FieldTypeIdent,
 			},
 			Doc: "Field with default",
-			Tag: `env:"FIELD_DEF" envDefault:"envdef"`,
+			Tag: `env:"FIELD_DEF" envDefault:"envdef,envdef2"`,
 		},
 		{
 			Names: []string{"FieldArr"},
@@ -168,7 +168,7 @@ func TestConvertDocItems(t *testing.T) {
 			Name: "FIELD_DEF",
 			Doc:  "Field with default",
 			Opts: types.EnvVarOptions{
-				Default: "envdef",
+				Default: "envdef,envdef2",
 			},
 		},
 		{

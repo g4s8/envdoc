@@ -77,6 +77,11 @@ func TestFieldTagValues(t *testing.T) {
 			expect: []string{"password"},
 		},
 		{
+			tag:    `envDefault:"GET, POST, PUT, PATCH, DELETE, OPTIONS"`,
+			key:    "envDefault",
+			expect: []string{"GET", " POST", " PUT", " PATCH", " DELETE", " OPTIONS"},
+		},
+		{
 			tag: `jsonpassword`,
 			key: "json",
 			err: true,

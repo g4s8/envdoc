@@ -1,6 +1,8 @@
 package main
 
 import (
+	"strings"
+
 	"github.com/g4s8/envdoc/ast"
 	"github.com/g4s8/envdoc/tags"
 	"github.com/g4s8/envdoc/types"
@@ -79,9 +81,10 @@ func (d *caarlos0fieldDecoder) decodeTagValues(_ *ast.FieldSpec, tag *tags.Field
 }
 
 func (d *caarlos0fieldDecoder) decodeEnvDefault(_ *ast.FieldSpec, tag *tags.FieldTag, out *FieldInfo) {
-	if envDefault, ok := tag.GetFirst(d.opts.TagDefault); ok {
-		out.Default = envDefault
-	} else if !ok && d.opts.RequiredIfNoDef {
+	envDefault := tag.GetAll(d.opts.TagDefault)
+	if len(envDefault) > 0 {
+		out.Default = strings.Join(envDefault, ",")
+	} else if d.opts.RequiredIfNoDef {
 		out.Required = true
 	}
 }
