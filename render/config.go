@@ -65,6 +65,18 @@ var configs = map[types.OutFormat]renderConfig{
 		},
 		tmpl: newTmplText("dotenv.tmpl"),
 	},
+	types.OutFormatEnvDist: {
+		Item: renderItemConfig{
+			SeparatorFormat:  "separated by '%s'",
+			SeparatorDefault: "comma-separated",
+			OptRequired:      "required",
+			OptExpand:        "expand",
+			OptFromFile:      "from-file",
+			OptNonEmpty:      "non-empty",
+			EnvDefaultFormat: "default: '%s'",
+		},
+		tmpl: newTmplText("dotenvdist.tmpl"),
+	},
 	types.OutFormatJSON: {
 		Item: renderItemConfig{},
 		tmpl: newTmplText("json.tmpl"),

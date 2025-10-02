@@ -4,16 +4,16 @@
   {{- if eq $.EnvName "" }}
 #
   {{- end }}
-  {{- template "doc.lines" (list $.Doc "##") }}
+  {{- template "doc.lines" (list $.Doc "#") }}
   {{- if $.EnvName }}
     {{- if $.Doc }}
       {{- printf "\n" }}
     {{- end }}
-    {{- template "item.options" (list $ $cfg "## (%s)\n") }}
+    {{- template "item.options" (list $ $cfg "# (%s)\n") }}
     {{- if $.EnvDefault }}
       {{- printf `%s="%s"` $.EnvName $.EnvDefault }}
     {{- else }}
-      {{- printf `%s=""` $.EnvName }}
+      {{- printf `%s="<FIXME>"` $.EnvName }}
     {{- end }}
   {{- end }}
   {{- $children := $.Children 0 }}
