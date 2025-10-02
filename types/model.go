@@ -10,6 +10,7 @@ const (
 	OutFormatHTML     OutFormat = "html"
 	OutFormatTxt      OutFormat = "plaintext"
 	OutFormatEnv      OutFormat = "dotenv"
+	OutFormatEnvDist  OutFormat = "dotenv.dist"
 	OutFormatJSON     OutFormat = "json"
 )
 
