@@ -1,0 +1,34 @@
+{{ range .Sections -}}
+{{ if .Name }}
+## {{ .Name }}
+{{ end }}
+{{- if .Doc }}
+{{ .Doc }}
+{{ end }}
+| Name | Description | Default | Attributes |
+|------|-------------|---------|------------|
+{{- range $item := .Items }}
+{{- $default := "" }}
+{{- if $item.EnvDefault }}
+    {{- $default = printf "`%s`" $item.EnvDefault }}
+{{- end }}
+{{- $attributes := "" }}
+{{- if $item.Required }}
+    {{- $attributes = printf "%s`REQUIRED`, " $attributes }}
+{{- end }}
+{{- if $item.Expand }}
+    {{- $attributes = printf "%s`Expandable`, " $attributes }}
+{{- end }}
+{{- if $item.NonEmpty }}
+    {{- $attributes = printf "%s`Not Empty`, " $attributes }}
+{{- end }}
+{{- if $item.FromFile }}
+    {{- $attributes = printf "%s`From File`, " $attributes }}
+{{- end }}
+{{- if $item.EnvSeparator }}
+    {{- $attributes = printf "%s`Separated by %s`, " $attributes $item.EnvSeparator }}
+{{- end }}
+{{- $attributes = trimSuffix $attributes ", " }}
+| `{{ $item.EnvName }}` | {{ $item.Doc }} | {{ $default }} | {{ $attributes }} |
+{{- end }}
+{{ end }}
