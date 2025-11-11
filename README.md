@@ -73,6 +73,7 @@ type Config struct {
  * `-target` (`enum(caarlos0, cleanenv)` string, optional, default `caarlos0`) - Set env library target.
  * `-output` (path string, **required**) - Output file name for generated documentation.
  * `-format` (`enum(markdown, plaintext, html, dotenv, json)` string, *optional*) - Output format for documentation.  Default is `markdown`.
+ * `-template` (path string, *optional*) - Path to a custom template file for rendering the output. It has priority over `-format`.
  * `-no-styles` (`bool`, *optional*) - If true, CSS styles will not be included for `html` format.
  * `-env-prefix` (`string`, *optional*) - Sets additional global prefix for all environment variables.
  * `-tag-name` (string, *optional*, default: `env`) - Use custom tag name instead of `env`.
