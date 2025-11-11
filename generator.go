@@ -12,6 +12,7 @@ import (
 
 type Renderer interface {
 	Render(scopes []*types.EnvScope, out io.Writer) error
+	RenderCustom(scopes []*types.EnvScope, tmpl string, out io.Writer) error
 }
 
 type Generator struct {
@@ -40,8 +41,15 @@ func (g *Generator) Generate(dir string, out io.Writer) error {
 	scopes := g.converter.ScopesFromFiles(res, files)
 	printScopesTree(scopes)
 
-	if err := g.renderer.Render(scopes, out); err != nil {
-		return fmt.Errorf("render: %w", err)
+	// The custom template is used if provided since it has a higher priority than the built-in formats.
+	if customTemplate := g.converter.CustomTemplate(); customTemplate != "" {
+		if err := g.renderer.RenderCustom(scopes, customTemplate, out); err != nil {
+			return fmt.Errorf("render custom: %w", err)
+		}
+	} else {
+		if err := g.renderer.Render(scopes, out); err != nil {
+			return fmt.Errorf("render: %w", err)
+		}
 	}
 
 	return nil

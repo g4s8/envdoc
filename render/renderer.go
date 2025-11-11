@@ -19,6 +19,7 @@ func NewRenderer(format types.OutFormat, noStyles bool) *Renderer {
 	}
 }
 
+// Render is used for generating an output based on a built-in format.
 func (r *Renderer) Render(scopes []*types.EnvScope, out io.Writer) error {
 	cfg, ok := configs[r.format]
 	if !ok {
@@ -31,6 +32,30 @@ func (r *Renderer) Render(scopes []*types.EnvScope, out io.Writer) error {
 	if err := f(c, out); err != nil {
 		return fmt.Errorf("render: %w", err)
 	}
+	return nil
+}
+
+// RenderCustom is used for generating an output based on the given custom template file.
+func (r *Renderer) RenderCustom(scopes []*types.EnvScope, tmplFilePath string, out io.Writer) error {
+	tmpl, err := newTmplCustom(tmplFilePath)
+	if err != nil {
+		return fmt.Errorf("creating custom template: %w", err)
+	}
+
+	cfg := renderConfig{
+		tmpl: tmpl,
+		// The renderItemConfig is empty for custom templates since their formatting styles are expected to be
+		// self-contained within the template file.
+		Item: renderItemConfig{},
+	}
+
+	c := newRenderContext(scopes, cfg, r.noStyles)
+	f := templateRenderer(cfg.tmpl)
+
+	if err := f(c, out); err != nil {
+		return fmt.Errorf("executing template: %w", err)
+	}
+
 	return nil
 }
 

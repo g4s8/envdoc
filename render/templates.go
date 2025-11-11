@@ -3,6 +3,7 @@ package render
 import (
 	"embed"
 	"encoding/json"
+	"fmt"
 	"path"
 	"strings"
 
@@ -43,10 +44,23 @@ const (
 	tmplHelpers = "helpers.tmpl"
 )
 
+// newTmplText generates the template for a built-in format.
 func newTmplText(name string) *texttmpl.Template {
 	return texttmpl.Must(texttmpl.New(name).
 		Funcs(tplFuncs).
 		ParseFS(templatesFS,
 			path.Join(tmplDir, name),
 			path.Join(tmplDir, tmplHelpers)))
+}
+
+// newTmplCustom generates the template based on the provided custom template file.
+func newTmplCustom(tmplFilePath string) (*texttmpl.Template, error) {
+	tmpl, err := texttmpl.New(path.Base(tmplFilePath)).
+		Funcs(tplFuncs).
+		ParseFiles(tmplFilePath)
+	if err != nil {
+		return nil, fmt.Errorf("parsing template file: %w", err)
+	}
+
+	return tmpl, nil
 }

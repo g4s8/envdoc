@@ -20,6 +20,7 @@ type ConverterOpts struct {
 	TagDefault      string
 	RequiredIfNoDef bool
 	UseFieldNames   bool
+	CustomTemplate  string
 }
 
 type Converter struct {
@@ -144,4 +145,8 @@ func (c *Converter) DocItemsFromField(resolver Resolver, file *ast.FileSpec, pre
 		return children
 	}
 	return res
+}
+
+func (c *Converter) CustomTemplate() string {
+	return c.opts.CustomTemplate
 }

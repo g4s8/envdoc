@@ -31,6 +31,7 @@ func main() {
 		TagDefault:      cfg.TagDefault,
 		RequiredIfNoDef: cfg.RequiredIfNoDef,
 		UseFieldNames:   cfg.FieldNames,
+		CustomTemplate:  cfg.TemplateFile,
 	})
 	renderer := render.NewRenderer(cfg.OutFormat, cfg.NoStyles)
 	gen := NewGenerator(parser, converter, renderer)
