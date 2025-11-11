@@ -14,12 +14,27 @@ import (
 var templatesFS embed.FS
 
 var tplFuncs = map[string]any{
-	"repeat": strings.Repeat,
-	"split":  strings.Split,
+	// Standard string functions.
+	"repeat":     strings.Repeat,
+	"split":      strings.Split,
+	"join":       strings.Join,
+	"contains":   strings.Contains,
+	"toLower":    strings.ToLower,
+	"toUpper":    strings.ToUpper,
+	"toTitle":    strings.ToTitle,
+	"replace":    strings.Replace,
+	"hasPrefix":  strings.HasPrefix,
+	"hasSuffix":  strings.HasSuffix,
+	"trimSpace":  strings.TrimSpace,
+	"trimPrefix": strings.TrimPrefix,
+	"trimSuffix": strings.TrimSuffix,
+	"trimLeft":   strings.TrimLeft,
+	"trimRight":  strings.TrimRight,
+
+	// Custom functions.
 	"strAppend": func(arr []string, item string) []string {
 		return append(arr, item)
 	},
-	"join": strings.Join,
 	"strSlice": func() []string {
 		return make([]string, 0)
 	},
