@@ -5,6 +5,8 @@ package main
 //
 //go:generate go run ../../ -output doc_table.md -template mdtable.tmpl -types *
 //go:generate go run ../../ -output doc_tree.txt -target cleanenv -template texttree.tmpl -types *
+//go:generate go run ../../ -output doc_table_styled.html -template htmltable.tmpl -types *
+//go:generate go run ../../ -output doc_table_plain.html -template htmltable.tmpl -types * -no-styles true
 type Config struct {
 	// Secret is a secret value that is read from a file.
 	Secret string `env:"SECRET,file"`
