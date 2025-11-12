@@ -1,0 +1,25 @@
+Environment Variables
+
+---------------------
+Config is an example configuration structure.
+It is used to generate documentation from custom templates.
+
+Config
+ ├── SECRET - Secret is a secret value that is read from a file.
+ ├── PASSWORD (default = /tmp/password) - Password is a password that is read from a file.
+ ├── CERTIFICATE (default = ${CERTIFICATE_FILE}) - Certificate is a certificate that is read from a file.
+ ├── SECRET_KEY (REQUIRED) - Key is a secret key.
+ ├── SECRET_VAL - SecretVal is a secret value.
+ ├── HOSTS (REQUIRED) - Hosts is a list of hosts.
+ ├── WORDS (default = one) - Words is just a list of words.
+ ├── COMMENT (REQUIRED, default = This is a comment.) - Just a comment.
+ ├── ALLOW_METHODS (default = GET) - AllowMethods is a list of allowed methods.
+ ├── Anon is an anonymous structure.
+     ├── USER (REQUIRED) - User is a user name.
+     ├── PASS (REQUIRED) - Pass is a password.
+
+---------------------
+NextConfig is a configuration structure to generate multiple doc sections.
+
+NextConfig
+ ├── MOUNT (REQUIRED) - Mount is a mount point.

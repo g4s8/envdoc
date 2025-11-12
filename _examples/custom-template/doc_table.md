@@ -1,8 +1,9 @@
+# Environment Variables
 
 ## Config
 
 Config is an example configuration structure.
-It is used to generate documentation from a custom Markdown table template.
+It is used to generate documentation from custom templates.
 
 | Name | Description | Default | Attributes |
 |------|-------------|---------|------------|
@@ -19,6 +20,8 @@ It is used to generate documentation from a custom Markdown table template.
 | `ANON_PASS` | Pass is a password. |  | `REQUIRED` |
 
 ## NextConfig
+
+NextConfig is a configuration structure to generate multiple doc sections.
 
 | Name | Description | Default | Attributes |
 |------|-------------|---------|------------|

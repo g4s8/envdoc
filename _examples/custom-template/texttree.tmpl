@@ -1,0 +1,53 @@
+{{ .Title -}}
+{{- range .Sections -}}
+{{ $section_doc := "" }}
+{{ "" }}
+{{ "---------------------" -}}
+{{ if .Doc }}
+    {{- $section_doc = printf "(%s)" .Doc }}
+{{ .Doc }}
+{{ end }}
+{{ if .Name }}
+{{- .Name -}}
+{{ end -}}
+{{ range $item := .Items }}
+{{- template "item" (list $item 0) }}
+{{- end -}}
+{{ end -}}
+
+{{/* Render individual items as part of a tree. */}}
+{{- define "item" }}
+{{ $ := index . 0 }}
+{{- $indent := index . 1 }} {{- repeat " " $indent }} {{"├── "}}
+{{- if $.EnvName }}
+{{- $.EnvName -}} {{- template "item.options" $ -}} {{- $.Doc | printf " - %s" }}
+{{- else }}
+{{- $.Doc }}
+{{- end }}
+{{- $children := $.Children 0 }}
+{{- if $children }}
+{{- range $child := $children }}
+{{- $childIndent := sum $indent 4 }}
+{{- template "item" (list $child $childIndent) }}
+{{- end }}
+{{- end -}}
+{{ end -}}
+
+{{/* Render item options inline. */}}
+{{- define "item.options" -}}
+    {{- $ := .  -}}
+    {{- $opts := "" -}}
+    {{- if $.Required }}
+        {{- $opts = printf "%sREQUIRED, " $opts }}
+    {{- end }}
+    {{- if $.EnvDefault -}}
+        {{- $opts = printf "%sdefault = %s, " $opts $.EnvDefault -}}
+    {{- end -}}
+    {{- if eq $.EnvSeparator "," }}
+        {{- $opts = printf "%sSeparated by `%s`, " $opts ":" }}
+    {{- end }}
+    {{- if $opts -}}
+        {{- $opts = trimSuffix $opts ", " -}}
+        {{- printf " (%s)" $opts -}}
+    {{- end -}}
+{{- end -}}
