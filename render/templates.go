@@ -15,6 +15,7 @@ var templatesFS embed.FS
 
 var tplFuncs = map[string]any{
 	// Standard string functions.
+	// The functions here were added arbitrarily, and more can be added when needed.
 	"repeat":     strings.Repeat,
 	"split":      strings.Split,
 	"join":       strings.Join,

@@ -127,6 +127,70 @@ This tool is compatible with
 
 *Let me know about any new lib to check compatibility.*
 
+## Custom Templates
+envdoc also supports user-defined templates for more specific layouts provided with the `-template` flag.
+
+Examples can be found [here](_examples/custom-template).
+
+### Template Data
+Custom templates are expected to be [Go text templates](https://pkg.go.dev/text/template) and are executed with the following data.
+
+#### Top-Level Data
+| Field      | Type              | Description                                                                                             |                                           
+|------------|-------------------|---------------------------------------------------------------------------------------------------------|
+| `Title`    | `string`          | Hard-coded to `Environment Variables`. Useful for padding the top of files.                             |
+| `Sections` | `[]renderSection` | A list of structs matched by the `-target` flag.                                                        |
+| `Style`    | `bool`            | The opposite of the the `-no-style` flag (hence it defaults to `true`). Useful for toggling CSS styles. |
+
+#### Section: renderSection
+Each section represents a struct holding fields that map to environment variables.
+
+| Field    | Type            | Description                                                       |
+|----------|-----------------|-------------------------------------------------------------------|
+| `Name`   | `string`        | Name of the struct.                                               |
+| `Doc`    | `string`        | Description of the struct (parsed from the struct's doc comment). |
+| `Items`  | `[]renderItem`  | List of fields within the struct.                                 |
+
+#### Item: renderItem
+Each item represents a struct field that maps to an environment variable.
+
+| Field          | Type            | Description                                                                                 |
+|----------------|-----------------|---------------------------------------------------------------------------------------------|
+| `EnvName`      | `string`        | Name of the environment variable.                                                           |
+| `Doc`          | `string`        | Description of the variable (parsed from the field's doc comment).                          |
+| `EnvDefault`   | `string`        | Optional default value.                                                                     |
+| `EnvSeparator` | `string`        | Character used to separate items in slices and maps.                                        |
+| `Required`     | `bool`          | Signifies if the variable must be set.                                                      |
+| `NonEmpty`     | `bool`          | Signifies if the variable must not be empty if set. Applies only to `caarlos0`              |
+| `Expand`       | `bool`          | Signifies if the value is expandable from environment variables. Applies only to `caarlos0` |
+| `FromFile`     | `bool`          | Signifies if the value is read from a file. Applies only to `caarlos0`                      |
+| `Children`     | `[]renderItem`  | Nested structs in item. Applies only to `cleanenv`.                                         |
+
+### Functions
+Custom templates support the following string functions from the standard library:
+- `repeat`
+- `split`
+- `join`
+- `contains`
+- `toLower`
+- `toUpper`
+- `toTitle`
+- `replace`
+- `hasPrefix`
+- `hasSuffix`
+- `trimSpace`
+- `trimPrefix`
+- `trimSuffix`
+- `trimLeft`
+- `trimRight`
+
+In addition to the standard functions above, the following are supported:
+- `strAppend`: `func (arr []string, item string) []string` - Appends `item` to `arr`.
+- `strSlice`: `func () []string` - Makes a new empty slice. 
+- `list`: `func(args ...any) []any` - Returns the variadic args as a slice.
+- `sum`: `func(args ...int) int` - Returns the sum of the variadic args.
+- `marshalIndent`: `func(v any) (string, error)` - Marshals the given value into a JSON string. <br>
+  Returns an error if the value is not a valid JSON.
 
 ## Contributing
 
