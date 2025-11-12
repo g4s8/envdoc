@@ -1,0 +1,35 @@
+{{ .Title }}
+{{ range .Sections }}
+## {{ .Name }}
+{{ if .Doc }}
+{{ .Doc }}
+{{ end }}
+{{ range $item := .Items }}
+{{- template "item" (list $item) }}
+{{ end -}}
+{{ end }}
+
+{{- define "item" }}
+  {{- $ := index . 0 }}
+  {{- if $.EnvName }}
+    {{- $.EnvName | printf "- `%s`" -}}
+    {{- template "item.options" $ }}
+    {{- $.Doc | printf " - %s" }}
+  {{- else }}
+    {{- $.Doc | printf "- %s" }}
+  {{- end }}
+{{ end -}}
+
+{{/*
+Render item options using items config (inline rendering).
+*/}}
+{{- define "item.options" -}}
+  {{- $ := index . -}}
+  {{- $opts := strSlice -}}
+  {{- if $.Required -}}
+    {{- $opts = (strAppend $opts "REQUIRED") -}}
+  {{- end -}}
+  {{- if $opts -}}
+    {{- join $opts ", " | printf " (%s)" -}}
+  {{- end -}}
+{{- end -}}
