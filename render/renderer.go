@@ -9,12 +9,14 @@ import (
 
 type Renderer struct {
 	format   types.OutFormat
+	title    string
 	noStyles bool
 }
 
-func NewRenderer(format types.OutFormat, noStyles bool) *Renderer {
+func NewRenderer(format types.OutFormat, title string, noStyles bool) *Renderer {
 	return &Renderer{
 		format:   format,
+		title:    title,
 		noStyles: noStyles,
 	}
 }
@@ -26,7 +28,7 @@ func (r *Renderer) Render(scopes []*types.EnvScope, out io.Writer) error {
 		return fmt.Errorf("unknown format: %q", r.format)
 	}
 
-	c := newRenderContext(scopes, cfg, r.noStyles)
+	c := newRenderContext(scopes, cfg, r.title, r.noStyles)
 	f := templateRenderer(cfg.tmpl)
 
 	if err := f(c, out); err != nil {
@@ -49,7 +51,7 @@ func (r *Renderer) RenderCustom(scopes []*types.EnvScope, tmplFilePath string, o
 		Item: renderItemConfig{},
 	}
 
-	c := newRenderContext(scopes, cfg, r.noStyles)
+	c := newRenderContext(scopes, cfg, r.title, r.noStyles)
 	f := templateRenderer(cfg.tmpl)
 
 	if err := f(c, out); err != nil {
@@ -97,13 +99,14 @@ type renderContext struct {
 	Config   renderConfig
 }
 
-func newRenderContext(scopes []*types.EnvScope, cfg renderConfig, noStyles bool) renderContext {
+func newRenderContext(scopes []*types.EnvScope, cfg renderConfig, title string, noStyles bool) renderContext {
 	res := renderContext{
+		Title:    title,
 		Sections: make([]renderSection, len(scopes)),
 		Styles:   !noStyles,
 		Config:   cfg,
 	}
-	res.Title = "Environment Variables"
+
 	for i, scope := range scopes {
 		section := renderSection{
 			Name:  scope.Name,

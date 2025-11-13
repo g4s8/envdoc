@@ -8,7 +8,7 @@ import (
 )
 
 func TestRender(t *testing.T) {
-	r := NewRenderer(types.OutFormatTxt, false)
+	r := NewRenderer(types.OutFormatTxt, "Environment Variables", false)
 	scopes := []*types.EnvScope{
 		{
 			Name: "scope1",
@@ -50,7 +50,7 @@ func TestRender(t *testing.T) {
 }
 
 func TestRenderCustom(t *testing.T) {
-	r := NewRenderer(types.OutFormatTxt, false)
+	r := NewRenderer(types.OutFormatTxt, "Configuration", false)
 	scopes := []*types.EnvScope{
 		{
 			Name: "scope1",
@@ -75,7 +75,7 @@ func TestRenderCustom(t *testing.T) {
 		t.Fatalf("Failed to render: %s", err)
 	}
 
-	// Environment Variables
+	// Configuration
 
 	// scope1
 
@@ -84,7 +84,7 @@ func TestRenderCustom(t *testing.T) {
 	// - `VAR1` (required): VAR1 doc (REQUIRED)
 
 	var expectSb strings.Builder
-	expectSb.WriteString("Environment Variables\n\n")
+	expectSb.WriteString("Configuration\n\n")
 	expectSb.WriteString("## scope1\n\n")
 	expectSb.WriteString("scope1 doc\n\n")
 	expectSb.WriteString("- `VAR1` (REQUIRED) - VAR1 doc\n")

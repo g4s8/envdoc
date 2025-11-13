@@ -33,7 +33,7 @@ func main() {
 		UseFieldNames:   cfg.FieldNames,
 		CustomTemplate:  cfg.TemplateFile,
 	})
-	renderer := render.NewRenderer(cfg.OutFormat, cfg.NoStyles)
+	renderer := render.NewRenderer(cfg.OutFormat, cfg.Title, cfg.NoStyles)
 	gen := NewGenerator(parser, converter, renderer)
 
 	out, err := os.Create(cfg.OutFile)
