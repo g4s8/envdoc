@@ -19,6 +19,7 @@ func TestConfig(t *testing.T) {
 			"-output", "out.txt",
 			"-format", "plaintext",
 			"-template", "foo.tmpl",
+			"-title", "Configuration",
 			"-env-prefix", "FOO",
 			"-no-styles",
 			"-field-names",
@@ -35,6 +36,7 @@ func TestConfig(t *testing.T) {
 		testutils.AssertError(t, c.OutFile == "out.txt", "unexpected OutFile: %q", c.OutFile)
 		testutils.AssertError(t, c.OutFormat == "plaintext", "unexpected OutFormat: %q", c.OutFormat)
 		testutils.AssertError(t, c.TemplateFile == "foo.tmpl", "unexpected Template: %q", c.TemplateFile)
+		testutils.AssertError(t, c.Title == "Configuration", "unexpected Title: %q", c.Title)
 		testutils.AssertError(t, c.EnvPrefix == "FOO", "unexpected EnvPrefix: %q", c.EnvPrefix)
 		testutils.AssertError(t, c.NoStyles, "unexpected NoStyles: false")
 		testutils.AssertError(t, c.FieldNames, "unexpected FieldNames: false")

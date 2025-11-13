@@ -74,6 +74,7 @@ type Config struct {
  * `-output` (path string, **required**) - Output file name for generated documentation.
  * `-format` (`enum(markdown, plaintext, html, dotenv, json)` string, *optional*) - Output format for documentation.  Default is `markdown`.
  * `-template` (path string, *optional*) - Path to a custom template file for rendering the output. It has priority over `-format`.
+ * `-title` (string, *optional*, default `Environment Variables`) - Title to be used as the header of the generated file.
  * `-no-styles` (`bool`, *optional*) - If true, CSS styles will not be included for `html` format.
  * `-env-prefix` (`string`, *optional*) - Sets additional global prefix for all environment variables.
  * `-tag-name` (string, *optional*, default: `env`) - Use custom tag name instead of `env`.
@@ -138,7 +139,7 @@ Custom templates are expected to be [Go text templates](https://pkg.go.dev/text/
 #### Top-Level Data
 | Field      | Type              | Description                                                                                             |                                           
 |------------|-------------------|---------------------------------------------------------------------------------------------------------|
-| `Title`    | `string`          | Hard-coded to `Environment Variables`. Useful for padding the top of files.                             |
+| `Title`    | `string`          | Value of the `-title` flag. Defaults to `Environment Variables`. Useful as a file header.               |
 | `Sections` | `[]renderSection` | A list of structs matched by the `-target` flag.                                                        |
 | `Style`    | `bool`            | The opposite of the the `-no-style` flag (hence it defaults to `true`). Useful for toggling CSS styles. |
 

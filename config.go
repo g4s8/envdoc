@@ -26,6 +26,8 @@ type Config struct {
 	OutFormat types.OutFormat
 	// TemplateFile to use for custom rendering of the output.
 	TemplateFile string
+	// Title to use as a header in the template.
+	Title string
 	// EnvPrefix to prefix the env vars with
 	EnvPrefix string
 	// NoStyles to disable styles for HTML format
@@ -63,6 +65,7 @@ func (c *Config) parseFlags(f *flag.FlagSet) error {
 	f.StringVar(&c.OutFile, "output", "", "Output file path")
 	f.StringVar((*string)(&c.OutFormat), "format", "markdown", "Output format, default `markdown`")
 	f.StringVar(&c.TemplateFile, "template", "", "Path to a custom template file for rendering the output. It has priority over -format")
+	f.StringVar(&c.Title, "title", "Environment Variables", "Title to be used as the header of the generated file")
 	f.BoolVar(&c.NoStyles, "no-styles", false, "Disable styles for HTML output")
 	// app config flags
 	f.StringVar(&c.EnvPrefix, "env-prefix", "", "Environment variable prefix")
@@ -174,6 +177,7 @@ func (c *Config) fprint(out io.Writer) {
 	if c.TemplateFile != "" {
 		fmt.Fprintf(out, "  Template: %q\n", c.TemplateFile)
 	}
+	fmt.Fprintf(out, "  Title: %q\n", c.Title)
 	if c.EnvPrefix != "" {
 		fmt.Fprintf(out, "  EnvPrefix: %q\n", c.EnvPrefix)
 	}
