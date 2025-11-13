@@ -48,7 +48,7 @@ func TestGenerator(t *testing.T) {
 				TagDefault:    "envDefault",
 				UseFieldNames: spec.FieldNames,
 			})
-			rend := render.NewRenderer(types.OutFormatTxt, false)
+			rend := render.NewRenderer(types.OutFormatTxt, "Environment Variables", false)
 			gen := NewGenerator(p, conv, rend)
 			var out bytes.Buffer
 			runGenerator(t, gen, spec, dir, &out)

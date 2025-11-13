@@ -1,0 +1,124 @@
+<h1>Environment Variables</h1>
+
+        <h2>Config</h2>
+    
+        <p>Config is an example configuration structure.
+It is used to generate documentation from custom templates.</p>
+    
+
+    <table>
+        <thead>
+        <tr>
+            <th>Name</th>
+            <th>Description</th>
+            <th>Default</th>
+            <th>Attributes</th>
+        </tr>
+        </thead>
+        <tbody>
+
+            <tr>
+                <td><code>SECRET</code></td>
+                <td>Secret is a secret value that is read from a file.</td>
+                <td></td>
+                <td><code>From File</code></td>
+            </tr>
+
+            <tr>
+                <td><code>PASSWORD</code></td>
+                <td>Password is a password that is read from a file.</td>
+                <td><code>/tmp/password</code></td>
+                <td><code>From File</code></td>
+            </tr>
+
+            <tr>
+                <td><code>CERTIFICATE</code></td>
+                <td>Certificate is a certificate that is read from a file.</td>
+                <td><code>${CERTIFICATE_FILE}</code></td>
+                <td><code>Expandable</code>, <code>From File</code></td>
+            </tr>
+
+            <tr>
+                <td><code>SECRET_KEY</code></td>
+                <td>Key is a secret key.</td>
+                <td></td>
+                <td><code>REQUIRED</code></td>
+            </tr>
+
+            <tr>
+                <td><code>SECRET_VAL</code></td>
+                <td>SecretVal is a secret value.</td>
+                <td></td>
+                <td><code>REQUIRED</code>, <code>Not Empty</code></td>
+            </tr>
+
+            <tr>
+                <td><code>HOSTS</code></td>
+                <td>Hosts is a list of hosts.</td>
+                <td></td>
+                <td><code>REQUIRED</code>, <code>Separated by :</code></td>
+            </tr>
+
+            <tr>
+                <td><code>WORDS</code></td>
+                <td>Words is just a list of words.</td>
+                <td><code>one,two,three</code></td>
+                <td><code>From File</code>, <code>Separated by ,</code></td>
+            </tr>
+
+            <tr>
+                <td><code>COMMENT</code></td>
+                <td>Just a comment.</td>
+                <td><code>This is a comment.</code></td>
+                <td><code>REQUIRED</code></td>
+            </tr>
+
+            <tr>
+                <td><code>ALLOW_METHODS</code></td>
+                <td>AllowMethods is a list of allowed methods.</td>
+                <td><code>GET, POST, PUT, PATCH, DELETE, OPTIONS</code></td>
+                <td></td>
+            </tr>
+
+            <tr>
+                <td><code>ANON_USER</code></td>
+                <td>User is a user name.</td>
+                <td></td>
+                <td><code>REQUIRED</code></td>
+            </tr>
+
+            <tr>
+                <td><code>ANON_PASS</code></td>
+                <td>Pass is a password.</td>
+                <td></td>
+                <td><code>REQUIRED</code></td>
+            </tr>
+        </tbody>
+    </table>
+
+        <h2>NextConfig</h2>
+    
+        <p>NextConfig is a configuration structure to generate multiple doc sections.</p>
+    
+
+    <table>
+        <thead>
+        <tr>
+            <th>Name</th>
+            <th>Description</th>
+            <th>Default</th>
+            <th>Attributes</th>
+        </tr>
+        </thead>
+        <tbody>
+
+            <tr>
+                <td><code>MOUNT</code></td>
+                <td>Mount is a mount point.</td>
+                <td></td>
+                <td><code>REQUIRED</code></td>
+            </tr>
+        </tbody>
+    </table>
+
+
