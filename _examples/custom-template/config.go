@@ -3,8 +3,8 @@ package main
 // Config is an example configuration structure.
 // It is used to generate documentation from custom templates.
 //
-//go:generate go run ../../ -output doc_table.md -template mdtable.tmpl -types *
-//go:generate go run ../../ -output doc_tree.txt -target cleanenv -template texttree.tmpl -types *
+//go:generate go run ../../ -output doc_table.md -template mdtable.tmpl -types * -title Configuration
+//go:generate go run ../../ -output doc_tree.txt -target cleanenv -template texttree.tmpl -types * -title Configuration
 //go:generate go run ../../ -output doc_table_styled.html -template htmltable.tmpl -types *
 //go:generate go run ../../ -output doc_table_plain.html -template htmltable.tmpl -types * -no-styles true
 type Config struct {
