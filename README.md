@@ -131,7 +131,7 @@ This tool is compatible with
 ## Custom Templates
 envdoc also supports user-defined templates for more specific layouts provided with the `-template` flag.
 
-Examples can be found [here](_examples/custom-template).
+Examples can be found [here](_examples/custom-templates).
 
 ### Template Data
 Custom templates are expected to be [Go text templates](https://pkg.go.dev/text/template) and are executed with the following data.
