@@ -334,8 +334,8 @@ func TestConverterFailedToResolve(t *testing.T) {
 	c := NewConverter(types.TargetTypeCaarlos0, opts)
 	resolver := resolver.NewTypeResolver()
 	item := c.DocItemsFromField(resolver, &ast.FileSpec{}, "", field)
-	if len(item) != 0 {
-		t.Fatalf("Expected 0 items, got %d", len(item))
+	if len(item) != 1 {
+		t.Fatalf("Expected 1 empty item, got %d", len(item))
 	}
 }
 

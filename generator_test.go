@@ -13,6 +13,7 @@ import (
 	"github.com/g4s8/envdoc/ast"
 	"github.com/g4s8/envdoc/render"
 	"github.com/g4s8/envdoc/types"
+	"github.com/sergi/go-diff/diffmatchpatch"
 	"golang.org/x/tools/txtar"
 )
 
@@ -62,9 +63,21 @@ func TestGenerator(t *testing.T) {
 			if err != nil {
 				t.Fatalf("failed to read expect.txt: %s", err)
 			}
-			if !bytes.Equal(out.Bytes(), expect) {
-				t.Logf("Expected:\n%s", expect)
-				t.Logf("Got:\n%s", out.String())
+			if got := out.Bytes(); !bytes.Equal(got, expect) {
+				dmp := diffmatchpatch.New()
+				diffs := dmp.DiffMain(string(expect), string(got), true)
+				var sb strings.Builder
+				for _, diff := range diffs {
+					switch diff.Type {
+					case diffmatchpatch.DiffDelete:
+						sb.WriteString("- ")
+					case diffmatchpatch.DiffInsert:
+						sb.WriteString("+ ")
+					}
+					sb.WriteString(diff.Text)
+					sb.WriteString("\n")
+				}
+				t.Logf("Diff:\n%s", sb.String())
 				t.Fatalf("Output mismatch")
 			}
 		})
