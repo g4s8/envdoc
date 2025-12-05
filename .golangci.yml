@@ -4,6 +4,7 @@ linters:
     - cyclop
     - errorlint
     - gocyclo
+    - staticcheck
   exclusions:
     generated: lax
     presets:
@@ -15,6 +16,12 @@ linters:
       - third_party$
       - builtin$
       - examples$
+    rules:
+      - path: '(.+)_test\.go'
+        linters:
+          - cyclop
+          - gocyclo
+          - staticcheck
 formatters:
   enable:
     - gofumpt

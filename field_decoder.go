@@ -59,6 +59,9 @@ func (d *caarlos0fieldDecoder) decodeFieldNames(f *ast.FieldSpec, tag *tags.Fiel
 	for i, name := range names {
 		names[i] = d.opts.EnvPrefix + name
 	}
+	if len(names) == 0 && !d.opts.UseFieldNames {
+		names = []string{""}
+	}
 	out.Names = names
 }
 

@@ -15,8 +15,9 @@ It is trying to cover all the possible cases.
  - `WORDS` (comma-separated, from-file, default: `one,two,three`) - Words is just a list of words.
  - `COMMENT` (**required**, default: `This is a comment.`) - Just a comment.
  - `ALLOW_METHODS` (default: `GET, POST, PUT, PATCH, DELETE, OPTIONS`) - AllowMethods is a list of allowed methods.
- - `ANON_USER` (**required**) - User is a user name.
- - `ANON_PASS` (**required**) - Pass is a password.
+ - Anon is an anonymous structure.
+   - `ANON_USER` (**required**) - User is a user name.
+   - `ANON_PASS` (**required**) - Pass is a password.
 
 ## NextConfig
 
