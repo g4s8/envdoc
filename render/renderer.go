@@ -35,9 +35,9 @@ func (r *Renderer) Render(scopes []*types.EnvScope, out io.Writer) error {
 }
 
 type renderSection struct {
-	Name  string
-	Doc   string
-	Items []renderItem
+	Name  string       `json:"name,omitempty"`
+	Doc   string       `json:"doc,omitempty"`
+	Items []renderItem `json:"items,omitempty"`
 }
 
 type renderItem struct {
