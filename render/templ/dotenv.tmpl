@@ -16,7 +16,7 @@
       {{- printf `%s="<FIXME>"` $.EnvName }}
     {{- end }}
   {{- end }}
-  {{- $children := $.Children 0 }}
+  {{- $children := $.IndentChildren 0 }}
   {{- if $children }}
 #
     {{- range $child := $children }}

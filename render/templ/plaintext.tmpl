@@ -10,7 +10,7 @@
   {{- else }}
     {{- $.Doc | printf "* %s" }}
   {{- end }}
-  {{- $children := $.Children 0 }}
+  {{- $children := $.IndentChildren 0 }}
   {{- if $children }}
     {{- range $child := $children }}
 {{ template "item" (list $child $cfg (sum $indent 2)) }}
