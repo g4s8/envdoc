@@ -244,12 +244,12 @@ func TestFieldDecoder(t *testing.T) {
 			spec: &ast.FieldSpec{
 				Names:   []string{"Foo"},
 				Doc:     "foo doc",
-				Tag:     `env:"FOO" env-default:"bar"`,
+				Tag:     `env:"FOO" env-default:"bar,baz"`,
 				TypeRef: ast.FieldTypeRef{Name: "string", Kind: ast.FieldTypeIdent},
 			},
 			expectField: FieldInfo{
 				Names:   []string{"FOO"},
-				Default: "bar",
+				Default: "bar,baz",
 			},
 		},
 		{

@@ -48,6 +48,17 @@ func TestFieldTags(t *testing.T) {
 		}
 	}
 
+	expectedStrings := map[string]string{
+		"env":        "PASSWORD,required,file",
+		"envDefault": "/tmp/password",
+		"json":       "password",
+	}
+	for k, v := range expectedStrings {
+		if got, ok := tag.GetString(k); !ok || got != v {
+			t.Errorf("%q: expected %q, got %q", k, v, got)
+		}
+	}
+
 	t.Run("error", func(t *testing.T) {
 		tagShouldErr(t, `envPASSWORD`)
 		tagShouldErr(t, `env:"PASSWORD`)
@@ -58,28 +69,28 @@ func TestFieldTags(t *testing.T) {
 func TestFieldTagValues(t *testing.T) {
 	tests := []struct {
 		tag, key string
-		expect   []string
+		expect   string
 		err      bool
 	}{
 		{
 			tag:    `env:"PASSWORD,required,file"`,
 			key:    "env",
-			expect: []string{"PASSWORD", "required", "file"},
+			expect: "PASSWORD,required,file",
 		},
 		{
 			tag:    `envDefault:"/tmp/password"`,
 			key:    "envDefault",
-			expect: []string{"/tmp/password"},
+			expect: "/tmp/password",
 		},
 		{
 			tag:    `json:"password"`,
 			key:    "json",
-			expect: []string{"password"},
+			expect: "password",
 		},
 		{
 			tag:    `envDefault:"GET, POST, PUT, PATCH, DELETE, OPTIONS"`,
 			key:    "envDefault",
-			expect: []string{"GET", " POST", " PUT", " PATCH", " DELETE", " OPTIONS"},
+			expect: "GET, POST, PUT, PATCH, DELETE, OPTIONS",
 		},
 		{
 			tag: `jsonpassword`,
@@ -106,13 +117,13 @@ func TestFieldTagValues(t *testing.T) {
 		t.Run(fmt.Sprintf("case%d", i), func(t *testing.T) {
 			vals := fieldTagValues(test.tag, test.key)
 			if test.err {
-				if vals != nil {
+				if vals != "" {
 					t.Errorf("expected nil, got %v", vals)
 				}
 				return
 			}
 
-			if !slices.Equal(vals, test.expect) {
+			if vals != test.expect {
 				t.Errorf("expected %v, got %v", test.expect, vals)
 			}
 		})
