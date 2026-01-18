@@ -14,6 +14,9 @@ type Config struct {
 	// Debug mode enabled.
 	Debug bool `env:"DEBUG" env-default:"false"`
 
+	// Location of the server.
+	Location string `env:"LOCATION" env-default:"city,country"`
+
 	// Timeouts configuration.
 	Timeouts struct {
 		// Read timeout.

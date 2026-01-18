@@ -9,6 +9,7 @@ using the commands below.
  * `HOST` (separated by `;`, required) - Hosts name of hosts to listen on.
  * `PORT` - Port to listen on.
  * `DEBUG` (default: `false`) - Debug mode enabled.
+ * `LOCATION` (default: `city,country`) - Location of the server.
  * Timeouts configuration.
    * `TIMEOUT_READ` (default: `10`) - Read timeout.
    * `TIMEOUT_WRITE` (default: `10`) - Write timeout.
