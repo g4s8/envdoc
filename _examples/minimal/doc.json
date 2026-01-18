@@ -1,0 +1,53 @@
+[
+  {
+    "name": "OAuthConfig",
+    "doc": "OAuthConfig holds configuration for OAuth clients and auth redirects.",
+    "items": [
+      {
+        "children": [
+          {
+            "env_name": "APP_ID",
+            "required": true,
+            "non_empty": true
+          },
+          {
+            "env_name": "APP_SECRET",
+            "env_default": "changeme",
+            "required": true,
+            "non_empty": true
+          },
+          {
+            "env_name": "APP_SCOPES",
+            "env_separator": " "
+          }
+        ]
+      },
+      {
+        "children": [
+          {
+            "children": [
+              {
+                "env_name": "AUTH_REDIRECT_EXTERNAL_URL",
+                "env_default": "http://localhost/"
+              },
+              {
+                "env_name": "AUTH_REDIRECT_INTERNAL_ROUTE"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "children": [
+          {
+            "env_name": "TESTING_FOO"
+          },
+          {
+            "env_name": "TESTING_BAR",
+            "env_default": "abc"
+          }
+        ]
+      }
+    ]
+  }
+]

@@ -1,24 +1,21 @@
 {{- define "item" }}
   {{- $ := index . 0 }}
   {{- $cfg := index . 1 }}
-  {{- if eq $.EnvName "" }}
-#
+  {{- if $.Doc }}
+    {{- template "doc.lines" (list $.Doc "#") }}
   {{- end }}
-  {{- template "doc.lines" (list $.Doc "#") }}
   {{- if $.EnvName }}
-    {{- if $.Doc }}
-      {{- printf "\n" }}
-    {{- end }}
+    {{- print "\n" }}
     {{- template "item.options" (list $ $cfg "# (%s)\n") }}
     {{- if $.EnvDefault }}
       {{- printf `%s="%s"` $.EnvName $.EnvDefault }}
     {{- else }}
       {{- printf `%s="<FIXME>"` $.EnvName }}
     {{- end }}
+    {{- print "\n" }}
   {{- end }}
   {{- $children := $.IndentChildren 0 }}
   {{- if $children }}
-#
     {{- range $child := $children }}
       {{- template "item" (list $child $cfg) }}
     {{- end }}
@@ -38,4 +35,3 @@
     {{- template "item" (list $item $cfg.Item) }}
   {{- end }}
 {{- end }}
-
