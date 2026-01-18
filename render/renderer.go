@@ -35,14 +35,14 @@ func (r *Renderer) Render(scopes []*types.EnvScope, out io.Writer) error {
 }
 
 type renderSection struct {
-	Name  string
-	Doc   string
-	Items []renderItem
+	Name  string       `json:"name,omitempty"`
+	Doc   string       `json:"doc,omitempty"`
+	Items []renderItem `json:"items,omitempty"`
 }
 
 type renderItem struct {
-	EnvName      string `json:"env_name"`
-	Doc          string `json:"doc"`
+	EnvName      string `json:"env_name,omitempty"`
+	Doc          string `json:"doc,omitempty"`
 	EnvDefault   string `json:"env_default,omitempty"`
 	EnvSeparator string `json:"env_separator,omitempty"`
 
@@ -51,14 +51,14 @@ type renderItem struct {
 	NonEmpty bool `json:"non_empty,omitempty"`
 	FromFile bool `json:"from_file,omitempty"`
 
-	children []renderItem
-	Indent   int `json:"-"`
+	Children []renderItem `json:"children,omitempty"`
+	Indent   int          `json:"-"`
 }
 
-func (i renderItem) Children(indentInc int) []renderItem {
+func (i renderItem) IndentChildren(indentInc int) []renderItem {
 	indent := i.Indent + indentInc
-	res := make([]renderItem, len(i.children))
-	for j, child := range i.children {
+	res := make([]renderItem, len(i.Children))
+	for j, child := range i.Children {
 		child.Indent = indent
 		res[j] = child
 	}
@@ -109,7 +109,7 @@ func newRenderItem(item *types.EnvDocItem) renderItem {
 		Expand:       item.Opts.Expand,
 		NonEmpty:     item.Opts.NonEmpty,
 		FromFile:     item.Opts.FromFile,
-		children:     children,
+		Children:     children,
 	}
 }
 
