@@ -2,6 +2,7 @@ package ast
 
 import (
 	"go/ast"
+	"path/filepath"
 	"slices"
 	"testing"
 )
@@ -22,7 +23,7 @@ func TestPkgVisitor(t *testing.T) {
 		t.Logf("file %q", f.Name)
 	}
 	for _, e := range expectFiles {
-		e = "testdata/" + e
+		e = filepath.Join("testdata", e)
 		if !slices.Contains(fileNames, e) {
 			t.Fatalf("file %q not found", e)
 		}

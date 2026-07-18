@@ -3,6 +3,7 @@ package edit
 import (
 	"os"
 	"path/filepath"
+	"runtime"
 	"strings"
 	"testing"
 )
@@ -526,6 +527,9 @@ func TestEditor_ReplaceSection_StatError(t *testing.T) {
 	// This test is tricky to implement portably since we need to trigger
 	// a stat error that's not os.IsNotExist. We can use a file in a directory
 	// without permissions (on Unix systems)
+	if runtime.GOOS == "windows" {
+		t.Skip("Unix file permissions are not enforced on Windows")
+	}
 	if os.Getuid() == 0 {
 		t.Skip("Skipping test when running as root")
 	}
@@ -594,6 +598,9 @@ func TestEditor_ReplaceSection_MkdirError(t *testing.T) {
 }
 
 func TestEditor_ReplaceSection_WriteToReadOnlyDirectory(t *testing.T) {
+	if runtime.GOOS == "windows" {
+		t.Skip("Unix file permissions are not enforced on Windows")
+	}
 	if os.Getuid() == 0 {
 		t.Skip("Skipping test when running as root")
 	}
