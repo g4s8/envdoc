@@ -2,6 +2,7 @@ package ast
 
 import (
 	"go/ast"
+	"path/filepath"
 	"testing"
 )
 
@@ -40,7 +41,7 @@ func (h *typeHandler) onField(f *FieldSpec) FieldHandler {
 
 func TestTypesVisitor(t *testing.T) {
 	fset, pkg, docs := loadTestFileSet(t)
-	file := pkg.Files["testdata/fields.go"]
+	file := pkg.Files[filepath.Join("testdata", "fields.go")]
 	h := &fileHandler{}
 	v := newFileVisitor(fset, file, docs, h)
 

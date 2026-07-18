@@ -94,9 +94,11 @@ func (c *RootCollector) onFile(f *FileSpec) interface {
 } {
 	// convert file name to relative path using baseDir
 	// if baseDir is empty or `.` then the file name is used as is.
-	name := f.Name
+	// normalize backslashes to forward slashes so glob patterns
+	// (which always use `/`) match paths on Windows too.
+	name := strings.ReplaceAll(f.Name, `\`, "/")
 	if c.baseDir != "" && c.baseDir != "." {
-		name, _ = strings.CutPrefix(name, c.baseDir)
+		name, _ = strings.CutPrefix(name, strings.ReplaceAll(c.baseDir, `\`, "/"))
 		name, _ = strings.CutPrefix(name, "/")
 		name = "./" + name
 	}

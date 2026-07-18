@@ -1,0 +1,3 @@
+# Force LF line endings so embedded templates and golden testdata
+# render identically on all platforms (Windows CI included).
+* text=auto eol=lf

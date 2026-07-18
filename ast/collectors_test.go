@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"github.com/g4s8/envdoc/testutils"
+	"github.com/g4s8/envdoc/utils"
 )
 
 func testGlob(t *testing.T, name string) func(string) bool {
@@ -73,5 +74,19 @@ func TestRootCollector(t *testing.T) {
 		testutils.AssertError(t, types[1].Name == "AnotherType", "[1]unexpected type name: %s", types[1].Name)
 		testutils.AssertError(t, types[0].Export == true, "[0]unexpected export flag: %t", types[0].Export)
 		testutils.AssertError(t, types[1].Export == false, "[1]unexpected export flag: %t", types[1].Export)
+	})
+	t.Run("windows-path-separator", func(t *testing.T) {
+		// file names may use OS-native separators (backslash on Windows);
+		// glob patterns always use forward slashes, so names must be normalized.
+		m, err := utils.NewGlobMatcher("cfg/config.go")
+		testutils.AssertFatal(t, err == nil, "compile glob: %v", err)
+		col := NewRootCollector("", WithFileGlob(m))
+		col.onFile(&FileSpec{
+			Name: `cfg\config.go`,
+		})
+		files := col.Files()
+		testutils.AssertFatal(t, len(files) == 1, "unexpected files count: %d", len(files))
+		testutils.AssertError(t, files[0].Name == "cfg/config.go", "unexpected file name: %s", files[0].Name)
+		testutils.AssertError(t, files[0].Export == true, "expected file to be exported")
 	})
 }
