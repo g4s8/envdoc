@@ -10,12 +10,14 @@ import (
 type Renderer struct {
 	format   types.OutFormat
 	noStyles bool
+	edit     bool
 }
 
-func NewRenderer(format types.OutFormat, noStyles bool) *Renderer {
+func NewRenderer(format types.OutFormat, noStyles bool, edit bool) *Renderer {
 	return &Renderer{
 		format:   format,
 		noStyles: noStyles,
+		edit:     edit,
 	}
 }
 
@@ -25,7 +27,7 @@ func (r *Renderer) Render(scopes []*types.EnvScope, out io.Writer) error {
 		return fmt.Errorf("unknown format: %q", r.format)
 	}
 
-	c := newRenderContext(scopes, cfg, r.noStyles)
+	c := newRenderContext(scopes, cfg, r.noStyles, r.edit)
 	f := templateRenderer(cfg.tmpl)
 
 	if err := f(c, out); err != nil {
@@ -72,13 +74,17 @@ type renderContext struct {
 	Config   renderConfig
 }
 
-func newRenderContext(scopes []*types.EnvScope, cfg renderConfig, noStyles bool) renderContext {
+func newRenderContext(scopes []*types.EnvScope, cfg renderConfig,
+	noStyles bool, edit bool,
+) renderContext {
 	res := renderContext{
 		Sections: make([]renderSection, len(scopes)),
 		Styles:   !noStyles,
 		Config:   cfg,
 	}
-	res.Title = "Environment Variables"
+	if !edit {
+		res.Title = "Environment Variables"
+	}
 	for i, scope := range scopes {
 		section := renderSection{
 			Name:  scope.Name,

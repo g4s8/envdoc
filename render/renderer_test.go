@@ -8,7 +8,7 @@ import (
 )
 
 func TestRenderer(t *testing.T) {
-	r := NewRenderer(types.OutFormatTxt, false)
+	r := NewRenderer(types.OutFormatTxt, false, false)
 	scopes := []*types.EnvScope{
 		{
 			Name: "scope1",
