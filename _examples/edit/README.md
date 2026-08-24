@@ -24,7 +24,6 @@ environment variable documentation alongside other content in your README.
 The following environment variables configure the server application:
 
 <!--envdoc:begin-->
-# Environment Variables
 
 ## ServerConfig
 

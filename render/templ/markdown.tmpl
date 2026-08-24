@@ -19,8 +19,9 @@
 {{ end -}}
 
 {{- $cfg := $.Config -}}
-# {{ .Title }}
-{{ range .Sections -}}
+{{- if .Title }}# {{ .Title }}
+{{ end }}
+{{- range .Sections -}}
 {{ if .Name }}
 ## {{ .Name }}
 {{ end }}

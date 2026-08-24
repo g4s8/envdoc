@@ -37,7 +37,7 @@ func main() {
 		RequiredIfNoDef: cfg.RequiredIfNoDef,
 		UseFieldNames:   cfg.FieldNames,
 	})
-	renderer := render.NewRenderer(cfg.OutFormat, cfg.NoStyles)
+	renderer := render.NewRenderer(cfg.OutFormat, cfg.NoStyles, cfg.Edit)
 	gen := NewGenerator(parser, converter, renderer)
 
 	// Branch based on mode
