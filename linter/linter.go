@@ -13,7 +13,7 @@ type linter struct {
 	noComments bool
 }
 
-func (l *linter) run(pass *analysis.Pass) (interface{}, error) {
+func (l *linter) run(pass *analysis.Pass) (any, error) {
 	tagStr := fmt.Sprintf("%s:", l.envName)
 	for _, f := range pass.Files {
 		ast.Inspect(f, func(n ast.Node) bool {

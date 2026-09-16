@@ -17,11 +17,11 @@ func NewLogger(out io.Writer) Logger {
 	return &ioLogger{out: out}
 }
 
-func (l *ioLogger) Logf(format string, args ...interface{}) {
+func (l *ioLogger) Logf(format string, args ...any) {
 	fmt.Fprintf(l.out, format, args...)
 }
 
-func (l *ioLogger) Log(args ...interface{}) {
+func (l *ioLogger) Log(args ...any) {
 	fmt.Fprint(l.out, args...)
 }
 
@@ -33,12 +33,12 @@ func NewTestLogger(t *testing.T) Logger {
 	return &testLogger{t: t}
 }
 
-func (l *testLogger) Logf(format string, args ...interface{}) {
+func (l *testLogger) Logf(format string, args ...any) {
 	l.t.Helper()
 	l.t.Logf(format, args...)
 }
 
-func (l *testLogger) Log(args ...interface{}) {
+func (l *testLogger) Log(args ...any) {
 	l.t.Helper()
 	l.t.Log(args...)
 }
@@ -62,14 +62,14 @@ func SetTestLogger(t *testing.T) {
 	logger = NewTestLogger(t)
 }
 
-func Logf(format string, args ...interface{}) {
+func Logf(format string, args ...any) {
 	if logger == nil {
 		SetLogger()
 	}
 	logger.Logf(format, args...)
 }
 
-func Log(args ...interface{}) {
+func Log(args ...any) {
 	if logger == nil {
 		SetLogger()
 	}

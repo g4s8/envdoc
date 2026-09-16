@@ -10,11 +10,12 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/sergi/go-diff/diffmatchpatch"
+	"golang.org/x/tools/txtar"
+
 	"github.com/g4s8/envdoc/ast"
 	"github.com/g4s8/envdoc/render"
 	"github.com/g4s8/envdoc/types"
-	"github.com/sergi/go-diff/diffmatchpatch"
-	"golang.org/x/tools/txtar"
 )
 
 func TestGenerator(t *testing.T) {
@@ -28,7 +29,6 @@ func TestGenerator(t *testing.T) {
 	}
 
 	for _, file := range files {
-		file := file
 
 		t.Run(filepath.Base(file), func(t *testing.T) {
 			t.Parallel()
@@ -146,16 +146,16 @@ func parseTestSpec(t *testing.T, data string) GenTestSpec {
 			continue
 		}
 
-		if strings.HasPrefix(line, "TypeName:") {
-			res.TypeName = strings.TrimSpace(strings.TrimPrefix(line, "TypeName:"))
+		if after, ok := strings.CutPrefix(line, "TypeName:"); ok {
+			res.TypeName = strings.TrimSpace(after)
 			continue
 		}
-		if strings.HasPrefix(line, "EnvPrefix:") {
-			res.EnvPrefix = strings.TrimSpace(strings.TrimPrefix(line, "EnvPrefix:"))
+		if after, ok := strings.CutPrefix(line, "EnvPrefix:"); ok {
+			res.EnvPrefix = strings.TrimSpace(after)
 			continue
 		}
-		if strings.HasPrefix(line, "FieldNames:") {
-			res.FieldNames = strings.TrimSpace(strings.TrimPrefix(line, "FieldNames:")) == "true"
+		if after, ok := strings.CutPrefix(line, "FieldNames:"); ok {
+			res.FieldNames = strings.TrimSpace(after) == "true"
 			continue
 		}
 	}

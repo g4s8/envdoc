@@ -1,8 +1,9 @@
 package main
 
 import (
-	"github.com/g4s8/envdoc/linter"
 	"golang.org/x/tools/go/analysis/unitchecker"
+
+	"github.com/g4s8/envdoc/linter"
 )
 
 func main() {

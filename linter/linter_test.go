@@ -53,7 +53,7 @@ func TestLinter(t *testing.T) {
 				Report: func(d analysis.Diagnostic) {
 					log.Printf("%s:%d: %s", fset.Position(d.Pos).Filename, fset.Position(d.Pos).Line, d.Message)
 				},
-				ResultOf: make(map[*analysis.Analyzer]interface{}),
+				ResultOf: make(map[*analysis.Analyzer]any),
 			}
 
 			res, err := inspect.Analyzer.Run(pass)

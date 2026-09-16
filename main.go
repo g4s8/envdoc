@@ -86,7 +86,7 @@ func generateNormal(gen *Generator, cfg Config) {
 	}
 }
 
-func fatal(format string, args ...interface{}) {
+func fatal(format string, args ...any) {
 	fmt.Fprintf(os.Stderr, format, args...)
 	fmt.Fprintln(os.Stderr)
 	os.Exit(1)

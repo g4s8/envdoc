@@ -8,9 +8,10 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/g4s8/envdoc/debug"
 	"golang.org/x/tools/txtar"
 	"gopkg.in/yaml.v2"
+
+	"github.com/g4s8/envdoc/debug"
 )
 
 func TestDataParser(t *testing.T) {

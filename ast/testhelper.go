@@ -9,8 +9,8 @@ import (
 
 type T interface {
 	Helper()
-	Fatal(args ...interface{})
-	Fatalf(format string, args ...interface{})
+	Fatal(args ...any)
+	Fatalf(format string, args ...any)
 }
 
 //nolint:staticcheck

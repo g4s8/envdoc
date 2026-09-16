@@ -30,7 +30,7 @@ func (fi fakeFileInfo) IsDir() bool {
 	panic("IsDir() not implemented")
 }
 
-func (fi fakeFileInfo) Sys() interface{} {
+func (fi fakeFileInfo) Sys() any {
 	panic("Sys() not implemented")
 }
 

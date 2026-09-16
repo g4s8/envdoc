@@ -6,7 +6,7 @@ type FieldTag map[string]string
 
 func ParseFieldTag(tag string) FieldTag {
 	t := make(FieldTag)
-	for _, fields := range strings.Fields(tag) {
+	for fields := range strings.FieldsSeq(tag) {
 		if !strings.Contains(fields, ":") {
 			continue
 		}
