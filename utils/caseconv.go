@@ -21,7 +21,7 @@ func CamelToSnake(s string) string {
 		if pos < len(s) {
 			next, _ = utf8.DecodeRuneInString(s[pos:])
 		}
-		if i > 0 && prev != underscore && r != underscore && unicode.IsUpper(r) && (unicode.IsLower(next)) {
+		if i > 0 && prev != underscore && r != underscore && unicode.IsUpper(r) && unicode.IsLower(next) {
 			result.WriteRune(underscore)
 		}
 		result.WriteRune(unicode.ToUpper(r))

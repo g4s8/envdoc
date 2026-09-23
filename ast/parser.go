@@ -101,6 +101,8 @@ func parseWalker(fset *token.FileSet, col *RootCollector) filepath.WalkFunc {
 }
 
 func parseDir(dir string, fset *token.FileSet, col *RootCollector) error {
+	// TODO: replace deprecated API
+	//nolint:staticcheck
 	pkgs, err := parser.ParseDir(fset, dir, nil, parser.ParseComments|parser.SkipObjectResolution)
 	if err != nil {
 		return fmt.Errorf("failed to parse dir: %w", err)
