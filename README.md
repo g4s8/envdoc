@@ -8,7 +8,7 @@ For `docenv` linter see [docenv/README.md](./docenv/README.md).
 
 <br/>
 
-[![CI](https://github.com/g4s8/envdoc/actions/workflows/go.yml/badge.svg)](https://github.com/g4s8/envdoc/actions/workflows/go.yml)
+[![CI](https://github.com/g4s8/envdoc/actions/workflows/ci.yml/badge.svg)](https://github.com/g4s8/envdoc/actions/workflows/ci.yml)
 [![Go Reference](https://pkg.go.dev/badge/github.com/g4s8/envdoc.svg)](https://pkg.go.dev/github.com/g4s8/envdoc)
 [![codecov](https://codecov.io/gh/g4s8/envdoc/graph/badge.svg?token=sqXWNR755O)](https://codecov.io/gh/g4s8/envdoc)
 [![Go Report Card](https://goreportcard.com/badge/github.com/g4s8/envdoc)](https://goreportcard.com/report/github.com/g4s8/envdoc)
