@@ -5,8 +5,8 @@ go 1.27.0
 require (
 	github.com/gobwas/glob v1.1.0
 	github.com/sergi/go-diff v1.4.0
-	golang.org/x/tools v0.51.0
+	golang.org/x/tools v0.52.0
 	gopkg.in/yaml.v2 v2.4.0
 )
 
-require golang.org/x/sync v0.23.0 // indirect
+require golang.org/x/sync v0.24.0 // indirect
